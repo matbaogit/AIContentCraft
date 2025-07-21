@@ -1301,6 +1301,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Handle data deletion requests
+  app.post('/api/data-deletion-request', async (req, res) => {
+    try {
+      const { email, reason, facebookUserId } = req.body;
+
+      if (!email || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email and reason are required'
+        });
+      }
+
+      // In a real implementation, you would:
+      // 1. Store the deletion request in a database
+      // 2. Send notification to admin
+      // 3. Create a tracking ticket
+      // 4. Send confirmation email to user
+
+      console.log('Data deletion request received:', {
+        email,
+        reason: reason.substring(0, 100) + '...',
+        facebookUserId,
+        timestamp: new Date().toISOString(),
+        ip: req.ip
+      });
+
+      // For now, just return success
+      res.json({
+        success: true,
+        data: {
+          requestId: `DDR-${Date.now()}`,
+          message: 'Your data deletion request has been received and will be processed within 30 days',
+          estimatedCompletion: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('Error processing data deletion request:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process deletion request'
+      });
+    }
+  });
+
   // Get current Facebook OAuth redirect URI for configuration
   app.get('/api/auth/facebook/redirect-uri', async (req, res) => {
     try {

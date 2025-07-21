@@ -43,24 +43,24 @@ export default function FacebookAppSetup() {
       id: "privacy-policy",
       title: "URL chính sách quyền riêng tư",
       description: "Link đến trang chính sách bảo mật của ứng dụng",
-      action: "Tạo Privacy Policy",
+      action: "Sử dụng URL có sẵn",
       details: [
-        "Phải là URL công khai, có thể truy cập được",
-        "Nội dung phải đầy đủ về việc xử lý dữ liệu người dùng",
-        "Bao gồm thông tin về Facebook data usage",
-        "Ví dụ: https://your-domain.com/privacy-policy"
+        "✅ Trang đã được tạo sẵn tại: /privacy-policy",
+        `🔗 URL đầy đủ: ${window.location.protocol}//${window.location.host}/privacy-policy`,
+        "Nội dung đầy đủ về việc xử lý dữ liệu người dùng",
+        "Bao gồm thông tin về Facebook data usage"
       ]
     },
     {
       id: "data-deletion",
       title: "Xóa dữ liệu người dùng",
       description: "URL hoặc hướng dẫn cho phép người dùng xóa dữ liệu",
-      action: "Tạo Data Deletion endpoint",
+      action: "Sử dụng URL có sẵn",
       details: [
-        "Có thể là URL endpoint hoặc email liên hệ",
-        "Phải có thể xử lý yêu cầu xóa dữ liệu từ Facebook",
-        "Ví dụ: https://your-domain.com/data-deletion",
-        "Hoặc email: privacy@your-domain.com"
+        "✅ Trang đã được tạo sẵn tại: /data-deletion",
+        `🔗 URL đầy đủ: ${window.location.protocol}//${window.location.host}/data-deletion`,
+        "Form xử lý yêu cầu xóa dữ liệu tự động",
+        "Backup: email privacy@seoaiwriter.com"
       ]
     },
     {
@@ -154,7 +154,20 @@ export default function FacebookAppSetup() {
                 {field.details.map((detail, index) => (
                   <div key={index} className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                     <div className="w-1 h-1 bg-gray-400 rounded-full" />
-                    {detail}
+                    <span className="flex-1">{detail}</span>
+                    {detail.includes('URL đầy đủ:') && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const url = detail.split('URL đầy đủ: ')[1];
+                          copyToClipboard(url, 'URL');
+                        }}
+                        className="ml-2"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

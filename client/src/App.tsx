@@ -63,6 +63,8 @@ import CreditUsageHistory from "@/pages/admin/credit-usage-history";
 import CreditHistory from "@/pages/dashboard/credit-history";
 import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
 import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import DataDeletion from "@/pages/data-deletion";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -141,6 +143,10 @@ function Router() {
       {/* Debug routes (Admin only) */}
       <ProtectedRoute path="/debug/facebook-oauth" component={FacebookOAuthDebug} adminOnly={true} />
       <ProtectedRoute path="/debug/facebook-app-setup" component={FacebookAppSetup} adminOnly={true} />
+      
+      {/* Public compliance pages */}
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/data-deletion" component={DataDeletion} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
