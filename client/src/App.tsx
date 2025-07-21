@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { lazy } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,6 +66,9 @@ import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
 import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
+
+// Lazy load Facebook Connect component
+const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -145,7 +149,7 @@ function Router() {
       <ProtectedRoute path="/debug/facebook-app-setup" component={FacebookAppSetup} adminOnly={true} />
       
       {/* Demo routes */}
-      <Route path="/demo/facebook-connect" component={() => import("@/pages/demo/facebook-connect")} />
+      <Route path="/demo/facebook-connect" component={FacebookConnect} />
       
       {/* Public compliance pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />

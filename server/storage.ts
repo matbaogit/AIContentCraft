@@ -1078,12 +1078,29 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async getSocialConnection(id: number): Promise<schema.SocialConnection | null> {
+  async getSocialConnection(id: number): Promise<any> {
     try {
-      const connection = await db.query.socialConnections.findFirst({
-        where: eq(schema.socialConnections.id, id)
-      });
-      return connection || null;
+      const [connection] = await db.select().from(schema.connections)
+        .where(eq(schema.connections.id, id))
+        .limit(1);
+      
+      if (!connection) return null;
+      
+      // Transform to match expected SocialConnection format
+      return {
+        id: connection.id,
+        userId: connection.userId,
+        platform: connection.type,
+        accountName: connection.name,
+        accountId: connection.config?.accountId || '',
+        accessToken: connection.config?.accessToken || '',
+        refreshToken: connection.config?.refreshToken || '',
+        tokenExpiry: connection.expiresAt,
+        isActive: connection.isActive,
+        settings: connection.config || {},
+        createdAt: connection.createdAt,
+        updatedAt: connection.updatedAt
+      };
     } catch (error) {
       console.error('Error fetching social connection:', error);
       return null;
@@ -1188,16 +1205,7 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async deleteSocialConnection(id: number): Promise<boolean> {
-    try {
-      await db.delete(schema.socialConnections)
-        .where(eq(schema.socialConnections.id, id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting social connection:', error);
-      return false;
-    }
-  }
+
 
   async getScheduledPosts(userId: number, options?: { page?: number; limit?: number; status?: string }): Promise<{ posts: schema.ScheduledPost[], total: number }> {
     try {
