@@ -366,6 +366,10 @@ interface SystemSettings {
   firebaseAppId: string;
   enableGoogleAuth: boolean;
   enableFacebookAuth: boolean;
+  // Social OAuth settings
+  facebookAppId: string;
+  facebookAppSecret: string;
+  enableFacebookOAuth: boolean;
   // System info
   version: string;
   lastBackup: string;
@@ -438,6 +442,13 @@ const firebaseSettingsSchema = z.object({
   enableFacebookAuth: z.boolean(),
 });
 
+// Social OAuth settings form schema
+const socialOAuthSettingsSchema = z.object({
+  facebookAppId: z.string().optional().or(z.literal("")),
+  facebookAppSecret: z.string().optional().or(z.literal("")),
+  enableFacebookOAuth: z.boolean(),
+});
+
 // Trial plan settings schema
 const trialPlanSettingsSchema = z.object({
   trialPlanId: z.string().min(1, "Please select a trial plan"),
@@ -448,6 +459,7 @@ type AiSettingsValues = z.infer<typeof aiSettingsSchema>;
 type EmailSettingsValues = z.infer<typeof emailSettingsSchema>;
 type ApiSettingsValues = z.infer<typeof apiSettingsSchema>;
 type WebhookSettingsValues = z.infer<typeof webhookSettingsSchema>;
+type SocialOAuthSettingsValues = z.infer<typeof socialOAuthSettingsSchema>;
 type TrialPlanSettingsValues = z.infer<typeof trialPlanSettingsSchema>;
 type FirebaseSettingsValues = z.infer<typeof firebaseSettingsSchema>;
 
@@ -583,6 +595,16 @@ export default function AdminSettings() {
     },
   });
 
+  // Social OAuth settings form  
+  const socialOAuthForm = useForm<SocialOAuthSettingsValues>({
+    resolver: zodResolver(socialOAuthSettingsSchema),
+    defaultValues: {
+      facebookAppId: settings?.facebookAppId || "",
+      facebookAppSecret: settings?.facebookAppSecret || "",
+      enableFacebookOAuth: settings?.enableFacebookOAuth || false,
+    },
+  });
+
   // Update settings when data is loaded
   useEffect(() => {
     if (settings) {
@@ -642,6 +664,12 @@ export default function AdminSettings() {
         firebaseAppId: settings.firebaseAppId || "",
         enableGoogleAuth: settings.enableGoogleAuth || false,
         enableFacebookAuth: settings.enableFacebookAuth || false,
+      });
+
+      socialOAuthForm.reset({
+        facebookAppId: settings.facebookAppId || "",
+        facebookAppSecret: settings.facebookAppSecret || "",
+        enableFacebookOAuth: settings.enableFacebookOAuth || false,
       });
     }
   }, [settings]);
@@ -778,6 +806,28 @@ export default function AdminSettings() {
     },
   });
 
+  // Update Social OAuth settings mutation
+  const updateSocialOAuthSettingsMutation = useMutation({
+    mutationFn: async (data: SocialOAuthSettingsValues) => {
+      const res = await apiRequest("PATCH", "/api/admin/settings/social-oauth", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thành công",
+        description: "Cài đặt Social OAuth đã được cập nhật",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Lỗi",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Test email settings mutation
   const testEmailSettingsMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
@@ -844,6 +894,10 @@ export default function AdminSettings() {
   
   const onFirebaseSubmit = (data: FirebaseSettingsValues) => {
     updateFirebaseSettingsMutation.mutate(data);
+  };
+
+  const onSocialOAuthSubmit = (data: SocialOAuthSettingsValues) => {
+    updateSocialOAuthSettingsMutation.mutate(data);
   };
 
   const [testEmailAddress, setTestEmailAddress] = useState("");
@@ -932,6 +986,12 @@ export default function AdminSettings() {
                       </svg>
                       {t("admin.settingsPage.firebase") || "Firebase"}
                     </TabsTrigger>
+                    <TabsTrigger value="social" className="justify-start">
+                      <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      Social OAuth
+                    </TabsTrigger>
                     <TabsTrigger value="credits" className="justify-start">
                       <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -1003,6 +1063,7 @@ export default function AdminSettings() {
                 <TabsTrigger value="email">Email</TabsTrigger>
                 <TabsTrigger value="api">API</TabsTrigger>
                 <TabsTrigger value="webhook">Webhook</TabsTrigger>
+                <TabsTrigger value="social">Social OAuth</TabsTrigger>
                 <TabsTrigger value="credits">Credits</TabsTrigger>
                 <TabsTrigger value="system">System</TabsTrigger>
               </TabsList>
@@ -1990,6 +2051,124 @@ export default function AdminSettings() {
                           {updateFirebaseSettingsMutation.isPending 
                             ? (t("common.saving") || "Đang lưu...") 
                             : (t("common.saveChanges") || "Lưu thay đổi")}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Social OAuth Settings */}
+            <TabsContent value="social" className="mt-0 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cài đặt Social OAuth</CardTitle>
+                  <CardDescription>
+                    Cấu hình thông tin ứng dụng Facebook để sử dụng tính năng OAuth tự động
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...socialOAuthForm}>
+                    <form onSubmit={socialOAuthForm.handleSubmit(onSocialOAuthSubmit)} className="space-y-6">
+                      
+                      {/* Facebook OAuth Configuration */}
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          </svg>
+                          <h3 className="text-lg font-semibold">Facebook OAuth</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={socialOAuthForm.control}
+                            name="facebookAppId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Facebook App ID</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Nhập Facebook App ID..." {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  App ID từ Facebook Developer Console
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={socialOAuthForm.control}
+                            name="facebookAppSecret"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Facebook App Secret</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="password"
+                                    placeholder="Nhập Facebook App Secret..." 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  App Secret từ Facebook Developer Console (được mã hóa an toàn)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={socialOAuthForm.control}
+                          name="enableFacebookOAuth"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                  Kích hoạt Facebook OAuth
+                                </FormLabel>
+                                <FormDescription>
+                                  Cho phép người dùng kết nối Facebook thông qua OAuth flow thay vì nhập Access Token thủ công
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Hướng dẫn cấu hình</AlertTitle>
+                        <AlertDescription>
+                          <div className="space-y-2 text-sm">
+                            <p>1. Truy cập <a href="https://developers.facebook.com/" className="text-blue-600 underline" target="_blank">Facebook Developer Console</a></p>
+                            <p>2. Tạo hoặc chọn ứng dụng Facebook</p>
+                            <p>3. Thêm Facebook Login product</p>
+                            <p>4. Trong Valid OAuth Redirect URIs, thêm: <code className="bg-gray-100 px-1 rounded text-xs">{window.location.origin}/api/auth/facebook/callback</code></p>
+                            <p>5. Copy App ID và App Secret từ Settings → Basic</p>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="pt-4 border-t">
+                        <Button 
+                          type="submit" 
+                          className="flex items-center"
+                          disabled={updateSocialOAuthSettingsMutation.isPending || !socialOAuthForm.formState.isDirty}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          {updateSocialOAuthSettingsMutation.isPending 
+                            ? "Đang lưu..." 
+                            : "Lưu cấu hình"}
                         </Button>
                       </div>
                     </form>

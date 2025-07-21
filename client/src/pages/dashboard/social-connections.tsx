@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,12 @@ const platformDescriptions = {
   instagram: "Chia sẻ hình ảnh và nội dung lên Instagram"
 };
 
+// Facebook OAuth connection function
+const handleFacebookOAuth = () => {
+  // Redirect to Facebook OAuth endpoint
+  window.location.href = '/api/auth/facebook';
+};
+
 export default function SocialConnections() {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -52,6 +58,53 @@ export default function SocialConnections() {
   const [selectedConnection, setSelectedConnection] = useState<SocialConnection | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<string>('');
   const [wordpressAuthType, setWordpressAuthType] = useState<string>('api-token');
+
+  // Handle OAuth callback success/error messages
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    
+    if (success === 'facebook_connected') {
+      toast({
+        title: "Facebook kết nối thành công!",
+        description: "Tài khoản Facebook của bạn đã được kết nối thành công. Bạn có thể bắt đầu đăng bài ngay bây giờ.",
+      });
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (error) {
+      let errorMessage = "Có lỗi xảy ra khi kết nối";
+      
+      switch (error) {
+        case 'facebook_denied':
+          errorMessage = "Bạn đã từ chối cấp quyền cho ứng dụng trên Facebook";
+          break;
+        case 'invalid_callback':
+          errorMessage = "Thông tin callback không hợp lệ";
+          break;
+        case 'app_not_configured':
+          errorMessage = "Ứng dụng Facebook chưa được cấu hình đúng cách";
+          break;
+        case 'token_exchange_failed':
+          errorMessage = "Không thể trao đổi mã xác thực với Facebook";
+          break;
+        case 'pages_fetch_failed':
+          errorMessage = "Không thể lấy danh sách Facebook Pages";
+          break;
+        case 'callback_failed':
+          errorMessage = "Quá trình callback thất bại, vui lòng thử lại";
+          break;
+      }
+      
+      toast({
+        title: "Kết nối Facebook thất bại",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast]);
 
   // Fetch social connections
   const { data: connectionsData, isLoading } = useQuery<{success: boolean, data: SocialConnection[]}>({
@@ -295,22 +348,34 @@ export default function SocialConnections() {
           </p>
         </div>
         
-        <Dialog 
-          open={showCreateDialog} 
-          onOpenChange={(open) => {
-            setShowCreateDialog(open);
-            if (!open) {
-              setSelectedPlatform('');
-              setWordpressAuthType('api-token');
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Thêm kết nối
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-3">
+          {/* Quick Facebook Connect Button */}
+          <Button 
+            onClick={handleFacebookOAuth}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            Kết nối Facebook
+          </Button>
+          
+          <Dialog 
+            open={showCreateDialog} 
+            onOpenChange={(open) => {
+              setShowCreateDialog(open);
+              if (!open) {
+                setSelectedPlatform('');
+                setWordpressAuthType('api-token');
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Kết nối khác
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tạo kết nối mới</DialogTitle>
@@ -462,8 +527,59 @@ export default function SocialConnections() {
                 </div>
               )}
 
-              {/* Social Media Platform Access Token */}
-              {selectedPlatform !== 'wordpress' && (
+              {/* Facebook OAuth Integration */}
+              {selectedPlatform === 'facebook' && (
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                    Kết nối Facebook
+                  </h4>
+                  
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-blue-900 dark:text-blue-100">Kết nối trực tiếp với Facebook</h5>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Kết nối an toàn thông qua Facebook OAuth
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      onClick={handleFacebookOAuth}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      Kết nối với Facebook
+                    </Button>
+                    
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      Bạn sẽ được chuyển hướng đến Facebook để cấp quyền. Sau khi xác nhận, bạn sẽ được đưa về trang này.
+                    </p>
+                    
+                    <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        <strong>Quyền được yêu cầu:</strong>
+                      </p>
+                      <ul className="text-xs text-blue-600 dark:text-blue-400 mt-1 space-y-1">
+                        <li>• Đăng bài lên các Facebook Page bạn quản lý</li>
+                        <li>• Đọc thông tin engagement (likes, comments)</li>
+                        <li>• Truy cập danh sách các Page của bạn</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Other Social Media Platforms - Manual Token Input */}
+              {selectedPlatform !== 'wordpress' && selectedPlatform !== 'facebook' && (
                 <div className="space-y-4 border-t pt-4">
                   <h4 className="font-medium text-gray-900 dark:text-gray-100">
                     Cài đặt {platformLabels[selectedPlatform as keyof typeof platformLabels]}
@@ -482,44 +598,47 @@ export default function SocialConnections() {
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                       Token này sẽ được sử dụng để đăng bài lên {platformLabels[selectedPlatform as keyof typeof platformLabels]}
                     </p>
-                    
-                    {selectedPlatform === 'facebook' && (
-                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
-                        <h6 className="font-medium text-yellow-800 dark:text-yellow-200 text-sm mb-2">Hướng dẫn lấy Facebook Access Token:</h6>
-                        <ol className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1 list-decimal list-inside">
-                          <li>Truy cập <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">Facebook Graph API Explorer</a></li>
-                          <li>Chọn ứng dụng Facebook của bạn</li>
-                          <li>Tạo User Token hoặc Page Token tùy theo nhu cầu</li>
-                          <li>Thêm permissions: pages_manage_posts, pages_read_engagement</li>
-                          <li>Copy token và paste vào đây</li>
-                        </ol>
-                        <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                          Lưu ý: Facebook tokens thường có thời hạn ngắn, cần cập nhật định kỳ.
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
               
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreateDialog(false);
-                    setSelectedPlatform('');
-                  }}
-                >
-                  Hủy
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createConnectionMutation.isPending}
-                >
-                  {createConnectionMutation.isPending ? "Đang tạo..." : "Tạo kết nối"}
-                </Button>
-              </div>
+              {/* Submit buttons - hide for Facebook since OAuth is handled differently */}
+              {selectedPlatform !== 'facebook' && (
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateDialog(false);
+                      setSelectedPlatform('');
+                    }}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createConnectionMutation.isPending}
+                  >
+                    {createConnectionMutation.isPending ? "Đang tạo..." : "Tạo kết nối"}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Facebook only shows close button since OAuth handles connection creation */}
+              {selectedPlatform === 'facebook' && (
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateDialog(false);
+                      setSelectedPlatform('');
+                    }}
+                  >
+                    Đóng
+                  </Button>
+                </div>
+              )}
             </form>
           </DialogContent>
         </Dialog>
@@ -852,6 +971,7 @@ export default function SocialConnections() {
       </Dialog>
         </div>
       </div>
+    </div>
     </div>
   );
 }

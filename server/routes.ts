@@ -1249,7 +1249,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add social media connection
+  // ========== Facebook OAuth Routes ==========
+  
+  // Initiate Facebook OAuth
+  app.get('/api/auth/facebook', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+      // Get Facebook OAuth settings from database
+      const socialOAuthSettings = await storage.getSettingsByCategory('social');
+      const facebookAppId = socialOAuthSettings.facebookAppId;
+      const enableFacebookOAuth = socialOAuthSettings.enableFacebookOAuth === 'true';
+      
+      if (!enableFacebookOAuth) {
+        return res.status(503).json({
+          success: false,
+          error: 'Facebook OAuth is not enabled. Please contact administrator.'
+        });
+      }
+      
+      if (!facebookAppId) {
+        return res.status(500).json({
+          success: false,
+          error: 'Facebook App ID not configured. Please contact administrator.'
+        });
+      }
+
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/facebook/callback`;
+
+      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${facebookAppId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=pages_manage_posts,pages_read_engagement&` +
+        `response_type=code&` +
+        `state=${req.user.id}`;
+      
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error initiating Facebook OAuth:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to initialize Facebook OAuth'
+      });
+    }
+  });
+
+  // Handle Facebook OAuth callback
+  app.get('/api/auth/facebook/callback', async (req, res) => {
+    try {
+      const { code, state, error: fbError } = req.query;
+      
+      if (fbError) {
+        console.error('Facebook OAuth error:', fbError);
+        return res.redirect('/dashboard/social-connections?error=facebook_denied');
+      }
+
+      if (!code || !state) {
+        return res.redirect('/dashboard/social-connections?error=invalid_callback');
+      }
+
+      const userId = parseInt(state as string);
+      
+      // Get Facebook OAuth settings from database
+      const socialOAuthSettings = await storage.getSettingsByCategory('social');
+      const facebookAppId = socialOAuthSettings.facebookAppId;
+      const facebookAppSecret = socialOAuthSettings.facebookAppSecret;
+      const enableFacebookOAuth = socialOAuthSettings.enableFacebookOAuth === 'true';
+      
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/facebook/callback`;
+
+      if (!enableFacebookOAuth) {
+        return res.redirect('/dashboard/social-connections?error=oauth_disabled');
+      }
+
+      if (!facebookAppId || !facebookAppSecret) {
+        return res.redirect('/dashboard/social-connections?error=app_not_configured');
+      }
+
+      // Exchange code for access token
+      const tokenResponse = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?` +
+        `client_id=${facebookAppId}&` +
+        `client_secret=${facebookAppSecret}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `code=${code}`);
+
+      const tokenData = await tokenResponse.json();
+      
+      if (tokenData.error) {
+        console.error('Facebook token exchange error:', tokenData.error);
+        return res.redirect('/dashboard/social-connections?error=token_exchange_failed');
+      }
+
+      const accessToken = tokenData.access_token;
+      const expiresIn = tokenData.expires_in;
+
+      // Get user's Facebook pages
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+      );
+      const pagesData = await pagesResponse.json();
+
+      if (pagesData.error) {
+        console.error('Facebook pages fetch error:', pagesData.error);
+        return res.redirect('/dashboard/social-connections?error=pages_fetch_failed');
+      }
+
+      // Get user info
+      const userResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${accessToken}`
+      );
+      const userData = await userResponse.json();
+
+      // If user has pages, create connections for each page
+      if (pagesData.data && pagesData.data.length > 0) {
+        for (const page of pagesData.data) {
+          // Use page access token for posting
+          await storage.createConnection({
+            userId,
+            type: 'facebook',
+            name: page.name,
+            config: {
+              accountName: page.name,
+              accountId: page.id,
+              userId: userData.id,
+              userName: userData.name
+            },
+            accessToken: page.access_token, // Page access token
+            pageId: page.id,
+            pageName: page.name,
+            expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+            isActive: true
+          });
+        }
+      } else {
+        // Create personal account connection (limited functionality)
+        await storage.createConnection({
+          userId,
+          type: 'facebook',
+          name: userData.name || 'Facebook Account',
+          config: {
+            accountName: userData.name,
+            accountId: userData.id,
+            userId: userData.id,
+            userName: userData.name
+          },
+          accessToken,
+          expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+          isActive: true
+        });
+      }
+
+      res.redirect('/dashboard/social-connections?success=facebook_connected');
+    } catch (error) {
+      console.error('Facebook OAuth callback error:', error);
+      res.redirect('/dashboard/social-connections?error=callback_failed');
+    }
+  });
+
+  // Get Facebook pages for connected user
+  app.get('/api/facebook/pages', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+
+      const userId = req.user.id;
+      const facebookConnections = await db.select()
+        .from(schema.connections)
+        .where(
+          sql`${schema.connections.userId} = ${userId} 
+              AND ${schema.connections.type} = 'facebook'
+              AND ${schema.connections.isActive} = true`
+        );
+
+      if (facebookConnections.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No Facebook connection found'
+        });
+      }
+
+      const connection = facebookConnections[0];
+      if (!connection.accessToken) {
+        return res.status(400).json({
+          success: false,
+          error: 'No access token available'
+        });
+      }
+
+      // Get fresh pages data
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?access_token=${connection.accessToken}`
+      );
+      const pagesData = await pagesResponse.json();
+
+      if (pagesData.error) {
+        return res.status(400).json({
+          success: false,
+          error: pagesData.error.message || 'Failed to fetch pages'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          pages: pagesData.data || []
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching Facebook pages:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch Facebook pages' 
+      });
+    }
+  });
+
+  // Add social media connection (legacy method - still supported)
   app.post('/api/dashboard/connections/social', async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
@@ -1272,6 +1490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: platform as schema.Connection['type'],
         name: accountName,
         config: { accessToken, accountName, accountId },
+        accessToken, // Store in dedicated field as well
         isActive: true
       });
       
@@ -2624,6 +2843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firebaseSettings = await storage.getSettingsByCategory('firebase');
       const imageSettings = await storage.getSettingsByCategory('image_generation');
       const socialSettings = await storage.getSettingsByCategory('social_content');
+      const socialOAuthSettings = await storage.getSettingsByCategory('social');
       
       // Chuẩn bị đối tượng cài đặt
       const settings = {
@@ -2686,6 +2906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firebaseAppId: firebaseSettings.firebaseAppId || "",
         enableGoogleAuth: firebaseSettings.enableGoogleAuth === "true",
         enableFacebookAuth: firebaseSettings.enableFacebookAuth === "true",
+        
+        // Social OAuth settings
+        facebookAppId: socialOAuthSettings.facebookAppId || "",
+        facebookAppSecret: socialOAuthSettings.facebookAppSecret || "",
+        enableFacebookOAuth: socialOAuthSettings.enableFacebookOAuth === "true",
         
         // System info
         version: "1.0.0",
@@ -2974,6 +3199,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching performance metrics:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch performance metrics' });
+    }
+  });
+
+  // Admin settings API - Social OAuth settings update
+  app.patch('/api/admin/settings/social-oauth', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+      
+      const { 
+        facebookAppId,
+        facebookAppSecret,
+        enableFacebookOAuth
+      } = req.body;
+      
+      console.log('Social OAuth settings update request received:');
+      console.log('- facebookAppId provided:', facebookAppId !== undefined);
+      console.log('- facebookAppSecret provided:', facebookAppSecret !== undefined);
+      console.log('- enableFacebookOAuth:', enableFacebookOAuth);
+      
+      // Update settings
+      const updates = [
+        storage.setSetting('facebookAppId', facebookAppId, 'social'),
+        storage.setSetting('facebookAppSecret', facebookAppSecret, 'social'),
+        storage.setSetting('enableFacebookOAuth', enableFacebookOAuth.toString(), 'social')
+      ];
+      
+      await Promise.all(updates);
+      
+      // Verification
+      const savedSettings = await storage.getSettingsByCategory('social');
+      console.log('Social OAuth settings saved successfully');
+      
+      res.json({ 
+        success: true, 
+        data: { 
+          message: 'Social OAuth settings updated successfully',
+          settings: savedSettings
+        } 
+      });
+    } catch (error) {
+      console.error('Error updating social OAuth settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to update social OAuth settings' });
     }
   });
 

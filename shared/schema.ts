@@ -87,6 +87,11 @@ export const connections = pgTable('connections', {
   type: connectionTypeEnum('type').notNull(),
   name: text('name').notNull(),
   config: jsonb('config').notNull(), // Store connection details like URLs, tokens, etc.
+  accessToken: text('access_token'), // OAuth access token
+  refreshToken: text('refresh_token'), // OAuth refresh token  
+  expiresAt: timestamp('expires_at'), // Token expiration time
+  pageId: text('page_id'), // Facebook Page ID
+  pageName: text('page_name'), // Facebook Page name
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
