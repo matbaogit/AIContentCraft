@@ -20,11 +20,17 @@ export default function DataDeletion() {
 
   const deletionMutation = useMutation({
     mutationFn: async (data: { email: string; reason: string; facebookUserId?: string }) => {
-      return await apiRequest('/api/data-deletion-request', {
+      const response = await fetch('/api/data-deletion-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
     },
     onSuccess: (response) => {
       toast({
