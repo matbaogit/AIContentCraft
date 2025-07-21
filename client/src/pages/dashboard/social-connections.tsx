@@ -94,6 +94,12 @@ export default function SocialConnections() {
         case 'callback_failed':
           errorMessage = "Quá trình callback thất bại, vui lòng thử lại";
           break;
+        case 'oauth_disabled':
+          errorMessage = "Facebook OAuth đã bị tắt. Liên hệ quản trị viên để bật lại.";
+          break;
+        default:
+          errorMessage = `Lỗi không xác định: ${error}`;
+          break;
       }
       
       toast({

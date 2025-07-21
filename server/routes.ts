@@ -1286,6 +1286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `response_type=code&` +
         `state=${req.user.id}`;
       
+      console.log('Facebook OAuth Debug:');
+      console.log('- Facebook App ID:', facebookAppId);
+      console.log('- Redirect URI:', redirectUri);
+      console.log('- Auth URL:', authUrl);
+      
       res.redirect(authUrl);
     } catch (error) {
       console.error('Error initiating Facebook OAuth:', error);
