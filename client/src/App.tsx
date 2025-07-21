@@ -61,6 +61,7 @@ import AdminTranslations from "@/pages/admin/translations";
 import SidebarMenuManagement from "@/pages/admin/sidebar-menu";
 import CreditUsageHistory from "@/pages/admin/credit-usage-history";
 import CreditHistory from "@/pages/dashboard/credit-history";
+import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -135,6 +136,9 @@ function Router() {
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />
+      
+      {/* Debug routes (Admin only) */}
+      <ProtectedRoute path="/debug/facebook-oauth" component={FacebookOAuthDebug} adminOnly={true} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
