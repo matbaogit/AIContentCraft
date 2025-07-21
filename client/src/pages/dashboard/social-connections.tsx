@@ -336,10 +336,20 @@ export default function SocialConnections() {
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                       Sử dụng Facebook OAuth để kết nối an toàn với trang Facebook của bạn.
                     </p>
-                    <Button type="button" onClick={handleFacebookOAuth} className="w-full">
-                      <Facebook className="w-4 h-4 mr-2" />
-                      Kết nối với Facebook
-                    </Button>
+                    <div className="space-y-2">
+                      <Button type="button" onClick={handleFacebookOAuth} className="w-full">
+                        <Facebook className="w-4 h-4 mr-2" />
+                        Kết nối với Facebook
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => window.open('/demo/facebook-connect', '_blank')}
+                        className="w-full"
+                      >
+                        Test Facebook Connect (Demo)
+                      </Button>
+                    </div>
                   </div>
                 )}
                 

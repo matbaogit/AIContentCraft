@@ -144,6 +144,9 @@ function Router() {
       <ProtectedRoute path="/debug/facebook-oauth" component={FacebookOAuthDebug} adminOnly={true} />
       <ProtectedRoute path="/debug/facebook-app-setup" component={FacebookAppSetup} adminOnly={true} />
       
+      {/* Demo routes */}
+      <Route path="/demo/facebook-connect" component={() => import("@/pages/demo/facebook-connect")} />
+      
       {/* Public compliance pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/data-deletion" component={DataDeletion} />

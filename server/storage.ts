@@ -1052,11 +1052,10 @@ class DatabaseStorage implements IStorage {
   // Social Media & Scheduling management
   async getSocialConnections(userId: number): Promise<any[]> {
     try {
-      // Use connections table instead of socialConnections for now
-      const connections = await db.query.connections.findMany({
-        where: eq(schema.connections.userId, userId),
-        orderBy: desc(schema.connections.createdAt)
-      });
+      // Use raw query to avoid Drizzle ORM schema conflicts
+      const connections = await db.select().from(schema.connections)
+        .where(eq(schema.connections.userId, userId))
+        .orderBy(desc(schema.connections.createdAt));
       
       // Transform to match expected SocialConnection format
       return connections.map(conn => ({
@@ -1065,8 +1064,8 @@ class DatabaseStorage implements IStorage {
         platform: conn.type,
         accountName: conn.name,
         accountId: conn.config?.accountId || '',
-        accessToken: conn.config?.accessToken || conn.accessToken,
-        refreshToken: conn.config?.refreshToken || conn.refreshToken,
+        accessToken: conn.config?.accessToken || '',
+        refreshToken: conn.config?.refreshToken || '',
         tokenExpiry: conn.expiresAt,
         isActive: conn.isActive,
         settings: conn.config || {},
@@ -1116,10 +1115,9 @@ class DatabaseStorage implements IStorage {
 
   async getSocialConnection(id: number): Promise<any> {
     try {
-      const [connection] = await db.query.connections.findMany({
-        where: eq(schema.connections.id, id),
-        limit: 1
-      });
+      const [connection] = await db.select().from(schema.connections)
+        .where(eq(schema.connections.id, id))
+        .limit(1);
       
       if (!connection) return null;
       
@@ -1130,8 +1128,8 @@ class DatabaseStorage implements IStorage {
         platform: connection.type,
         accountName: connection.name,
         accountId: connection.config?.accountId || '',
-        accessToken: connection.config?.accessToken || connection.accessToken,
-        refreshToken: connection.config?.refreshToken || connection.refreshToken,
+        accessToken: connection.config?.accessToken || '',
+        refreshToken: connection.config?.refreshToken || '',
         tokenExpiry: connection.expiresAt,
         isActive: connection.isActive,
         settings: connection.config || {},
