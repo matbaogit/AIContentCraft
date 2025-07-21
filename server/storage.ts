@@ -1050,13 +1050,29 @@ class DatabaseStorage implements IStorage {
   }
 
   // Social Media & Scheduling management
-  async getSocialConnections(userId: number): Promise<schema.SocialConnection[]> {
+  async getSocialConnections(userId: number): Promise<any[]> {
     try {
-      const connections = await db.query.socialConnections.findMany({
-        where: eq(schema.socialConnections.userId, userId),
-        orderBy: desc(schema.socialConnections.createdAt)
+      // Use connections table instead of socialConnections for now
+      const connections = await db.query.connections.findMany({
+        where: eq(schema.connections.userId, userId),
+        orderBy: desc(schema.connections.createdAt)
       });
-      return connections;
+      
+      // Transform to match expected SocialConnection format
+      return connections.map(conn => ({
+        id: conn.id,
+        userId: conn.userId,
+        platform: conn.type,
+        accountName: conn.name,
+        accountId: conn.config?.accountId || '',
+        accessToken: conn.accessToken,
+        refreshToken: conn.refreshToken,
+        tokenExpiry: conn.expiresAt,
+        isActive: conn.isActive,
+        settings: conn.config || {},
+        createdAt: conn.createdAt,
+        updatedAt: conn.updatedAt
+      }));
     } catch (error) {
       console.error('Error fetching social connections:', error);
       return [];
@@ -1091,14 +1107,29 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateSocialConnection(id: number, data: Partial<schema.SocialConnection>): Promise<schema.SocialConnection | null> {
+  async updateSocialConnection(id: number, data: Partial<any>): Promise<any> {
     try {
-      const [updatedConnection] = await db.update(schema.socialConnections)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
-        .where(eq(schema.socialConnections.id, id))
+      // Transform data to match connections table structure
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      if (data.settings) {
+        updateData.config = data.settings;
+      }
+      if (data.isActive !== undefined) {
+        updateData.isActive = data.isActive;
+      }
+      if (data.accessToken) {
+        updateData.accessToken = data.accessToken;
+      }
+      if (data.refreshToken) {
+        updateData.refreshToken = data.refreshToken;
+      }
+      
+      const [updatedConnection] = await db.update(schema.connections)
+        .set(updateData)
+        .where(eq(schema.connections.id, id))
         .returning();
       return updatedConnection || null;
     } catch (error) {
