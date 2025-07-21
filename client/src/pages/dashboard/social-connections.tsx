@@ -15,6 +15,7 @@ import { Plus, Settings, CheckCircle, XCircle, Facebook, Twitter, Linkedin, Inst
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/Layout";
+import { FacebookConnectModal } from "@/components/facebook/FacebookConnectModal";
 
 interface Connection {
   id: number;
@@ -72,6 +73,7 @@ export default function SocialConnections() {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showFacebookModal, setShowFacebookModal] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [form, setForm] = useState<ConnectionForm>({
     platform: '',
@@ -246,10 +248,7 @@ export default function SocialConnections() {
     });
   };
 
-  // Facebook OAuth connection
-  const handleFacebookOAuth = () => {
-    window.location.href = '/api/auth/facebook';
-  };
+
 
   // Available platforms to connect
   const availablePlatforms = Object.keys(platformConfig).filter(platform => 
@@ -334,22 +333,16 @@ export default function SocialConnections() {
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                     <h4 className="font-medium mb-2">Kết nối Facebook</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                      Sử dụng Facebook OAuth để kết nối an toàn với trang Facebook của bạn.
+                      Chọn phương thức kết nối Facebook phù hợp với bạn.
                     </p>
-                    <div className="space-y-2">
-                      <Button type="button" onClick={handleFacebookOAuth} className="w-full">
-                        <Facebook className="w-4 h-4 mr-2" />
-                        Kết nối với Facebook
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => window.open('/demo/facebook-connect', '_blank')}
-                        className="w-full"
-                      >
-                        Test Facebook Connect (Demo)
-                      </Button>
-                    </div>
+                    <Button 
+                      type="button" 
+                      onClick={() => setShowFacebookModal(true)}
+                      className="w-full"
+                    >
+                      <Facebook className="w-4 h-4 mr-2" />
+                      Chọn phương thức kết nối
+                    </Button>
                   </div>
                 )}
                 
@@ -591,6 +584,22 @@ export default function SocialConnections() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Facebook Connect Modal */}
+        <FacebookConnectModal 
+          open={showFacebookModal}
+          onOpenChange={setShowFacebookModal}
+          onConnectionSaved={(connection) => {
+            // Handle successful connection
+            queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
+            setShowFacebookModal(false);
+            setShowCreateDialog(false);
+            toast({
+              title: "Facebook kết nối thành công!",
+              description: "Tài khoản Facebook đã được kết nối thành công.",
+            });
+          }}
+        />
       </div>
     </DashboardLayout>
   );

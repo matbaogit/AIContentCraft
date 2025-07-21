@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
+import { setupFacebookAuth } from "./routes/facebook-auth";
 import * as schema from "@shared/schema";
 import { db } from "../db";
 import { sql, eq, desc } from "drizzle-orm";
@@ -76,6 +77,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication routes
   setupAuth(app);
+  
+  // Set up Facebook OAuth routes
+  setupFacebookAuth(app);
   
   // Register admin routes
   registerAdminRoutes(app);
