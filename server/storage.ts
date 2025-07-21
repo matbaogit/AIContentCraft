@@ -1065,8 +1065,8 @@ class DatabaseStorage implements IStorage {
         platform: conn.type,
         accountName: conn.name,
         accountId: conn.config?.accountId || '',
-        accessToken: conn.accessToken,
-        refreshToken: conn.refreshToken,
+        accessToken: conn.config?.accessToken || conn.accessToken,
+        refreshToken: conn.config?.refreshToken || conn.refreshToken,
         tokenExpiry: conn.expiresAt,
         isActive: conn.isActive,
         settings: conn.config || {},
@@ -1091,11 +1091,18 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async createSocialConnection(connection: schema.InsertSocialConnection): Promise<schema.SocialConnection> {
+  async createSocialConnection(connection: any): Promise<any> {
     try {
-      const [newConnection] = await db.insert(schema.socialConnections)
+      // Use connections table instead of socialConnections
+      const [newConnection] = await db.insert(schema.connections)
         .values({
-          ...connection,
+          userId: connection.userId,
+          type: connection.platform || connection.type,
+          name: connection.accountName || connection.name,
+          config: connection.settings || connection.config || {},
+          accessToken: connection.accessToken,
+          refreshToken: connection.refreshToken,
+          isActive: connection.isActive !== undefined ? connection.isActive : true,
           createdAt: new Date(),
           updatedAt: new Date()
         })
@@ -1104,6 +1111,36 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating social connection:', error);
       throw error;
+    }
+  }
+
+  async getSocialConnection(id: number): Promise<any> {
+    try {
+      const [connection] = await db.query.connections.findMany({
+        where: eq(schema.connections.id, id),
+        limit: 1
+      });
+      
+      if (!connection) return null;
+      
+      // Transform to match expected SocialConnection format
+      return {
+        id: connection.id,
+        userId: connection.userId,
+        platform: connection.type,
+        accountName: connection.name,
+        accountId: connection.config?.accountId || '',
+        accessToken: connection.config?.accessToken || connection.accessToken,
+        refreshToken: connection.config?.refreshToken || connection.refreshToken,
+        tokenExpiry: connection.expiresAt,
+        isActive: connection.isActive,
+        settings: connection.config || {},
+        createdAt: connection.createdAt,
+        updatedAt: connection.updatedAt
+      };
+    } catch (error) {
+      console.error('Error fetching social connection:', error);
+      return null;
     }
   }
 
@@ -1126,6 +1163,9 @@ class DatabaseStorage implements IStorage {
       if (data.refreshToken) {
         updateData.refreshToken = data.refreshToken;
       }
+      if (data.accountName) {
+        updateData.name = data.accountName;
+      }
       
       const [updatedConnection] = await db.update(schema.connections)
         .set(updateData)
@@ -1135,6 +1175,18 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error updating social connection:', error);
       return null;
+    }
+  }
+
+  async deleteSocialConnection(id: number): Promise<boolean> {
+    try {
+      const [deletedConnection] = await db.delete(schema.connections)
+        .where(eq(schema.connections.id, id))
+        .returning();
+      return !!deletedConnection;
+    } catch (error) {
+      console.error('Error deleting social connection:', error);
+      return false;
     }
   }
 

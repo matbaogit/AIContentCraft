@@ -4397,7 +4397,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = req.user.id;
-      const { platform, accountName, accessToken, refreshToken, accountId, settings } = req.body;
+      const { type, name, config, platform, accountName, accessToken, refreshToken, accountId, settings } = req.body;
 
       // Validation based on platform type
       if (!platform || !accountName) {
@@ -4435,12 +4435,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const connection = await storage.createSocialConnection({
         userId,
-        platform,
-        accountName,
-        accessToken: accessToken || '', // Empty for WordPress
+        platform: platform || type,
+        accountName: accountName || name,
+        accessToken: accessToken || '', 
         refreshToken: refreshToken || '',
-        accountId: accountId || accountName, // Use accountName as fallback for WordPress
-        settings: settings || {}
+        accountId: accountId || accountName || name,
+        settings: settings || config || {}
       });
 
       res.json({ success: true, data: connection });
@@ -4451,7 +4451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update social connection
-  app.patch('/api/social-connections/:id', async (req, res) => {
+  app.put('/api/social-connections/:id', async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ success: false, error: 'Not authenticated' });
