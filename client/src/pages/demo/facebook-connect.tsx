@@ -51,15 +51,20 @@ export default function FacebookConnect() {
       
       setIsSDKLoaded(true);
       
-      // Check if user is already logged in
-      window.FB.getLoginStatus(function(response: any) {
-        if (response.status === 'connected') {
-          setIsLoggedIn(true);
-          setAccessToken(response.authResponse.accessToken);
-          getUserInfo();
-          getPermissions();
-        }
-      });
+      // Check if user is already logged in with error handling
+      try {
+        window.FB.getLoginStatus(function(response: any) {
+          if (response && response.status === 'connected') {
+            setIsLoggedIn(true);
+            setAccessToken(response.authResponse.accessToken);
+            getUserInfo();
+            getPermissions();
+          }
+        }, { force: false }); // Don't force roundtrip to server
+      } catch (error) {
+        console.log('Facebook login status check failed:', error);
+        // Ignore the error and continue
+      }
     };
 
     // Load Facebook SDK script
@@ -72,58 +77,98 @@ export default function FacebookConnect() {
   }, []);
 
   const getUserInfo = () => {
-    window.FB.api('/me', { fields: 'id,name,picture' }, function(response: FacebookUser) {
-      setUser(response);
-    });
+    try {
+      window.FB.api('/me', { fields: 'id,name,picture' }, function(response: FacebookUser) {
+        if (response && !response.error) {
+          setUser(response);
+        } else {
+          console.error('Error getting user info:', response.error);
+        }
+      });
+    } catch (error) {
+      console.error('Error calling FB API for user info:', error);
+    }
   };
 
   const getPermissions = () => {
-    window.FB.api('/me/permissions', function(response: any) {
-      if (response.data) {
-        const grantedPermissions = response.data
-          .filter((perm: any) => perm.status === 'granted')
-          .map((perm: any) => perm.permission);
-        setPermissions(grantedPermissions);
-      }
-    });
+    try {
+      window.FB.api('/me/permissions', function(response: any) {
+        if (response && response.data && !response.error) {
+          const grantedPermissions = response.data
+            .filter((perm: any) => perm.status === 'granted')
+            .map((perm: any) => perm.permission);
+          setPermissions(grantedPermissions);
+        } else {
+          console.error('Error getting permissions:', response.error);
+        }
+      });
+    } catch (error) {
+      console.error('Error calling FB API for permissions:', error);
+    }
   };
 
   const getPages = () => {
     setLoading(true);
-    window.FB.api('/me/accounts', { fields: 'id,name,access_token,category' }, function(response: any) {
-      if (response.data) {
-        setPages(response.data);
-      }
+    try {
+      window.FB.api('/me/accounts', { fields: 'id,name,access_token,category' }, function(response: any) {
+        if (response && response.data && !response.error) {
+          setPages(response.data);
+        } else {
+          console.error('Error getting pages:', response.error);
+          alert('Lỗi khi lấy danh sách trang: ' + (response.error?.message || 'Unknown error'));
+        }
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error('Error calling FB API for pages:', error);
       setLoading(false);
-    });
+    }
   };
 
   const login = () => {
     setLoading(true);
-    window.FB.login(function(response: any) {
+    try {
+      window.FB.login(function(response: any) {
+        setLoading(false);
+        if (response && response.authResponse) {
+          setIsLoggedIn(true);
+          setAccessToken(response.authResponse.accessToken);
+          getUserInfo();
+          getPermissions();
+          getPages();
+        } else {
+          console.error('Facebook login failed:', response);
+          alert('Đăng nhập Facebook thất bại: ' + (response.error?.message || 'Người dùng từ chối đăng nhập'));
+        }
+      }, { 
+        scope: 'public_profile,pages_manage_posts,pages_read_engagement,manage_pages,pages_show_list',
+        return_scopes: true
+      });
+    } catch (error) {
       setLoading(false);
-      if (response.authResponse) {
-        setIsLoggedIn(true);
-        setAccessToken(response.authResponse.accessToken);
-        getUserInfo();
-        getPermissions();
-        getPages();
-      } else {
-        console.error('Facebook login failed:', response);
-      }
-    }, { 
-      scope: 'public_profile,pages_manage_posts,pages_read_engagement,manage_pages,pages_show_list'
-    });
+      console.error('Error during Facebook login:', error);
+      alert('Lỗi khi đăng nhập Facebook: ' + error);
+    }
   };
 
   const logout = () => {
-    window.FB.logout(function() {
+    try {
+      window.FB.logout(function() {
+        setIsLoggedIn(false);
+        setUser(null);
+        setPages([]);
+        setAccessToken('');
+        setPermissions([]);
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Reset state anyway
       setIsLoggedIn(false);
       setUser(null);
       setPages([]);
       setAccessToken('');
       setPermissions([]);
-    });
+    }
   };
 
   const saveConnection = async (page: FacebookPage) => {
@@ -314,6 +359,21 @@ export default function FacebookConnect() {
               <p><strong>App ID:</strong> {FACEBOOK_APP_ID}</p>
               <p><strong>Pages Count:</strong> {pages.length}</p>
               <p><strong>Permissions Count:</strong> {permissions.length}</p>
+              <p><strong>User:</strong> {user ? user.name : 'Not loaded'}</p>
+              <p><strong>Access Token:</strong> {accessToken ? 'Present' : 'None'}</p>
+            </div>
+            
+            {/* Help section */}
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Lưu ý quan trọng:
+              </h4>
+              <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                <li>• Facebook App cần được cấu hình đúng domain</li>
+                <li>• Cần có quyền pages_manage_posts để đăng bài</li>
+                <li>• Account Facebook phải là Business Account</li>
+                <li>• Nếu lỗi CORS, hãy thử trên domain chính thức</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
