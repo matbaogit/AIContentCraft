@@ -1301,6 +1301,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current Facebook OAuth redirect URI for configuration
+  app.get('/api/auth/facebook/redirect-uri', async (req, res) => {
+    try {
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/facebook/callback`;
+      res.json({
+        success: true,
+        data: {
+          redirectUri,
+          instructions: [
+            "1. Vào Facebook Developers Console",
+            "2. Chọn app của bạn",
+            "3. Vào Settings → Basic",
+            "4. Tìm mục 'Valid OAuth Redirect URIs'",
+            "5. Thêm URI này vào danh sách"
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('Error getting redirect URI:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get redirect URI'
+      });
+    }
+  });
+
   // Handle Facebook OAuth callback
   app.get('/api/auth/facebook/callback', async (req, res) => {
     try {
