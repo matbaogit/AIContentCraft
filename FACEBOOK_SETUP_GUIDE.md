@@ -59,12 +59,15 @@ Dashboard → Add Product → "Pages API"
 ```
 App Review → Permissions and Features:
 
-Request these permissions:
+Basic permissions (available without review):
+- public_profile
+- email
+
+Advanced permissions (require App Review):
 - pages_manage_posts
 - pages_read_engagement  
 - manage_pages
 - pages_show_list
-- public_profile
 ```
 
 ## 4. Environment Variables

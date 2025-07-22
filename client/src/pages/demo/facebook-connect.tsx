@@ -141,7 +141,7 @@ export default function FacebookConnect() {
           alert('Đăng nhập Facebook thất bại: ' + (response.error?.message || 'Người dùng từ chối đăng nhập'));
         }
       }, { 
-        scope: 'public_profile,pages_manage_posts,pages_read_engagement,manage_pages,pages_show_list',
+        scope: 'public_profile,email',
         return_scopes: true
       });
     } catch (error) {
@@ -370,7 +370,7 @@ export default function FacebookConnect() {
               </h4>
               <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
                 <li>• Facebook App cần được cấu hình đúng domain</li>
-                <li>• Cần có quyền pages_manage_posts để đăng bài</li>
+                <li>• Hiện chỉ sử dụng quyền cơ bản: public_profile, email</li>
                 <li>• Account Facebook phải là Business Account</li>
                 <li>• Nếu lỗi CORS, hãy thử trên domain chính thức</li>
               </ul>

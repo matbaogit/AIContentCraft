@@ -100,9 +100,9 @@ export default function FacebookAppSetup() {
       id: "permissions",
       title: "3. Yêu cầu Permissions",
       items: [
-        "pages_manage_posts - Để đăng bài lên Facebook Pages",
-        "pages_read_engagement - Để đọc thông tin engagement",
-        "pages_show_list - Để hiển thị danh sách Pages"
+        "public_profile - Để truy cập thông tin profile cơ bản",
+        "email - Để lấy địa chỉ email người dùng",
+        "Lưu ý: Các permissions khác cần App Review từ Facebook"
       ]
     }
   ];

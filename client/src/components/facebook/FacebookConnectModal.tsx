@@ -143,7 +143,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
             </h4>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
               <li>• Facebook App phải được cấu hình đúng domain</li>
-              <li>• Cần quyền pages_manage_posts để đăng bài</li>
+              <li>• Hiện chỉ sử dụng quyền cơ bản: public_profile, email</li>
               <li>• Account Facebook phải là Business Account</li>
               <li>• Nếu gặp lỗi, hãy thử phương thức nhập thủ công</li>
             </ul>

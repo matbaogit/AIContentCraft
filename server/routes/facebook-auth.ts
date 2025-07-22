@@ -11,7 +11,7 @@ export function setupFacebookAuth(app: any) {
   // Start Facebook OAuth flow
   app.get('/api/auth/facebook', (req: Request, res: Response) => {
     const state = req.query.redirect || 'social-connections';
-    const scopes = 'public_profile,pages_manage_posts,pages_read_engagement,manage_pages,pages_show_list';
+    const scopes = 'public_profile,email';
     
     const facebookAuthUrl = `https://www.facebook.com/v21.0/dialog/oauth?` +
       `client_id=${FACEBOOK_APP_ID}&` +

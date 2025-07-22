@@ -40,9 +40,9 @@ export default function FacebookOAuthDebug() {
       hasAppSecret: !!socialSettings.facebookAppSecret,
       appId: socialSettings.facebookAppId,
       redirectUri,
-      authUrl: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${socialSettings.facebookAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=pages_manage_posts,pages_read_engagement&response_type=code&state=1`,
+      authUrl: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${socialSettings.facebookAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=public_profile,email&response_type=code&state=1`,
       callbackUrl: redirectUri,
-      requiredScopes: ['pages_manage_posts', 'pages_read_engagement'],
+      requiredScopes: ['public_profile', 'email'],
       facebookConsoleUrl: 'https://developers.facebook.com/apps/'
     };
     
@@ -256,7 +256,7 @@ export default function FacebookOAuthDebug() {
                 "This app is requesting permissions that are not approved"
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Cần xin phê duyệt permissions từ Facebook (pages_manage_posts, pages_read_engagement)
+                Hiện tại chỉ sử dụng permissions cơ bản (public_profile, email)
               </p>
             </div>
           </div>

@@ -1286,7 +1286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${facebookAppId}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=pages_manage_posts,pages_read_engagement&` +
+        `scope=public_profile,email&` +
         `response_type=code&` +
         `state=${req.user.id}`;
       
