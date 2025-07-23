@@ -1052,26 +1052,12 @@ class DatabaseStorage implements IStorage {
   // Social Media & Scheduling management
   async getSocialConnections(userId: number): Promise<any[]> {
     try {
-      // Use raw query to avoid Drizzle ORM schema conflicts
-      const connections = await db.select().from(schema.connections)
-        .where(eq(schema.connections.userId, userId))
-        .orderBy(desc(schema.connections.createdAt));
+      // Use socialConnections table (fixed)
+      const connections = await db.select().from(schema.socialConnections)
+        .where(eq(schema.socialConnections.userId, userId))
+        .orderBy(desc(schema.socialConnections.createdAt));
       
-      // Transform to match expected SocialConnection format
-      return connections.map(conn => ({
-        id: conn.id,
-        userId: conn.userId,
-        platform: conn.type,
-        accountName: conn.name,
-        accountId: conn.config?.accountId || '',
-        accessToken: conn.config?.accessToken || '',
-        refreshToken: conn.config?.refreshToken || '',
-        tokenExpiry: conn.expiresAt,
-        isActive: conn.isActive,
-        settings: conn.config || {},
-        createdAt: conn.createdAt,
-        updatedAt: conn.updatedAt
-      }));
+      return connections;
     } catch (error) {
       console.error('Error fetching social connections:', error);
       return [];
@@ -1109,16 +1095,17 @@ class DatabaseStorage implements IStorage {
 
   async createSocialConnection(connection: any): Promise<any> {
     try {
-      // Use connections table instead of socialConnections
-      const [newConnection] = await db.insert(schema.connections)
+      // Use socialConnections table (fixed)
+      const [newConnection] = await db.insert(schema.socialConnections)
         .values({
           userId: connection.userId,
-          type: connection.platform || connection.type,
-          name: connection.accountName || connection.name,
-          config: connection.settings || connection.config || {},
+          platform: connection.platform,
+          accountName: connection.accountName,
           accessToken: connection.accessToken,
           refreshToken: connection.refreshToken,
+          accountId: connection.accountId,
           isActive: connection.isActive !== undefined ? connection.isActive : true,
+          settings: connection.settings || {},
           createdAt: new Date(),
           updatedAt: new Date()
         })
