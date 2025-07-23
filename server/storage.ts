@@ -114,6 +114,14 @@ export interface IStorage {
   createPublishingLog(log: schema.InsertPublishingLog): Promise<schema.PublishingLog>;
   getPublishingLogs(scheduledPostId: number): Promise<schema.PublishingLog[]>;
   
+  // Referral system
+  generateReferralCode(userId: number): Promise<string>;
+  getUserReferralInfo(userId: number): Promise<{ code: string; totalReferrals: number; totalCreditsEarned: number } | null>;
+  validateReferralCode(code: string): Promise<{ userId: number; username: string } | null>;
+  processReferral(referrerId: number, referredUserId: number, referralCode: string): Promise<boolean>;
+  getReferralTransactions(userId: number, page: number, limit: number): Promise<{ transactions: any[], total: number }>;
+  getReferralSettings(): Promise<{ referrerReward: number; referredReward: number; enabled: boolean }>;
+
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -1410,6 +1418,183 @@ class DatabaseStorage implements IStorage {
       console.error('Error creating publishing log:', error);
       throw error;
     }
+  }
+
+  // Referral system implementation
+  async generateReferralCode(userId: number): Promise<string> {
+    // Check if user already has a referral code
+    const existingReferral = await db.query.referrals.findFirst({
+      where: eq(schema.referrals.userId, userId)
+    });
+
+    if (existingReferral) {
+      return existingReferral.referralCode;
+    }
+
+    // Generate unique referral code
+    let referralCode: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      // Generate code: REF + userId + random string
+      const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
+      referralCode = `REF${userId}${randomString}`;
+      
+      // Check if code already exists
+      const existing = await db.query.referrals.findFirst({
+        where: eq(schema.referrals.referralCode, referralCode)
+      });
+      
+      isUnique = !existing;
+      attempts++;
+    } while (!isUnique && attempts < maxAttempts);
+
+    if (!isUnique) {
+      throw new Error('Unable to generate unique referral code');
+    }
+
+    // Update user with referral code
+    await db.update(schema.users)
+      .set({ referralCode })
+      .where(eq(schema.users.id, userId));
+
+    // Create referral record
+    await db.insert(schema.referrals).values({
+      userId,
+      referralCode,
+      totalReferrals: 0,
+      totalCreditsEarned: 0
+    });
+
+    return referralCode;
+  }
+
+  async getUserReferralInfo(userId: number): Promise<{ code: string; totalReferrals: number; totalCreditsEarned: number } | null> {
+    const referral = await db.query.referrals.findFirst({
+      where: eq(schema.referrals.userId, userId)
+    });
+
+    if (!referral) {
+      return null;
+    }
+
+    return {
+      code: referral.referralCode,
+      totalReferrals: referral.totalReferrals,
+      totalCreditsEarned: referral.totalCreditsEarned
+    };
+  }
+
+  async validateReferralCode(code: string): Promise<{ userId: number; username: string } | null> {
+    const referral = await db.query.referrals.findFirst({
+      where: eq(schema.referrals.referralCode, code),
+      with: {
+        user: true
+      }
+    });
+
+    if (!referral) {
+      return null;
+    }
+
+    return {
+      userId: referral.userId,
+      username: referral.user.username
+    };
+  }
+
+  async processReferral(referrerId: number, referredUserId: number, referralCode: string): Promise<boolean> {
+    try {
+      // Get referral settings
+      const settings = await this.getReferralSettings();
+      if (!settings.enabled) {
+        return false;
+      }
+
+      // Create referral transaction
+      const [transaction] = await db.insert(schema.referralTransactions).values({
+        referrerId,
+        referredUserId,
+        referralCode,
+        referrerCredits: settings.referrerReward,
+        referredCredits: settings.referredReward,
+        status: 'completed' as const,
+        completedAt: new Date()
+      }).returning();
+
+      // Add credits to referrer
+      await this.addUserCredits(
+        referrerId, 
+        settings.referrerReward, 
+        undefined, 
+        `Giới thiệu thành công người dùng #${referredUserId}`
+      );
+
+      // Add credits to referred user
+      await this.addUserCredits(
+        referredUserId, 
+        settings.referredReward, 
+        undefined, 
+        `Tín dụng chào mừng từ mã giới thiệu: ${referralCode}`
+      );
+
+      // Update referral statistics
+      await db.update(schema.referrals)
+        .set({
+          totalReferrals: sql`${schema.referrals.totalReferrals} + 1`,
+          totalCreditsEarned: sql`${schema.referrals.totalCreditsEarned} + ${settings.referrerReward}`,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.referrals.userId, referrerId));
+
+      return true;
+    } catch (error) {
+      console.error('Error processing referral:', error);
+      return false;
+    }
+  }
+
+  async getReferralTransactions(userId: number, page: number = 1, limit: number = 20): Promise<{ transactions: any[], total: number }> {
+    const offset = (page - 1) * limit;
+
+    // Get transactions where user is either referrer or referred
+    const transactions = await db.query.referralTransactions.findMany({
+      where: sql`${schema.referralTransactions.referrerId} = ${userId} OR ${schema.referralTransactions.referredUserId} = ${userId}`,
+      orderBy: desc(schema.referralTransactions.createdAt),
+      limit,
+      offset,
+      with: {
+        referrer: {
+          columns: { id: true, username: true }
+        },
+        referredUser: {
+          columns: { id: true, username: true }
+        }
+      }
+    });
+
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: sql`count(*)`.mapWith(Number) })
+      .from(schema.referralTransactions)
+      .where(sql`${schema.referralTransactions.referrerId} = ${userId} OR ${schema.referralTransactions.referredUserId} = ${userId}`);
+
+    return {
+      transactions,
+      total: count
+    };
+  }
+
+  async getReferralSettings(): Promise<{ referrerReward: number; referredReward: number; enabled: boolean }> {
+    const settings = await this.getSettingsByCategory('referral');
+
+    return {
+      referrerReward: parseInt(settings['referrer_credit_reward'] || '50'),
+      referredReward: parseInt(settings['referred_credit_reward'] || '20'),
+      enabled: settings['referral_system_enabled'] === 'true'
+    };
   }
 }
 

@@ -67,6 +67,7 @@ import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
 import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
+import ReferralPage from "@/pages/dashboard/referral";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -127,6 +128,7 @@ function Router() {
       <ProtectedRoute path="/dashboard/publishing-logs" component={PublishingLogs} />
       <ProtectedRoute path="/dashboard/social-connections" component={SocialConnections} />
       <ProtectedRoute path="/dashboard/theme-demo" component={ThemeDemo} />
+      <ProtectedRoute path="/dashboard/referral" component={ReferralPage} />
       <ProtectedRoute path="/dashboard/settings" component={Settings} />
       <ProtectedRoute path="/article/:id" component={Article} />
       

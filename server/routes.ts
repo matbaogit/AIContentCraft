@@ -5488,5 +5488,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== REFERRAL SYSTEM API ENDPOINTS ==========
+  
+  // Get user's referral information
+  app.get('/api/dashboard/referral', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get or generate referral code
+      let referralInfo = await storage.getUserReferralInfo(userId);
+      
+      if (!referralInfo) {
+        // Generate referral code if user doesn't have one
+        const code = await storage.generateReferralCode(userId);
+        referralInfo = {
+          code,
+          totalReferrals: 0,
+          totalCreditsEarned: 0
+        };
+      }
+      
+      // Get referral settings
+      const settings = await storage.getReferralSettings();
+      
+      res.json({
+        success: true,
+        data: {
+          ...referralInfo,
+          referralLink: `${req.protocol}://${req.get('host')}/register?ref=${referralInfo.code}`,
+          settings: {
+            referrerReward: settings.referrerReward,
+            referredReward: settings.referredReward,
+            enabled: settings.enabled
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching referral info:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch referral information' });
+    }
+  });
+
+  // Get referral transactions history
+  app.get('/api/dashboard/referral/transactions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      const result = await storage.getReferralTransactions(userId, page, limit);
+      
+      res.json({
+        success: true,
+        data: result.transactions,
+        pagination: {
+          page,
+          limit,
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit)
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching referral transactions:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch referral transactions' });
+    }
+  });
+
+  // Validate referral code (public endpoint)
+  app.get('/api/referral/validate/:code', async (req, res) => {
+    try {
+      const { code } = req.params;
+      
+      if (!code) {
+        return res.status(400).json({ success: false, error: 'Referral code is required' });
+      }
+      
+      const referrer = await storage.validateReferralCode(code);
+      
+      if (!referrer) {
+        return res.status(404).json({ success: false, error: 'Invalid referral code' });
+      }
+      
+      const settings = await storage.getReferralSettings();
+      
+      if (!settings.enabled) {
+        return res.status(400).json({ success: false, error: 'Referral system is currently disabled' });
+      }
+      
+      res.json({
+        success: true,
+        data: {
+          referrerUsername: referrer.username,
+          referredReward: settings.referredReward,
+          valid: true
+        }
+      });
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      res.status(500).json({ success: false, error: 'Failed to validate referral code' });
+    }
+  });
+
+  // Process referral (called during user registration)
+  app.post('/api/referral/process', async (req, res) => {
+    try {
+      const { referralCode, newUserId } = req.body;
+      
+      if (!referralCode || !newUserId) {
+        return res.status(400).json({ success: false, error: 'Referral code and new user ID are required' });
+      }
+      
+      // Validate referral code and get referrer
+      const referrer = await storage.validateReferralCode(referralCode);
+      
+      if (!referrer) {
+        return res.status(404).json({ success: false, error: 'Invalid referral code' });
+      }
+      
+      // Process the referral (give credits to both users)
+      const success = await storage.processReferral(referrer.userId, newUserId, referralCode);
+      
+      if (!success) {
+        return res.status(500).json({ success: false, error: 'Failed to process referral' });
+      }
+      
+      const settings = await storage.getReferralSettings();
+      
+      res.json({
+        success: true,
+        data: {
+          referrerCredits: settings.referrerReward,
+          referredCredits: settings.referredReward,
+          message: 'Referral processed successfully'
+        }
+      });
+    } catch (error) {
+      console.error('Error processing referral:', error);
+      res.status(500).json({ success: false, error: 'Failed to process referral' });
+    }
+  });
+
+  // Admin: Get referral statistics
+  app.get('/api/admin/referrals/stats', isAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+      
+      // Get overall referral statistics
+      const [totalReferrals] = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(schema.referralTransactions)
+        .where(eq(schema.referralTransactions.status, 'completed'));
+      
+      const [totalCreditsAwarded] = await db
+        .select({ 
+          total: sql`sum(${schema.referralTransactions.referrerCredits} + ${schema.referralTransactions.referredCredits})`.mapWith(Number) 
+        })
+        .from(schema.referralTransactions)
+        .where(eq(schema.referralTransactions.status, 'completed'));
+      
+      const [activeReferrers] = await db
+        .select({ count: sql`count(distinct ${schema.referralTransactions.referrerId})`.mapWith(Number) })
+        .from(schema.referralTransactions)
+        .where(eq(schema.referralTransactions.status, 'completed'));
+      
+      // Get top referrers
+      const topReferrers = await db
+        .select({
+          userId: schema.referrals.userId,
+          username: schema.users.username,
+          totalReferrals: schema.referrals.totalReferrals,
+          totalCreditsEarned: schema.referrals.totalCreditsEarned
+        })
+        .from(schema.referrals)
+        .leftJoin(schema.users, eq(schema.referrals.userId, schema.users.id))
+        .orderBy(desc(schema.referrals.totalReferrals))
+        .limit(10);
+      
+      res.json({
+        success: true,
+        data: {
+          totalReferrals: totalReferrals.count,
+          totalCreditsAwarded: totalCreditsAwarded.total || 0,
+          activeReferrers: activeReferrers.count,
+          topReferrers
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching referral stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch referral statistics' });
+    }
+  });
+
+  // Admin: Update referral settings
+  app.patch('/api/admin/referrals/settings', isAuthenticated, async (req, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+      
+      const { referrerReward, referredReward, enabled } = req.body;
+      
+      const updates = [];
+      
+      if (referrerReward !== undefined) {
+        updates.push(storage.setSetting('referrer_credit_reward', String(referrerReward), 'referral'));
+      }
+      
+      if (referredReward !== undefined) {
+        updates.push(storage.setSetting('referred_credit_reward', String(referredReward), 'referral'));
+      }
+      
+      if (enabled !== undefined) {
+        updates.push(storage.setSetting('referral_system_enabled', String(enabled), 'referral'));
+      }
+      
+      await Promise.all(updates);
+      
+      res.json({
+        success: true,
+        data: { message: 'Referral settings updated successfully' }
+      });
+    } catch (error) {
+      console.error('Error updating referral settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to update referral settings' });
+    }
+  });
+
   return httpServer;
 }

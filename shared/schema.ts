@@ -11,9 +11,11 @@ export const connectionTypeEnum = pgEnum('connection_type', ['wordpress', 'faceb
 export const aiProviderEnum = pgEnum('ai_provider', ['openai', 'claude', 'gemini']);
 export const postStatusEnum = pgEnum('post_status', ['pending', 'processing', 'completed', 'failed', 'cancelled']);
 export const platformEnum = pgEnum('platform', ['wordpress', 'facebook', 'twitter', 'linkedin', 'instagram']);
+export const referralStatusEnum = pgEnum('referral_status', ['pending', 'completed', 'failed']);
 
 // Enum types for TypeScript
 export type PlanType = 'credit' | 'storage';
+export type ReferralTransactionStatus = 'pending' | 'completed' | 'failed';
 
 // Users table
 export const users = pgTable('users', {
@@ -30,6 +32,8 @@ export const users = pgTable('users', {
   verificationTokenExpiry: timestamp('verification_token_expiry'),
   resetPasswordToken: text('reset_password_token'),
   resetPasswordTokenExpiry: timestamp('reset_password_token_expiry'),
+  referralCode: text('referral_code').unique(), // Mã giới thiệu của user này
+  referredBy: integer('referred_by').references(() => users.id), // ID người giới thiệu
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -137,13 +141,7 @@ export const systemSettings = pgTable('system_settings', {
 });
 
 // Define relations
-export const usersRelations = relations(users, ({ many }) => ({
-  articles: many(articles),
-  connections: many(connections),
-  userPlans: many(userPlans),
-  creditTransactions: many(creditTransactions),
-  creditUsageHistory: many(creditUsageHistory),
-}));
+
 
 export const plansRelations = relations(plans, ({ many }) => ({
   userPlans: many(userPlans),
@@ -649,6 +647,59 @@ export const publishingLogsRelations = relations(publishingLogs, ({ one }) => ({
   scheduledPost: one(scheduledPosts, { fields: [publishingLogs.scheduledPostId], references: [scheduledPosts.id] }),
 }));
 
+// Referral System Tables
+
+// Referrals table - stores referral codes and stats for each user
+export const referrals = pgTable('referrals', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull().unique(),
+  referralCode: text('referral_code').notNull().unique(),
+  totalReferrals: integer('total_referrals').notNull().default(0),
+  totalCreditsEarned: integer('total_credits_earned').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Referral transactions table - logs each referral transaction
+export const referralTransactions = pgTable('referral_transactions', {
+  id: serial('id').primaryKey(),
+  referrerId: integer('referrer_id').references(() => users.id).notNull(),
+  referredUserId: integer('referred_user_id').references(() => users.id).notNull(),
+  referralCode: text('referral_code').notNull(),
+  referrerCredits: integer('referrer_credits').notNull(),
+  referredCredits: integer('referred_credits').notNull(),
+  status: referralStatusEnum('status').notNull().default('pending'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+});
+
+// Referral Relations
+export const referralsRelations = relations(referrals, ({ one, many }) => ({
+  user: one(users, { fields: [referrals.userId], references: [users.id] }),
+  transactions: many(referralTransactions, { relationName: 'referrerTransactions' }),
+}));
+
+export const referralTransactionsRelations = relations(referralTransactions, ({ one }) => ({
+  referrer: one(users, { fields: [referralTransactions.referrerId], references: [users.id] }),
+  referredUser: one(users, { fields: [referralTransactions.referredUserId], references: [users.id] }),
+}));
+
+// Update users relations to include referral info and original relations
+export const usersRelations = relations(users, ({ one, many }) => ({
+  // Original relations
+  articles: many(articles),
+  connections: many(connections),
+  userPlans: many(userPlans),
+  creditTransactions: many(creditTransactions),
+  creditUsageHistory: many(creditUsageHistory),
+  // Referral relations
+  referrer: one(users, { fields: [users.referredBy], references: [users.id], relationName: 'referrer' }),
+  referredUsers: many(users, { relationName: 'referrer' }),
+  referralInfo: one(referrals, { fields: [users.id], references: [referrals.userId] }),
+  referralTransactionsAsReferrer: many(referralTransactions, { relationName: 'referrerTransactions' }),
+  referralTransactionsAsReferred: many(referralTransactions, { relationName: 'referredTransactions' }),
+}));
+
 
 
 // Social Media Schemas
@@ -673,6 +724,24 @@ export const selectPostTemplateSchema = createSelectSchema(postTemplates);
 export const insertPostTemplateSchema = createInsertSchema(postTemplates, {
   name: (schema) => schema.min(1, "Template name is required").max(100, "Name too long"),
 });
+
+// Referral Schemas
+export const selectReferralSchema = createSelectSchema(referrals);
+export const insertReferralSchema = createInsertSchema(referrals, {
+  referralCode: (schema) => schema.min(6, "Referral code must be at least 6 characters").max(20, "Referral code too long"),
+});
+
+export const selectReferralTransactionSchema = createSelectSchema(referralTransactions);
+export const insertReferralTransactionSchema = createInsertSchema(referralTransactions, {
+  referrerCredits: (schema) => schema.min(0, "Referrer credits must be positive"),
+  referredCredits: (schema) => schema.min(0, "Referred credits must be positive"),
+});
+
+// TypeScript types
+export type Referral = typeof referrals.$inferSelect;
+export type NewReferral = typeof referrals.$inferInsert;
+export type ReferralTransaction = typeof referralTransactions.$inferSelect;
+export type NewReferralTransaction = typeof referralTransactions.$inferInsert;
 
 export const selectPostingAnalyticsSchema = createSelectSchema(postingAnalytics);
 export const insertPostingAnalyticsSchema = createInsertSchema(postingAnalytics);
