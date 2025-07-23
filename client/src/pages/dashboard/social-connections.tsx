@@ -614,11 +614,11 @@ export default function SocialConnections() {
               try {
                 // Save connection to database
                 const connectionData = {
-                  type: 'facebook',
-                  name: `Facebook - ${userInfo.name}`,
-                  config: {
-                    accessToken: accessToken,
-                    accountId: userInfo.id,
+                  platform: 'facebook',
+                  accountName: `Facebook - ${userInfo.name}`,
+                  accountId: userInfo.id,
+                  accessToken: accessToken,
+                  settings: {
                     userInfo: userInfo,
                     connectedAt: new Date().toISOString(),
                     method: 'popup_sdk'
