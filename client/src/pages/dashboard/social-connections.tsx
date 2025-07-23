@@ -190,6 +190,18 @@ export default function SocialConnections() {
     });
   };
 
+  const handleFacebookOAuth = () => {
+    setShowFacebookModal(true);
+  };
+
+  const handleFacebookConnectionSaved = (connection: any) => {
+    queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
+    toast({
+      title: "Thành công",
+      description: "Kết nối Facebook đã được tạo thành công.",
+    });
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.platform || !form.name) {
