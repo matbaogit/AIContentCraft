@@ -114,7 +114,7 @@ export default function SocialConnections() {
   // Create connection mutation
   const createMutation = useMutation({
     mutationFn: async (data: ConnectionForm) => {
-      return await apiRequest('/api/social-connections', 'POST', {
+      return await apiRequest('POST', '/api/social-connections', {
         type: data.platform,
         name: data.name,
         config: data.config
@@ -141,7 +141,7 @@ export default function SocialConnections() {
   // Update connection mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<Connection> }) => {
-      return await apiRequest(`/api/social-connections/${id}`, 'PUT', data);
+      return await apiRequest('PUT', `/api/social-connections/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
@@ -164,7 +164,7 @@ export default function SocialConnections() {
   // Delete connection mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/social-connections/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/social-connections/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });

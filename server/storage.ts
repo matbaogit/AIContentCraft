@@ -363,10 +363,21 @@ class DatabaseStorage implements IStorage {
   // Connection management
   async getConnections(userId: number): Promise<schema.Connection[]> {
     try {
-      const connections = await db.query.connections.findMany({
-        where: eq(schema.connections.userId, userId)
-      });
-      return connections;
+      // Use socialConnections table for consistency
+      const connections = await db.select().from(schema.socialConnections)
+        .where(eq(schema.socialConnections.userId, userId));
+      
+      // Transform to match old Connection interface if needed
+      return connections.map(conn => ({
+        id: conn.id,
+        userId: conn.userId,
+        type: conn.platform,
+        name: conn.accountName,
+        config: conn.settings || {},
+        isActive: conn.isActive,
+        createdAt: conn.createdAt,
+        updatedAt: conn.updatedAt
+      })) as schema.Connection[];
     } catch (error) {
       console.error('Error fetching connections:', error);
       return [];
