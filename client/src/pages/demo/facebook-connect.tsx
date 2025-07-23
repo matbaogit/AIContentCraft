@@ -61,8 +61,8 @@ export default function FacebookConnectDemo() {
         const token = response.authResponse.accessToken;
         setAccessToken(token);
         
-        // Get user info exactly like user's HTML
-        window.FB.api('/me', { fields: 'name,email,id' }, function(userResponse: any) {
+        // Get user info exactly like user's HTML - remove email field
+        window.FB.api('/me', { fields: 'name,id' }, function(userResponse: any) {
           console.log('User info:', userResponse);
           setUserInfo(userResponse);
           
@@ -79,7 +79,7 @@ export default function FacebookConnectDemo() {
         });
       }
     }, {
-      scope: 'public_profile,email' // Basic permissions that work
+      scope: 'public_profile' // Only public_profile, email requires app review
     });
   };
 
@@ -144,7 +144,7 @@ export default function FacebookConnectDemo() {
                 <li>App ID: 665827136508049 (từ HTML mẫu)</li>
                 <li>API Version: v21.0 (từ HTML mẫu)</li>
                 <li>Domain: connect.facebook.net/vi_VN/sdk.js</li>
-                <li>Permissions: public_profile,email</li>
+                <li>Permissions: public_profile (email cần app review)</li>
               </ul>
             </div>
           </CardContent>

@@ -121,7 +121,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
               <ul className="text-sm space-y-1 text-gray-600 dark:text-gray-300">
                 <li>• Mở popup Facebook trong trang hiện tại</li>
                 <li>• Lấy Access Token tự động</li>
-                <li>• Hỗ trợ quyền cơ bản public_profile và email</li>
+                <li>• Hỗ trợ quyền cơ bản public_profile (email cần app review)</li>
                 <li>• Không cần chuyển trang</li>
               </ul>
 

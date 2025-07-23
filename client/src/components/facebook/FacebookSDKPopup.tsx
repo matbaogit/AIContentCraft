@@ -78,8 +78,8 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
       if (response.authResponse) {
         const { accessToken } = response.authResponse;
         
-        // Get user info
-        window.FB.api('/me', { fields: 'id,name,email,picture' }, function(userInfo: any) {
+        // Get user info (removed email field - requires app review)
+        window.FB.api('/me', { fields: 'id,name,picture' }, function(userInfo: any) {
           if (userInfo && !userInfo.error) {
             // Check permissions
             window.FB.api('/me/permissions', function(permResponse: any) {
@@ -118,7 +118,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         });
       }
     }, {
-      scope: 'public_profile,email'
+      scope: 'public_profile'
     });
   };
 
@@ -158,11 +158,10 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
       <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
         <p><strong>Quyền yêu cầu:</strong></p>
         <ul className="list-disc list-inside ml-2 space-y-1">
-          <li>public_profile - Truy cập thông tin cơ bản</li>
-          <li>email - Địa chỉ email người dùng</li>
+          <li>public_profile - Truy cập thông tin cơ bản (tên, ID, ảnh đại diện)</li>
         </ul>
         <p className="text-xs text-yellow-600 dark:text-yellow-400">
-          <strong>Lưu ý:</strong> App cần được Facebook phê duyệt để sử dụng permissions nâng cao như pages_manage_posts
+          <strong>Lưu ý:</strong> Scope 'email' và permissions nâng cao cần Facebook App Review để sử dụng
         </p>
       </div>
     </div>
