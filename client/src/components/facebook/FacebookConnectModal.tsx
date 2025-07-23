@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Facebook, ExternalLink, AlertCircle } from "lucide-react";
+import { FacebookSDKPopup } from './FacebookSDKPopup';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from "@/lib/queryClient";
 
 interface FacebookConnectModalProps {
   open: boolean;
@@ -13,6 +16,8 @@ interface FacebookConnectModalProps {
 
 export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: FacebookConnectModalProps) {
   const [connecting, setConnecting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleServerOAuth = () => {
     setConnecting(true);
@@ -23,6 +28,61 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
   const handleManualSetup = () => {
     // Close modal and let parent handle manual form
     onOpenChange(false);
+  };
+
+  const handlePopupSuccess = async (accessToken: string, userInfo: any) => {
+    try {
+      setSaving(true);
+      
+      // Save connection to database
+      const connectionData = {
+        platform: 'facebook',
+        name: `Facebook - ${userInfo.name}`,
+        username: userInfo.name,
+        accessToken: accessToken,
+        accountId: userInfo.id,
+        settings: {
+          userInfo: userInfo,
+          connectedAt: new Date().toISOString(),
+          method: 'popup_sdk'
+        }
+      };
+
+      const response = await apiRequest('/api/social-connections', {
+        method: 'POST',
+        body: connectionData
+      });
+
+      if (response.success) {
+        toast({
+          title: "Thành công",
+          description: `Đã lưu kết nối Facebook cho ${userInfo.name}`,
+        });
+
+        if (onConnectionSaved) {
+          onConnectionSaved(response.data);
+        }
+        onOpenChange(false);
+      } else {
+        throw new Error(response.error || 'Lỗi không xác định');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Lỗi lưu kết nối",
+        description: error.message || 'Không thể lưu kết nối Facebook',
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePopupError = (error: any) => {
+    toast({
+      title: "Lỗi kết nối",
+      description: error.message || 'Không thể kết nối với Facebook',
+      variant: "destructive",
+    });
   };
 
   return (
@@ -39,12 +99,42 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Popup SDK Method */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Phương thức 1: Facebook SDK Popup</CardTitle>
+              <CardDescription>
+                Sử dụng popup Facebook JavaScript SDK để kết nối (Khuyến nghị)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <Badge variant="secondary">Nhanh chóng</Badge>
+                <Badge variant="secondary">Popup</Badge>
+                <Badge variant="secondary">SDK</Badge>
+              </div>
+              
+              <ul className="text-sm space-y-1 text-gray-600 dark:text-gray-300">
+                <li>• Mở popup Facebook trong trang hiện tại</li>
+                <li>• Lấy Access Token tự động</li>
+                <li>• Hỗ trợ pages_manage_posts và manage_pages</li>
+                <li>• Không cần chuyển trang</li>
+              </ul>
+
+              <FacebookSDKPopup 
+                onSuccess={handlePopupSuccess}
+                onError={handlePopupError}
+                loading={saving}
+              />
+            </CardContent>
+          </Card>
+
           {/* OAuth Method */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Phương thức 1: OAuth tự động</CardTitle>
+              <CardTitle className="text-lg">Phương thức 2: OAuth tự động</CardTitle>
               <CardDescription>
-                Sử dụng Facebook OAuth để kết nối tự động (khuyến nghị)
+                Sử dụng Facebook OAuth để kết nối tự động
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -74,7 +164,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
           {/* Manual Method */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Phương thức 2: Nhập thủ công</CardTitle>
+              <CardTitle className="text-lg">Phương thức 3: Nhập thủ công</CardTitle>
               <CardDescription>
                 Nhập Access Token và thông tin trang Facebook thủ công
               </CardDescription>
@@ -107,7 +197,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-yellow-600" />
-                Phương thức 3: Test Demo
+                Phương thức 4: Test Demo
               </CardTitle>
               <CardDescription>
                 Sử dụng trang demo để test Facebook JavaScript SDK
