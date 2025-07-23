@@ -41,7 +41,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         });
         
         setIsSDKLoaded(true);
-        console.log('Facebook SDK initialized');
+        console.log('Facebook SDK initialized with v21.0 (from user HTML)');
       };
 
       // Load SDK script

@@ -68,7 +68,7 @@ import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
 
-// Lazy load Facebook Connect component
+// Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
 
 function Router() {
