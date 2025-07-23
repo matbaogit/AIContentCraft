@@ -51,6 +51,7 @@ async function seed() {
           type: 'credit',
           price: 500000,
           value: 50,
+          credits: 50,
         },
         {
           name: 'Gói Nâng Cao',
@@ -58,6 +59,7 @@ async function seed() {
           type: 'credit',
           price: 900000,
           value: 100,
+          credits: 100,
         },
         {
           name: 'Gói Chuyên Nghiệp',
@@ -65,6 +67,7 @@ async function seed() {
           type: 'credit',
           price: 2000000,
           value: 250,
+          credits: 250,
         }
       ]);
       console.log("Credit plans created successfully");
@@ -87,6 +90,7 @@ async function seed() {
           price: 200000,
           value: 5 * 1024 * 1024 * 1024, // 5GB in bytes
           duration: 30, // 1 month
+          credits: 0, // Storage plans don't give credits
         },
         {
           name: 'Gói Lưu Trữ Business',
@@ -95,6 +99,7 @@ async function seed() {
           price: 500000,
           value: 20 * 1024 * 1024 * 1024, // 20GB in bytes
           duration: 30, // 1 month
+          credits: 0, // Storage plans don't give credits
         },
         {
           name: 'Gói Lưu Trữ Enterprise',
@@ -103,6 +108,7 @@ async function seed() {
           price: 1000000,
           value: 50 * 1024 * 1024 * 1024, // 50GB in bytes
           duration: 30, // 1 month
+          credits: 0, // Storage plans don't give credits
         }
       ]);
       console.log("Storage plans created successfully");
@@ -125,6 +131,108 @@ async function seed() {
       console.log("Default webhook settings created");
     } else {
       console.log("Webhook settings already exist, skipping");
+    }
+
+    // Create sidebar menu items
+    const existingMenuItems = await db.query.sidebarMenuItems.findMany();
+    
+    if (existingMenuItems.length === 0) {
+      console.log("Creating default sidebar menu items...");
+      await db.insert(schema.sidebarMenuItems).values([
+        {
+          key: 'dashboard',
+          icon: 'LayoutDashboard',
+          path: '/dashboard',
+          label: 'Bảng điều khiển',
+          labelEn: 'Dashboard',
+          isEnabled: true,
+          sortOrder: 1,
+          requiredRole: 'user'
+        },
+        {
+          key: 'my-articles',
+          icon: 'FileText',
+          path: '/dashboard/my-articles',
+          label: 'Bài viết của tôi',
+          labelEn: 'My Articles',
+          isEnabled: true,
+          sortOrder: 2,
+          requiredRole: 'user'
+        },
+        {
+          key: 'create-content',
+          icon: 'Plus',
+          path: '/dashboard/create-content',
+          label: 'Tạo nội dung',
+          labelEn: 'Create Content',
+          isEnabled: true,
+          sortOrder: 3,
+          requiredRole: 'user'
+        },
+        {
+          key: 'image-library',
+          icon: 'Images',
+          path: '/dashboard/image-library',
+          label: 'Thư viện hình ảnh',
+          labelEn: 'Image Library',
+          isEnabled: true,
+          sortOrder: 4,
+          requiredRole: 'user'
+        },
+        {
+          key: 'referral',
+          icon: 'Gift',
+          path: '/dashboard/referral',
+          label: 'Giới thiệu',
+          labelEn: 'Referral',
+          isEnabled: true,
+          sortOrder: 16,
+          requiredRole: 'user'
+        },
+        {
+          key: 'credits',
+          icon: 'Coins',
+          path: '/dashboard/credits',
+          label: 'Tín dụng',
+          labelEn: 'Credits',
+          isEnabled: true,
+          sortOrder: 17,
+          requiredRole: 'user'
+        },
+        {
+          key: 'settings',
+          icon: 'Settings',
+          path: '/dashboard/settings',
+          label: 'Cài đặt',
+          labelEn: 'Settings',
+          isEnabled: true,
+          sortOrder: 18,
+          requiredRole: 'user'
+        }
+      ]);
+      console.log("Default sidebar menu items created");
+    } else {
+      // Check if referral menu item exists, if not add it
+      const referralMenuItem = await db.query.sidebarMenuItems.findFirst({
+        where: eq(schema.sidebarMenuItems.key, 'referral')
+      });
+      
+      if (!referralMenuItem) {
+        console.log("Adding referral menu item...");
+        await db.insert(schema.sidebarMenuItems).values({
+          key: 'referral',
+          icon: 'Gift',
+          path: '/dashboard/referral',
+          label: 'Giới thiệu',
+          labelEn: 'Referral',
+          isEnabled: true,
+          sortOrder: 16,
+          requiredRole: 'user'
+        });
+        console.log("Referral menu item created");
+      } else {
+        console.log("Referral menu item already exists, skipping");
+      }
     }
 
     console.log("Database seeding completed successfully");
