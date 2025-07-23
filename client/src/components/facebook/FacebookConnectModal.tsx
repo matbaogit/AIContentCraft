@@ -37,8 +37,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
       // Save connection to database
       const connectionData = {
         platform: 'facebook',
-        name: `Facebook - ${userInfo.name}`,
-        username: userInfo.name,
+        accountName: `Facebook - ${userInfo.name}`,
         accessToken: accessToken,
         accountId: userInfo.id,
         settings: {
@@ -48,23 +47,28 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
         }
       };
 
-      const response = await apiRequest('/api/social-connections', {
+      const response = await fetch('/api/social-connections', {
         method: 'POST',
-        body: connectionData
+        body: JSON.stringify(connectionData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      
+      const result = await response.json();
 
-      if (response.success) {
+      if (result.success) {
         toast({
           title: "Thành công",
           description: `Đã lưu kết nối Facebook cho ${userInfo.name}`,
         });
 
         if (onConnectionSaved) {
-          onConnectionSaved(response.data);
+          onConnectionSaved(result.data);
         }
         onOpenChange(false);
       } else {
-        throw new Error(response.error || 'Lỗi không xác định');
+        throw new Error(result.error || 'Lỗi không xác định');
       }
     } catch (error: any) {
       toast({
@@ -117,7 +121,7 @@ export function FacebookConnectModal({ open, onOpenChange, onConnectionSaved }: 
               <ul className="text-sm space-y-1 text-gray-600 dark:text-gray-300">
                 <li>• Mở popup Facebook trong trang hiện tại</li>
                 <li>• Lấy Access Token tự động</li>
-                <li>• Hỗ trợ pages_manage_posts và manage_pages</li>
+                <li>• Hỗ trợ quyền cơ bản public_profile và email</li>
                 <li>• Không cần chuyển trang</li>
               </ul>
 

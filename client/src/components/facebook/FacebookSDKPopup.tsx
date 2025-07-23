@@ -118,7 +118,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         });
       }
     }, {
-      scope: 'public_profile,pages_manage_posts,manage_pages'
+      scope: 'public_profile,email'
     });
   };
 
@@ -159,9 +159,11 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         <p><strong>Quyền yêu cầu:</strong></p>
         <ul className="list-disc list-inside ml-2 space-y-1">
           <li>public_profile - Truy cập thông tin cơ bản</li>
-          <li>pages_manage_posts - Đăng bài lên trang Facebook</li>
-          <li>manage_pages - Quản lý các trang Facebook</li>
+          <li>email - Địa chỉ email người dùng</li>
         </ul>
+        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+          <strong>Lưu ý:</strong> App cần được Facebook phê duyệt để sử dụng permissions nâng cao như pages_manage_posts
+        </p>
       </div>
     </div>
   );
