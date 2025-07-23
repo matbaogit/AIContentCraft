@@ -1119,27 +1119,11 @@ class DatabaseStorage implements IStorage {
 
   async getSocialConnection(id: number): Promise<any> {
     try {
-      const [connection] = await db.select().from(schema.connections)
-        .where(eq(schema.connections.id, id))
+      const [connection] = await db.select().from(schema.socialConnections)
+        .where(eq(schema.socialConnections.id, id))
         .limit(1);
       
-      if (!connection) return null;
-      
-      // Transform to match expected SocialConnection format
-      return {
-        id: connection.id,
-        userId: connection.userId,
-        platform: connection.type,
-        accountName: connection.name,
-        accountId: connection.config?.accountId || '',
-        accessToken: connection.config?.accessToken || '',
-        refreshToken: connection.config?.refreshToken || '',
-        tokenExpiry: connection.expiresAt,
-        isActive: connection.isActive,
-        settings: connection.config || {},
-        createdAt: connection.createdAt,
-        updatedAt: connection.updatedAt
-      };
+      return connection || null;
     } catch (error) {
       console.error('Error fetching social connection:', error);
       return null;
@@ -1148,13 +1132,13 @@ class DatabaseStorage implements IStorage {
 
   async updateSocialConnection(id: number, data: Partial<any>): Promise<any> {
     try {
-      // Transform data to match connections table structure
+      // Use socialConnections table structure
       const updateData: any = {
         updatedAt: new Date()
       };
       
       if (data.settings) {
-        updateData.config = data.settings;
+        updateData.settings = data.settings;
       }
       if (data.isActive !== undefined) {
         updateData.isActive = data.isActive;
@@ -1166,12 +1150,12 @@ class DatabaseStorage implements IStorage {
         updateData.refreshToken = data.refreshToken;
       }
       if (data.accountName) {
-        updateData.name = data.accountName;
+        updateData.accountName = data.accountName;
       }
       
-      const [updatedConnection] = await db.update(schema.connections)
+      const [updatedConnection] = await db.update(schema.socialConnections)
         .set(updateData)
-        .where(eq(schema.connections.id, id))
+        .where(eq(schema.socialConnections.id, id))
         .returning();
       return updatedConnection || null;
     } catch (error) {
@@ -1182,8 +1166,8 @@ class DatabaseStorage implements IStorage {
 
   async deleteSocialConnection(id: number): Promise<boolean> {
     try {
-      const [deletedConnection] = await db.delete(schema.connections)
-        .where(eq(schema.connections.id, id))
+      const [deletedConnection] = await db.delete(schema.socialConnections)
+        .where(eq(schema.socialConnections.id, id))
         .returning();
       return !!deletedConnection;
     } catch (error) {
