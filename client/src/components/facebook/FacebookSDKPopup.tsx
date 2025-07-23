@@ -118,7 +118,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         });
       }
     }, {
-      scope: 'public_profile'
+      scope: 'public_profile,pages_manage_posts,pages_read_engagement,publish_to_groups'
     });
   };
 
@@ -129,6 +129,12 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           Nhấn vào nút bên dưới để mở popup đăng nhập Facebook và cấp quyền cho ứng dụng
         </p>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
+          <p className="text-xs text-yellow-800 dark:text-yellow-200">
+            <strong>Lưu ý:</strong> Để đăng bài lên Facebook, bạn cần cấp các quyền: pages_manage_posts, pages_read_engagement, và publish_to_groups. 
+            Nếu popup yêu cầu permissions bị từ chối, bạn có thể thử lại hoặc liên hệ admin.
+          </p>
+        </div>
       </div>
 
       <Button
