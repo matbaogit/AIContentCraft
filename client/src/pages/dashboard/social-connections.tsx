@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/Layout";
 import { FacebookConnectModal } from "@/components/facebook/FacebookConnectModal";
+import { FacebookSDKPopup } from "@/components/facebook/FacebookSDKPopup";
 
 interface Connection {
   id: number;
@@ -74,6 +75,7 @@ export default function SocialConnections() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFacebookModal, setShowFacebookModal] = useState(false);
+  const [showFacebookSDKPopup, setShowFacebookSDKPopup] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [form, setForm] = useState<ConnectionForm>({
     platform: '',
@@ -191,7 +193,7 @@ export default function SocialConnections() {
   };
 
   const handleFacebookOAuth = () => {
-    setShowFacebookModal(true);
+    setShowFacebookSDKPopup(true);
   };
 
   const handleFacebookConnectionSaved = (connection: any) => {
@@ -604,6 +606,55 @@ export default function SocialConnections() {
             });
           }}
         />
+
+        {/* Facebook SDK Popup Direct */}
+        {showFacebookSDKPopup && (
+          <FacebookSDKPopup
+            onSuccess={async (accessToken: string, userInfo: any) => {
+              try {
+                // Save connection to database
+                const connectionData = {
+                  type: 'facebook',
+                  name: `Facebook - ${userInfo.name}`,
+                  config: {
+                    accessToken: accessToken,
+                    accountId: userInfo.id,
+                    userInfo: userInfo,
+                    connectedAt: new Date().toISOString(),
+                    method: 'popup_sdk'
+                  }
+                };
+
+                await apiRequest('POST', '/api/social-connections', connectionData);
+                
+                queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
+                toast({
+                  title: "Thành công",
+                  description: `Đã kết nối Facebook cho ${userInfo.name}`,
+                });
+                setShowFacebookSDKPopup(false);
+              } catch (error: any) {
+                toast({
+                  title: "Lỗi",
+                  description: error.message || "Có lỗi xảy ra khi lưu kết nối",
+                  variant: "destructive",
+                });
+                setShowFacebookSDKPopup(false);
+              }
+            }}
+            onError={(error: any) => {
+              toast({
+                title: "Lỗi kết nối Facebook",
+                description: error.message || "Không thể kết nối với Facebook",
+                variant: "destructive",
+              });
+              setShowFacebookSDKPopup(false);
+            }}
+            onCancel={() => {
+              setShowFacebookSDKPopup(false);
+            }}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
