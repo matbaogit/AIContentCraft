@@ -5716,5 +5716,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Referral Settings API (Admin Only) ==========
+  
+  // Get referral settings
+  app.get('/api/admin/referral-settings', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+
+      // Get referral settings from system_settings table
+      const referralSettings = await storage.getSettingsByCategory('referral');
+      
+      // Parse the settings into the expected format
+      const settings = {
+        referrer_credit_reward: parseInt(referralSettings.referrer_credit_reward || '50'),
+        referred_credit_reward: parseInt(referralSettings.referred_credit_reward || '20'),
+        referral_system_enabled: referralSettings.referral_system_enabled === 'true'
+      };
+
+      res.json({ success: true, data: settings });
+    } catch (error) {
+      console.error('Error fetching referral settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch referral settings' });
+    }
+  });
+
+  // Update referral settings
+  app.put('/api/admin/referral-settings', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+
+      const { referrer_credit_reward, referred_credit_reward, referral_system_enabled } = req.body;
+
+      // Validate input
+      if (typeof referrer_credit_reward !== 'number' || referrer_credit_reward < 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'referrer_credit_reward must be a non-negative number' 
+        });
+      }
+
+      if (typeof referred_credit_reward !== 'number' || referred_credit_reward < 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'referred_credit_reward must be a non-negative number' 
+        });
+      }
+
+      if (typeof referral_system_enabled !== 'boolean') {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'referral_system_enabled must be a boolean' 
+        });
+      }
+
+      // Update settings in the database
+      await storage.updateSetting('referrer_credit_reward', referrer_credit_reward.toString());
+      await storage.updateSetting('referred_credit_reward', referred_credit_reward.toString());
+      await storage.updateSetting('referral_system_enabled', referral_system_enabled.toString());
+
+      console.log('Referral settings updated by admin:', {
+        referrer_credit_reward,
+        referred_credit_reward,
+        referral_system_enabled,
+        adminId: req.user.id
+      });
+
+      res.json({ 
+        success: true, 
+        data: {
+          referrer_credit_reward,
+          referred_credit_reward,
+          referral_system_enabled
+        },
+        message: 'Referral settings updated successfully'
+      });
+    } catch (error) {
+      console.error('Error updating referral settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to update referral settings' });
+    }
+  });
+
   return httpServer;
 }

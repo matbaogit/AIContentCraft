@@ -68,6 +68,7 @@ import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
 import ReferralPage from "@/pages/dashboard/referral";
+import AdminReferralSettings from "@/pages/admin/referral-settings";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -144,6 +145,7 @@ function Router() {
       <ProtectedRoute path="/admin/translations" component={AdminTranslations} adminOnly={true} />
       <ProtectedRoute path="/admin/sidebar-menu" component={SidebarMenuManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/credit-usage-history" component={CreditUsageHistory} adminOnly={true} />
+      <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />

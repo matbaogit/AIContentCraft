@@ -17,6 +17,7 @@ import {
   Activity,
   MessageSquare,
   Languages,
+  Gift,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,7 +31,7 @@ interface AdminLayoutProps {
   title?: string;
 }
 
-export function AdminLayout({ children, title }: AdminLayoutProps) {
+function Layout({ children, title }: AdminLayoutProps) {
   const { t, language, setLanguage } = useLanguage();
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
@@ -96,6 +97,11 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
       href: "/admin/credit-usage-history",
       label: "Lịch sử tín dụng",
       icon: <Activity className="h-5 w-5" />,
+    },
+    {
+      href: "/admin/referral-settings",
+      label: "Cấu hình giới thiệu",
+      icon: <Gift className="h-5 w-5" />,
     },
     {
       href: "/admin/history",
@@ -208,11 +214,15 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               <Avatar className="h-8 w-8">
                 <AvatarImage src={`https://ui-avatars.com/api/?name=${user?.fullName || user?.username}&background=random`} />
                 <AvatarFallback>
-                  {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'A'}
+                  {(typeof user?.fullName === 'string' ? user.fullName.charAt(0) : '') || 
+                   (typeof user?.username === 'string' ? user.username.charAt(0) : '') || 'A'}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-3">
-                <p className="text-sm font-medium text-white">{user?.fullName || user?.username}</p>
+                <p className="text-sm font-medium text-white">
+                  {(typeof user?.fullName === 'string' ? user.fullName : '') || 
+                   (typeof user?.username === 'string' ? user.username : '')}
+                </p>
                 <button
                   onClick={handleLogout}
                   className="text-xs text-white/80 hover:text-white flex items-center mt-1"
@@ -293,11 +303,15 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={`https://ui-avatars.com/api/?name=${user?.fullName || user?.username}&background=random`} />
                     <AvatarFallback>
-                      {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'A'}
+                      {(typeof user?.fullName === 'string' ? user.fullName.charAt(0) : '') || 
+                       (typeof user?.username === 'string' ? user.username.charAt(0) : '') || 'A'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-white">{user?.fullName || user?.username}</p>
+                    <p className="text-sm font-medium text-white">
+                      {(typeof user?.fullName === 'string' ? user.fullName : '') || 
+                       (typeof user?.username === 'string' ? user.username : '')}
+                    </p>
                     <button
                       onClick={handleLogout}
                       className="text-xs text-white/80 hover:text-white flex items-center mt-1"
@@ -338,3 +352,6 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
     </div>
   );
 }
+
+export default Layout;
+export { Layout as AdminLayout };
