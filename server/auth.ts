@@ -104,7 +104,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { username, email, password, fullName } = req.body;
+      const { username, email, password, fullName, referralCode } = req.body;
       
       // Kiểm tra email đã tồn tại chưa
       const existingUserByEmail = await storage.getUserByUsername(email);
@@ -155,6 +155,36 @@ export function setupAuth(app: Express) {
         } else {
           // Fallback nếu không tìm thấy gói free
           await storage.addUserCredits(result.user.id, 10, undefined, 'Welcome bonus');
+        }
+
+        // Xử lý referral code nếu có
+        if (referralCode && referralCode.trim()) {
+          try {
+            console.log('Processing referral code:', referralCode, 'for user:', result.user.id);
+            
+            // Validate referral code
+            const referrer = await storage.validateReferralCode(referralCode.trim());
+            
+            if (referrer && referrer.userId !== result.user.id) {
+              // Process referral transaction
+              const referralProcessed = await storage.processReferral(
+                referrer.userId, 
+                result.user.id, 
+                referralCode.trim()
+              );
+              
+              if (referralProcessed) {
+                console.log('Referral processed successfully for user:', result.user.id);
+              } else {
+                console.log('Failed to process referral for user:', result.user.id);
+              }
+            } else {
+              console.log('Invalid referral code or self-referral attempt:', referralCode);
+            }
+          } catch (error) {
+            console.error('Error processing referral during registration:', error);
+            // Don't fail registration if referral processing fails
+          }
         }
       }
 

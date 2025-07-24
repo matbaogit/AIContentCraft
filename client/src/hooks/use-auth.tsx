@@ -27,6 +27,7 @@ type RegisterData = {
   email: string;
   password: string;
   fullName?: string;
+  referralCode?: string;
 };
 
 export const AuthContext = createContext<AuthContextType>({

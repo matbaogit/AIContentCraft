@@ -94,6 +94,7 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/register" component={AuthPage} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />

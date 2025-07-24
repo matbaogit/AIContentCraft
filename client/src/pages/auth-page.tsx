@@ -53,6 +53,7 @@ const registerSchema = z.object({
     }),
   confirmPassword: z.string()
     .min(1, { message: "Vui lòng xác nhận mật khẩu" }),
+  referralCode: z.string().optional(),
   terms: z.boolean()
     .refine((val) => val === true, {
       message: "Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật",
@@ -68,20 +69,29 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { t } = useLanguage();
   const { user, loginMutation, registerMutation } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isVerified, setIsVerified] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>("");
   const { toast } = useToast();
   
-  // Check URL params to set default tab
+  // Check URL params to set default tab and referral code
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab === 'register') {
+    const refCode = params.get('ref');
+    
+    // If on /register route or has ?ref= parameter, switch to register tab
+    if (location === '/register' || refCode || tab === 'register') {
       setActiveTab('register');
     }
-  }, []);
+    
+    // Set referral code if present
+    if (refCode) {
+      setReferralCode(refCode);
+    }
+  }, [location]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -126,9 +136,17 @@ export default function AuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
+      referralCode: "",
       terms: false,
     },
   });
+
+  // Update referral code field when referralCode state changes
+  useEffect(() => {
+    if (referralCode) {
+      registerForm.setValue('referralCode', referralCode);
+    }
+  }, [referralCode, registerForm]);
 
   const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate({
@@ -153,6 +171,7 @@ export default function AuthPage() {
       email: data.email,
       password: data.password,
       fullName: data.fullName,
+      referralCode: data.referralCode,
     });
   };
 
@@ -416,6 +435,25 @@ export default function AuthPage() {
                               <FormLabel className="text-slate-200">{t("auth.register.confirmPassword")}</FormLabel>
                               <FormControl>
                                 <Input type="password" className="bg-slate-700/50 border-slate-600" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={registerForm.control}
+                          name="referralCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-slate-200">Mã giới thiệu (không bắt buộc)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="text" 
+                                  className="bg-slate-700/50 border-slate-600" 
+                                  placeholder="Nhập mã giới thiệu nếu có..." 
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
