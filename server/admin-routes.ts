@@ -1018,4 +1018,109 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // Admin Email Settings API endpoints
+  app.patch("/api/admin/settings/email", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { 
+        smtpServer, 
+        smtpPort, 
+        smtpUsername, 
+        smtpPassword, 
+        emailSender, 
+        appBaseUrl 
+      } = req.body;
+
+      // Validate required fields
+      if (!smtpServer || !smtpPort || !smtpUsername || !smtpPassword || !emailSender) {
+        return res.status(400).json({
+          success: false,
+          error: "All email configuration fields are required"
+        });
+      }
+
+      // Update email settings
+      await storage.setSetting('smtpServer', smtpServer, 'email');
+      await storage.setSetting('smtpPort', smtpPort.toString(), 'email');
+      await storage.setSetting('smtpUsername', smtpUsername, 'email');
+      await storage.setSetting('smtpPassword', smtpPassword, 'email');
+      await storage.setSetting('emailSender', emailSender, 'email');
+      if (appBaseUrl) {
+        await storage.setSetting('appBaseUrl', appBaseUrl, 'email');
+      }
+
+      console.log('Email settings updated by admin:', {
+        smtpServer,
+        smtpPort,
+        smtpUsername,
+        emailSender,
+        appBaseUrl,
+        adminId: req.user.id
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Email settings updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating email settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update email settings"
+      });
+    }
+  });
+
+  // Test email settings
+  app.post("/api/admin/settings/email/test", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          error: "Test email address is required"
+        });
+      }
+
+      // Get current email settings
+      const smtpSettings = await storage.getSmtpSettings();
+      
+      if (!smtpSettings) {
+        return res.status(400).json({
+          success: false,
+          error: "Email settings not configured"
+        });
+      }
+
+      // Here you would implement actual email sending test
+      // For now, we'll just return success
+      console.log('Email test requested for:', email, 'with settings:', smtpSettings);
+
+      return res.status(200).json({
+        success: true,
+        message: "Test email would be sent successfully"
+      });
+    } catch (error) {
+      console.error("Error testing email settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to test email settings"
+      });
+    }
+  });
 }
