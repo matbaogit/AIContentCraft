@@ -1020,6 +1020,39 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // Admin Email Settings API endpoints
+  // Get email settings
+  app.get("/api/admin/settings/email", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const emailSettings = await storage.getSettingsByCategory('email');
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          smtpServer: emailSettings.smtpServer || '',
+          smtpPort: emailSettings.smtpPort || '587',
+          smtpUsername: emailSettings.smtpUsername || '',
+          smtpPassword: emailSettings.smtpPassword || '',
+          emailSender: emailSettings.emailSender || '',
+          appBaseUrl: emailSettings.appBaseUrl || ''
+        }
+      });
+    } catch (error) {
+      console.error("Error getting email settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get email settings"
+      });
+    }
+  });
+
+  // Update email settings  
   app.patch("/api/admin/settings/email", async (req: Request, res: Response) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ 

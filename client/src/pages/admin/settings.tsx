@@ -507,7 +507,20 @@ export default function AdminSettings() {
     },
   });
 
+  // Fetch email settings separately
+  const { data: emailSettingsResponse, isLoading: isLoadingEmailSettings } = useQuery<{ success: boolean, data: EmailSettingsValues }>({
+    queryKey: ["/api/admin/settings/email"],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/settings/email');
+      if (!response.ok) {
+        throw new Error(`Error fetching email settings: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+  });
+
   const settings = settingsResponse?.data;
+  const emailSettings = emailSettingsResponse?.data;
 
   // Forms for different setting sections
   const generalForm = useForm<GeneralSettingsValues>({
@@ -541,12 +554,12 @@ export default function AdminSettings() {
   const emailForm = useForm<EmailSettingsValues>({
     resolver: zodResolver(emailSettingsSchema),
     defaultValues: {
-      smtpServer: settings?.smtpServer || "",
-      smtpPort: settings?.smtpPort || 587,
-      smtpUsername: settings?.smtpUsername || "",
-      smtpPassword: settings?.smtpPassword || "",
-      emailSender: settings?.emailSender || "",
-      appBaseUrl: settings?.appBaseUrl || "http://localhost:5000",
+      smtpServer: emailSettings?.smtpServer || "",
+      smtpPort: emailSettings?.smtpPort || 587,
+      smtpUsername: emailSettings?.smtpUsername || "",
+      smtpPassword: emailSettings?.smtpPassword || "",
+      emailSender: emailSettings?.emailSender || "",
+      appBaseUrl: emailSettings?.appBaseUrl || "http://localhost:5000",
     },
   });
 
@@ -630,14 +643,17 @@ export default function AdminSettings() {
         creditCostPerImage: settings.creditCostPerImage,
       });
       
-      emailForm.reset({
-        smtpServer: settings.smtpServer,
-        smtpPort: settings.smtpPort,
-        smtpUsername: settings.smtpUsername,
-        smtpPassword: settings.smtpPassword,
-        emailSender: settings.emailSender,
-        appBaseUrl: settings.appBaseUrl,
-      });
+      // Email settings are handled separately
+      if (emailSettings) {
+        emailForm.reset({
+          smtpServer: emailSettings.smtpServer || "",
+          smtpPort: emailSettings.smtpPort || 587,
+          smtpUsername: emailSettings.smtpUsername || "",
+          smtpPassword: emailSettings.smtpPassword || "",
+          emailSender: emailSettings.emailSender || "",
+          appBaseUrl: emailSettings.appBaseUrl || "",
+        });
+      }
       
       apiForm.reset({
         openaiApiKey: settings.openaiApiKey,
@@ -673,6 +689,20 @@ export default function AdminSettings() {
       });
     }
   }, [settings]);
+
+  // Update email form when email settings are loaded
+  useEffect(() => {
+    if (emailSettings) {
+      emailForm.reset({
+        smtpServer: emailSettings.smtpServer || "",
+        smtpPort: emailSettings.smtpPort || 587,
+        smtpUsername: emailSettings.smtpUsername || "",
+        smtpPassword: emailSettings.smtpPassword || "",
+        emailSender: emailSettings.emailSender || "",
+        appBaseUrl: emailSettings.appBaseUrl || "",
+      });
+    }
+  }, [emailSettings, emailForm]);
 
   // Update general settings mutation
   const updateGeneralSettingsMutation = useMutation({
@@ -729,7 +759,7 @@ export default function AdminSettings() {
         title: "Thành công",
         description: "Cài đặt email đã được cập nhật",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings/email"] });
     },
     onError: (error: Error) => {
       toast({

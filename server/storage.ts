@@ -707,9 +707,10 @@ class DatabaseStorage implements IStorage {
     smtpUsername: string;
     smtpPassword: string;
     emailSender: string;
+    appBaseUrl?: string;
   } | null> {
     try {
-      const smtpSettings = await this.getSettingsByCategory('smtp');
+      const smtpSettings = await this.getSettingsByCategory('email');
       
       if (!smtpSettings.smtpServer || !smtpSettings.smtpUsername || !smtpSettings.smtpPassword) {
         return null;
@@ -720,7 +721,8 @@ class DatabaseStorage implements IStorage {
         smtpPort: parseInt(smtpSettings.smtpPort || '587'),
         smtpUsername: smtpSettings.smtpUsername,
         smtpPassword: smtpSettings.smtpPassword,
-        emailSender: smtpSettings.emailSender || `SEO AI Writer <${smtpSettings.smtpUsername}>`
+        emailSender: smtpSettings.emailSender || `SEO AI Writer <${smtpSettings.smtpUsername}>`,
+        appBaseUrl: smtpSettings.appBaseUrl
       };
     } catch (error) {
       console.error('Error retrieving SMTP settings:', error);
