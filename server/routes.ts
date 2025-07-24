@@ -5774,9 +5774,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update settings in the database
-      await storage.updateSetting('referrer_credit_reward', referrer_credit_reward.toString());
-      await storage.updateSetting('referred_credit_reward', referred_credit_reward.toString());
-      await storage.updateSetting('referral_system_enabled', referral_system_enabled.toString());
+      await storage.setSetting('referrer_credit_reward', referrer_credit_reward.toString(), 'referral');
+      await storage.setSetting('referred_credit_reward', referred_credit_reward.toString(), 'referral');
+      await storage.setSetting('referral_system_enabled', referral_system_enabled.toString(), 'referral');
 
       console.log('Referral settings updated by admin:', {
         referrer_credit_reward,
