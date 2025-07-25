@@ -1207,4 +1207,152 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // Get all users endpoint  
+  app.get("/api/admin/users", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      return res.status(200).json({
+        success: true,
+        data: { users }
+      });
+    } catch (error) {
+      console.error("Error getting users:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get users"
+      });
+    }
+  });
+
+  // Update user endpoint
+  app.patch("/api/admin/users/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const userId = parseInt(req.params.id);
+      const { username, email, fullName, role, credits } = req.body;
+
+      const updatedUser = await storage.updateUser(userId, {
+        username,
+        email, 
+        fullName,
+        role,
+        credits: credits ? Number(credits) : undefined
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update user"
+      });
+    }
+  });
+
+  // Delete user endpoint
+  app.delete("/api/admin/users/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid user ID"
+        });
+      }
+
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      // Don't allow deleting admin users
+      if (user.role === 'admin') {
+        return res.status(400).json({
+          success: false,
+          error: "Cannot delete admin users"
+        });
+      }
+
+      // Delete the user
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(400).json({
+          success: false,
+          error: "Failed to delete user"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "User deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  });
+
+  // Get admin stats endpoint
+  app.get("/api/admin/stats", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const stats = await storage.getAdminStats();
+      return res.status(200).json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.error("Error getting admin stats:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get admin stats"
+      });
+    }
+  });
 }
