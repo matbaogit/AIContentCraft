@@ -1153,9 +1153,10 @@ export function registerAdminRoutes(app: Express) {
         },
       });
 
-      // Send test email
+      // Send test email (use SMTP username as sender for compatibility)
+      const senderEmail = smtpSettings.emailSender || smtpSettings.smtpUsername;
       const info = await transporter.sendMail({
-        from: smtpSettings.emailSender,
+        from: smtpSettings.smtpUsername, // Use SMTP username to avoid SendAsDenied errors
         to: email,
         subject: 'Test Email từ SEO AI Writer',
         html: `
@@ -1163,7 +1164,7 @@ export function registerAdminRoutes(app: Express) {
           <p>Cài đặt SMTP của bạn đã được cấu hình đúng.</p>
           <p><strong>Máy chủ SMTP:</strong> ${smtpSettings.smtpServer}</p>
           <p><strong>Cổng:</strong> ${smtpSettings.smtpPort}</p>
-          <p><strong>Người gửi:</strong> ${smtpSettings.emailSender}</p>
+          <p><strong>Người gửi:</strong> ${smtpSettings.smtpUsername}</p>
           <p>Thời gian gửi: ${new Date().toLocaleString('vi-VN')}</p>
         `,
       });
@@ -1193,6 +1194,8 @@ export function registerAdminRoutes(app: Express) {
         errorMessage = "Xác thực SMTP thất bại. Kiểm tra lại username và password.";
       } else if (error.code === 'ESOCKET') {
         errorMessage = "Lỗi kết nối socket. Kiểm tra lại cấu hình SMTP.";
+      } else if (error.message && error.message.includes('SendAsDenied')) {
+        errorMessage = "Lỗi Microsoft SMTP: Không được phép gửi email với địa chỉ khác tài khoản SMTP. Hệ thống đã tự động sử dụng địa chỉ SMTP làm sender.";
       } else if (error.message) {
         errorMessage = error.message;
       }
