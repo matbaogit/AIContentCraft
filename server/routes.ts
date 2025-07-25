@@ -5829,5 +5829,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public Footer API endpoint
+  app.get('/api/public/footer', async (req, res) => {
+    try {
+      const sections = await db.query.footerSections.findMany({
+        where: (footerSections) => eq(footerSections.isActive, true),
+        orderBy: (footerSections, { asc }) => [asc(footerSections.order)],
+        with: {
+          links: {
+            where: (footerLinks) => eq(footerLinks.isActive, true),
+            orderBy: (footerLinks, { asc }) => [asc(footerLinks.order)]
+          }
+        }
+      });
+
+      const socialLinks = await db.query.footerSocialLinks.findMany({
+        where: (footerSocialLinks) => eq(footerSocialLinks.isActive, true),
+        orderBy: (footerSocialLinks, { asc }) => [asc(footerSocialLinks.order)]
+      });
+
+      const settings = await db.query.footerSettings.findFirst();
+
+      res.json({ 
+        success: true, 
+        data: { 
+          sections, 
+          socialLinks, 
+          settings 
+        } 
+      });
+    } catch (error) {
+      console.error('Error fetching footer data:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch footer data' });
+    }
+  });
+
   return httpServer;
 }

@@ -70,6 +70,7 @@ import DataDeletion from "@/pages/data-deletion";
 import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
 import PublicPagesAdmin from "@/pages/admin/public-pages";
+import FooterManagement from "@/pages/admin/footer-management";
 import PublicPage from "@/pages/public/[slug]";
 
 // Demo components
@@ -149,6 +150,7 @@ function Router() {
       <ProtectedRoute path="/admin/credit-usage-history" component={CreditUsageHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/public-pages" component={PublicPagesAdmin} adminOnly={true} />
+      <ProtectedRoute path="/admin/footer-management" component={FooterManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />
