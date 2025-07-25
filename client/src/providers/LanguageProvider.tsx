@@ -203,7 +203,20 @@ const translations: TranslationsType = {
       pricing: "giá cả",
       faq: "câu hỏi",
       contact: "liên hệ"
-    }
+    },
+    powerful: "Tính năng mạnh mẽ",
+    Features: "Tính năng",
+    title: "Tiêu đề",
+    description: "Mô tả",
+    credit: "Tín dụng",
+    Plans: "Gói dịch vụ",
+    badge: "Nhãn",
+    question: "Câu hỏi",
+    answer: "Câu trả lời",
+    subtitle: "Phụ đề",
+    benefit1: "Lợi ích 1",
+    benefit2: "Lợi ích 2", 
+    benefit3: "Lợi ích 3"
   },
   en: {
     common: {
@@ -387,7 +400,20 @@ const translations: TranslationsType = {
       pricing: "pricing",
       faq: "faq",
       contact: "contact"
-    }
+    },
+    powerful: "Powerful Features",
+    Features: "Features",
+    title: "Title",
+    description: "Description", 
+    credit: "Credit",
+    Plans: "Plans",
+    badge: "Badge",
+    question: "Question",
+    answer: "Answer",
+    subtitle: "Subtitle",
+    benefit1: "Benefit 1",
+    benefit2: "Benefit 2",
+    benefit3: "Benefit 3"
   }
 };
 
