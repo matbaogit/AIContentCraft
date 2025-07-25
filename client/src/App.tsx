@@ -69,9 +69,6 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
 import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
-import PublicPagesAdmin from "@/pages/admin/public-pages";
-import FooterManagement from "@/pages/admin/footer-management";
-import PublicPage from "@/pages/public/[slug]";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -149,8 +146,6 @@ function Router() {
       <ProtectedRoute path="/admin/sidebar-menu" component={SidebarMenuManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/credit-usage-history" component={CreditUsageHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
-      <ProtectedRoute path="/admin/public-pages" component={PublicPagesAdmin} adminOnly={true} />
-      <ProtectedRoute path="/admin/footer-management" component={FooterManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />
@@ -163,15 +158,9 @@ function Router() {
       {/* Demo routes */}
       <Route path="/demo/facebook-connect" component={FacebookConnect} />
       
-      {/* Static compliance pages (legacy) */}
-      <Route path="/privacy-policy-static" component={PrivacyPolicy} />
-      <Route path="/data-deletion-static" component={DataDeletion} />
-      
-      {/* Dynamic public pages */}
-      <Route path="/privacy-policy" component={PublicPage} />
-      <Route path="/data-deletion-instructions" component={PublicPage} />
-      <Route path="/terms-of-service" component={PublicPage} />
-      <Route path="/:slug" component={PublicPage} />
+      {/* Public compliance pages */}
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/data-deletion" component={DataDeletion} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

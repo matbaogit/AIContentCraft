@@ -472,23 +472,6 @@ export const sidebarMenuItems = pgTable('sidebar_menu_items', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Public Pages table
-export const publicPages = pgTable('public_pages', {
-  id: serial('id').primaryKey(),
-  slug: varchar('slug', { length: 100 }).notNull().unique(), // URL slug
-  title: varchar('title', { length: 200 }).notNull(), // page title
-  titleEn: varchar('title_en', { length: 200 }), // English title
-  content: text('content').notNull(), // page content in Vietnamese
-  contentEn: text('content_en'), // page content in English
-  metaDescription: varchar('meta_description', { length: 300 }), // SEO meta description
-  metaDescriptionEn: varchar('meta_description_en', { length: 300 }), // English meta description
-  isPublished: boolean('is_published').notNull().default(true),
-  sortOrder: integer('sort_order').notNull().default(0),
-  lastEditedBy: integer('last_edited_by').references(() => users.id), // admin who last edited
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
 // Workspace Relations
 export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
   owner: one(users, { fields: [workspaces.ownerId], references: [users.id] }),
@@ -775,21 +758,9 @@ export const insertPublishingLogsSchema = createInsertSchema(publishingLogs, {
 export const insertSidebarMenuItemSchema = createInsertSchema(sidebarMenuItems);
 export const selectSidebarMenuItemSchema = createSelectSchema(sidebarMenuItems);
 
-// Public Pages Schemas
-export const insertPublicPageSchema = createInsertSchema(publicPages, {
-  slug: (schema) => schema.min(1, "URL slug is required").max(100, "URL slug too long"),
-  title: (schema) => schema.min(1, "Title is required").max(200, "Title too long"),
-  content: (schema) => schema.min(1, "Content is required"),
-});
-export const selectPublicPageSchema = createSelectSchema(publicPages);
-
 // Sidebar Menu Items Types
 export type SidebarMenuItem = z.infer<typeof selectSidebarMenuItemSchema>;
 export type InsertSidebarMenuItem = z.infer<typeof insertSidebarMenuItemSchema>;
-
-// Public Pages Types
-export type PublicPage = z.infer<typeof selectPublicPageSchema>;
-export type InsertPublicPage = z.infer<typeof insertPublicPageSchema>;
 
 // Social Media Types
 export type SocialConnection = z.infer<typeof selectSocialConnectionSchema>;
@@ -802,88 +773,5 @@ export type PostingAnalytics = z.infer<typeof selectPostingAnalyticsSchema>;
 export type InsertPostingAnalytics = z.infer<typeof insertPostingAnalyticsSchema>;
 export type PublishingLog = z.infer<typeof selectPublishingLogsSchema>;
 export type InsertPublishingLog = z.infer<typeof insertPublishingLogsSchema>;
-
-// Footer sections table
-export const footerSections = pgTable('footer_sections', {
-  id: serial('id').primaryKey(),
-  sectionKey: text('section_key').notNull().unique(), // 'product', 'company', 'support', 'social'
-  title: text('title').notNull(),
-  isActive: boolean('is_active').notNull().default(true),
-  order: integer('order').notNull().default(0),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Footer links table
-export const footerLinks = pgTable('footer_links', {
-  id: serial('id').primaryKey(),
-  sectionId: integer('section_id').references(() => footerSections.id).notNull(),
-  label: text('label').notNull(),
-  href: text('href').notNull(),
-  isActive: boolean('is_active').notNull().default(true),
-  order: integer('order').notNull().default(0),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Footer social links table
-export const footerSocialLinks = pgTable('footer_social_links', {
-  id: serial('id').primaryKey(),
-  platform: text('platform').notNull(), // 'facebook', 'twitter', 'instagram', 'linkedin'
-  url: text('url').notNull(),
-  isActive: boolean('is_active').notNull().default(true),
-  order: integer('order').notNull().default(0),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Footer settings table
-export const footerSettings = pgTable('footer_settings', {
-  id: serial('id').primaryKey(),
-  description: text('description'),
-  copyrightText: text('copyright_text'),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
-
-// Footer Relations
-export const footerSectionsRelations = relations(footerSections, ({ many }) => ({
-  links: many(footerLinks),
-}));
-
-export const footerLinksRelations = relations(footerLinks, ({ one }) => ({
-  section: one(footerSections, { fields: [footerLinks.sectionId], references: [footerSections.id] }),
-}));
-
-// Footer Schemas
-export const insertFooterSectionSchema = createInsertSchema(footerSections, {
-  title: (schema) => schema.min(1, "Title is required").max(100, "Title too long"),
-  sectionKey: (schema) => schema.min(1, "Section key is required").max(50, "Section key too long"),
-});
-export const selectFooterSectionSchema = createSelectSchema(footerSections);
-
-export const insertFooterLinkSchema = createInsertSchema(footerLinks, {
-  label: (schema) => schema.min(1, "Label is required").max(100, "Label too long"),
-  href: (schema) => schema.min(1, "URL is required").max(500, "URL too long"),
-});
-export const selectFooterLinkSchema = createSelectSchema(footerLinks);
-
-export const insertFooterSocialLinkSchema = createInsertSchema(footerSocialLinks, {
-  platform: (schema) => schema.min(1, "Platform is required").max(50, "Platform name too long"),
-  url: (schema) => schema.min(1, "URL is required").max(500, "URL too long"),
-});
-export const selectFooterSocialLinkSchema = createSelectSchema(footerSocialLinks);
-
-export const insertFooterSettingSchema = createInsertSchema(footerSettings);
-export const selectFooterSettingSchema = createSelectSchema(footerSettings);
-
-// Footer Types
-export type FooterSection = z.infer<typeof selectFooterSectionSchema>;
-export type InsertFooterSection = z.infer<typeof insertFooterSectionSchema>;
-export type FooterLink = z.infer<typeof selectFooterLinkSchema>;
-export type InsertFooterLink = z.infer<typeof insertFooterLinkSchema>;
-export type FooterSocialLink = z.infer<typeof selectFooterSocialLinkSchema>;
-export type InsertFooterSocialLink = z.infer<typeof insertFooterSocialLinkSchema>;
-export type FooterSetting = z.infer<typeof selectFooterSettingSchema>;
-export type InsertFooterSetting = z.infer<typeof insertFooterSettingSchema>;
 
 
