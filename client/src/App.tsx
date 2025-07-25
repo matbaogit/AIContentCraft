@@ -61,6 +61,7 @@ import AdminFeedback from "@/pages/admin/feedback";
 import AdminTranslations from "@/pages/admin/translations";
 import SidebarMenuManagement from "@/pages/admin/sidebar-menu";
 import CreditUsageHistory from "@/pages/admin/credit-usage-history";
+import LegalPagesManagement from "@/pages/admin/legal-pages";
 import CreditHistory from "@/pages/dashboard/credit-history";
 import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
 import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
@@ -149,6 +150,7 @@ function Router() {
       <ProtectedRoute path="/admin/translations" component={AdminTranslations} adminOnly={true} />
       <ProtectedRoute path="/admin/sidebar-menu" component={SidebarMenuManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/credit-usage-history" component={CreditUsageHistory} adminOnly={true} />
+      <ProtectedRoute path="/admin/legal-pages" component={LegalPagesManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />

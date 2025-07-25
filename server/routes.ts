@@ -84,6 +84,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
   registerAdminRoutes(app);
 
+  // ========== Legal Pages API ==========
+  // Get all legal pages
+  app.get('/api/admin/legal-pages', isAuthenticated, async (req, res) => {
+    try {
+      // Check admin permission
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          error: 'Admin access required'
+        });
+      }
+
+      const pages = await db.select().from(schema.legalPages);
+      
+      res.json({
+        success: true,
+        data: pages
+      });
+    } catch (error) {
+      console.error('Error fetching legal pages:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch legal pages'
+      });
+    }
+  });
+
+  // Update legal page
+  app.put('/api/admin/legal-pages/:id', isAuthenticated, async (req, res) => {
+    try {
+      // Check admin permission
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          error: 'Admin access required'
+        });
+      }
+
+      const pageId = req.params.id;
+      const { title_vi, title_en, content_vi, content_en } = req.body;
+
+      // Validate input
+      if (!title_vi || !title_en || !content_vi || !content_en) {
+        return res.status(400).json({
+          success: false,
+          error: 'All fields are required'
+        });
+      }
+
+      // Update the page
+      const [updatedPage] = await db
+        .update(schema.legalPages)
+        .set({
+          title_vi,
+          title_en,
+          content_vi,
+          content_en,
+          lastUpdated: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.legalPages.id, pageId))
+        .returning();
+
+      if (!updatedPage) {
+        return res.status(404).json({
+          success: false,
+          error: 'Legal page not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: updatedPage
+      });
+    } catch (error) {
+      console.error('Error updating legal page:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update legal page'
+      });
+    }
+  });
+
   // Data deletion request endpoint
   app.post('/api/data-deletion-request', async (req, res) => {
     try {

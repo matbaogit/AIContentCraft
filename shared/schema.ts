@@ -774,4 +774,32 @@ export type InsertPostingAnalytics = z.infer<typeof insertPostingAnalyticsSchema
 export type PublishingLog = z.infer<typeof selectPublishingLogsSchema>;
 export type InsertPublishingLog = z.infer<typeof insertPublishingLogsSchema>;
 
+// Legal Pages table
+export const legalPages = pgTable('legal_pages', {
+  id: text('id').primaryKey(), // 'privacy-policy', 'data-deletion', 'terms-of-service'
+  title_vi: text('title_vi').notNull(),
+  title_en: text('title_en').notNull(),
+  content_vi: text('content_vi').notNull(),
+  content_en: text('content_en').notNull(),
+  path: text('path').notNull().unique(),
+  description: text('description'),
+  lastUpdated: timestamp('last_updated').defaultNow().notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Legal Pages Schemas
+export const selectLegalPageSchema = createSelectSchema(legalPages);
+export const insertLegalPageSchema = createInsertSchema(legalPages, {
+  title_vi: (schema) => schema.min(1, "Vietnamese title is required"),
+  title_en: (schema) => schema.min(1, "English title is required"),
+  content_vi: (schema) => schema.min(10, "Vietnamese content must be at least 10 characters"),
+  content_en: (schema) => schema.min(10, "English content must be at least 10 characters"),
+  path: (schema) => schema.min(1, "Path is required"),
+});
+
+// Legal Pages Types
+export type LegalPage = z.infer<typeof selectLegalPageSchema>;
+export type InsertLegalPage = z.infer<typeof insertLegalPageSchema>;
+
 
