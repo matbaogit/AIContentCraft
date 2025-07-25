@@ -177,6 +177,33 @@ const translations: TranslationsType = {
         },
         powerfulFeatures: "Tính năng mạnh mẽ"
       },
+      faq: {
+        badge: "Câu hỏi thường gặp",
+        title: "Câu hỏi thường gặp", 
+        subtitle: "Tìm câu trả lời cho những thắc mắc phổ biến",
+        questions: {
+          0: {
+            question: "Làm thế nào để bắt đầu tạo nội dung với AI?",
+            answer: "Đơn giản chỉ cần đăng ký tài khoản, chọn loại nội dung muốn tạo, nhập từ khóa và để AI làm phần còn lại. Hệ thống sẽ tự động tạo nội dung SEO tối ưu trong vài phút."
+          },
+          1: {
+            question: "Tôi có thể tạo bao nhiêu bài viết mỗi tháng?",
+            answer: "Tùy thuộc vào gói dịch vụ bạn chọn. Gói miễn phí cho phép tạo 5 bài viết/tháng, gói cơ bản 50 bài/tháng, và gói cao cấp không giới hạn."
+          },
+          2: {
+            question: "Nội dung được tạo có tự động tối ưu SEO không?",
+            answer: "Có, tất cả nội dung được tạo đều được tối ưu SEO tự động với từ khóa, thẻ meta, cấu trúc heading và liên kết nội bộ phù hợp."
+          },
+          3: {
+            question: "Tôi có thể chỉnh sửa nội dung sau khi tạo không?",
+            answer: "Hoàn toàn có thể. Bạn có thể chỉnh sửa, bổ sung hoặc tùy chỉnh nội dung theo ý muốn trước khi xuất bản."
+          },
+          4: {
+            question: "Có hỗ trợ đăng bài tự động lên website không?",
+            answer: "Có, chúng tôi hỗ trợ tích hợp với WordPress, Facebook, Instagram và nhiều nền tảng khác để đăng bài tự động theo lịch."
+          }
+        }
+      },
       pricing: {
         title: "Bảng giá linh hoạt",
         subtitle: "Chọn gói phù hợp với nhu cầu của bạn",
@@ -202,10 +229,6 @@ const translations: TranslationsType = {
           backup: "sao lưu tự động",
           analytics: "phân tích nâng cao"
         }
-      },
-      faq: {
-        title: "Câu hỏi thường gặp",
-        subtitle: "Tìm câu trả lời cho những thắc mắc phổ biến"
       },
       feedback: {
         title: "Góp ý & Phản hồi",
@@ -394,6 +417,33 @@ const translations: TranslationsType = {
         },
         powerfulFeatures: "Powerful Features"
       },
+      faq: {
+        badge: "FAQ",
+        title: "Frequently Asked Questions",
+        subtitle: "Find answers to common questions",
+        questions: {
+          0: {
+            question: "How do I start creating content with AI?",
+            answer: "Simply sign up for an account, choose the type of content you want to create, enter keywords and let AI do the rest. The system will automatically generate SEO-optimized content in minutes."
+          },
+          1: {
+            question: "How many articles can I create per month?",
+            answer: "It depends on the service package you choose. Free plan allows 5 articles/month, basic plan 50 articles/month, and premium plan unlimited."
+          },
+          2: {
+            question: "Is the generated content automatically SEO optimized?",
+            answer: "Yes, all generated content is automatically SEO optimized with appropriate keywords, meta tags, heading structure and internal links."
+          },
+          3: {
+            question: "Can I edit content after creation?",
+            answer: "Absolutely. You can edit, add or customize content as desired before publishing."
+          },
+          4: {
+            question: "Do you support automatic posting to websites?",
+            answer: "Yes, we support integration with WordPress, Facebook, Instagram and many other platforms for automatic scheduled posting."
+          }
+        }
+      },
       pricing: {
         title: "Flexible Pricing",
         subtitle: "Choose a plan that fits your needs",
@@ -419,10 +469,6 @@ const translations: TranslationsType = {
           backup: "auto backup",
           analytics: "advanced analytics"
         }
-      },
-      faq: {
-        title: "Frequently Asked Questions",
-        subtitle: "Find answers to common questions"
       },
       feedback: {
         title: "Feedback & Suggestions",
