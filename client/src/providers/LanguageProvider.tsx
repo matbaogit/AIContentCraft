@@ -205,15 +205,24 @@ const translations: TranslationsType = {
         }
       },
       pricing: {
+        badge: "Bảng giá",
         title: "Bảng giá linh hoạt",
         subtitle: "Chọn gói phù hợp với nhu cầu của bạn",
+        mostPopular: "Phổ biến nhất",
+        creditPlans: "Gói tín dụng",
+        storagePlans: "Gói lưu trữ",
+        buyNow: "Mua ngay",
+        subscribe: "Đăng ký",
+        guarantee: "Đảm bảo hoàn tiền 30 ngày",
         packages: {
           basic: "Cơ bản",
           advanced: "Nâng cao", 
           professional: "Chuyên nghiệp",
           storageBasic: "Lưu trữ cơ bản",
+          storageBusiness: "Lưu trữ doanh nghiệp",
           storageAdvanced: "Lưu trữ nâng cao",
-          storagePro: "Lưu trữ chuyên nghiệp"
+          storagePro: "Lưu trữ chuyên nghiệp",
+          storageEnterprise: "Lưu trữ doanh nghiệp"
         },
         features: {
           credits: "tín dụng",
@@ -227,7 +236,10 @@ const translations: TranslationsType = {
           maxArticles: "bài viết tối đa",
           storage: "dung lượng",
           backup: "sao lưu tự động",
-          analytics: "phân tích nâng cao"
+          analytics: "phân tích nâng cao",
+          wpConnections: "kết nối WordPress",
+          socialConnect: "kết nối mạng xã hội",
+          apiAccess: "truy cập API"
         }
       },
       feedback: {
@@ -445,15 +457,24 @@ const translations: TranslationsType = {
         }
       },
       pricing: {
-        title: "Flexible Pricing",
+        badge: "Pricing",
+        title: "Flexible Pricing", 
         subtitle: "Choose a plan that fits your needs",
+        mostPopular: "Most Popular",
+        creditPlans: "Credit Plans",
+        storagePlans: "Storage Plans",
+        buyNow: "Buy Now",
+        subscribe: "Subscribe",
+        guarantee: "30-day money back guarantee",
         packages: {
           basic: "Basic",
           advanced: "Advanced",
           professional: "Professional", 
           storageBasic: "Basic Storage",
+          storageBusiness: "Business Storage", 
           storageAdvanced: "Advanced Storage",
-          storagePro: "Pro Storage"
+          storagePro: "Pro Storage",
+          storageEnterprise: "Enterprise Storage"
         },
         features: {
           credits: "credits",
@@ -467,7 +488,10 @@ const translations: TranslationsType = {
           maxArticles: "max articles",
           storage: "storage",
           backup: "auto backup",
-          analytics: "advanced analytics"
+          analytics: "advanced analytics",
+          wpConnections: "WordPress connections",
+          socialConnect: "social media connections",
+          apiAccess: "API access"
         }
       },
       feedback: {
