@@ -189,26 +189,35 @@ export async function requestPasswordReset(email: string): Promise<{
   error?: string;
 }> {
   try {
+    console.log(`[requestPasswordReset] Starting password reset request for email: ${email}`);
+    
     // Tìm người dùng bằng email
     const user = await storage.getUserByUsername(email);
     
     if (!user) {
+      console.log(`[requestPasswordReset] User not found for email: ${email}`);
       // Không tiết lộ thông tin tài khoản tồn tại hay không
       return {
         success: true
       };
     }
 
+    console.log(`[requestPasswordReset] User found: ${user.username} (ID: ${user.id})`);
+
     // Tạo token đặt lại mật khẩu
     const resetToken = generateToken();
     const now = new Date();
     const tokenExpiry = new Date(now.getTime() + 1 * 60 * 60 * 1000); // Hiệu lực 1 giờ
+
+    console.log(`[requestPasswordReset] Generated reset token, expires at: ${tokenExpiry}`);
 
     // Cập nhật token đặt lại mật khẩu
     await storage.updateUser(user.id, {
       resetPasswordToken: resetToken,
       resetPasswordTokenExpiry: tokenExpiry
     });
+
+    console.log(`[requestPasswordReset] Updated user with reset token`);
 
     // Gửi email đặt lại mật khẩu
     const resetUrl = `${appConfig.baseUrl}/reset-password?token=${resetToken}`;
@@ -217,18 +226,31 @@ export async function requestPasswordReset(email: string): Promise<{
       resetUrl
     });
 
-    await sendEmail({
+    console.log(`[requestPasswordReset] Sending password reset email to: ${user.email}`);
+    console.log(`[requestPasswordReset] Reset URL: ${resetUrl}`);
+
+    const emailResult = await sendEmail({
       to: user.email,
       subject: emailTemplate.subject,
       text: emailTemplate.text,
       html: emailTemplate.html
     });
 
+    if (!emailResult.success) {
+      console.error(`[requestPasswordReset] Failed to send email:`, emailResult.error);
+      return {
+        success: false,
+        error: emailResult.error || 'Không thể gửi email đặt lại mật khẩu'
+      };
+    }
+
+    console.log(`[requestPasswordReset] Password reset email sent successfully`);
+
     return {
       success: true
     };
   } catch (error) {
-    console.error('Error requesting password reset:', error);
+    console.error('[requestPasswordReset] Error requesting password reset:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Lỗi không xác định khi yêu cầu đặt lại mật khẩu'

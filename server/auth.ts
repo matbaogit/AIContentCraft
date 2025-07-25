@@ -68,11 +68,11 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Tên đăng nhập hoặc mật khẩu không chính xác' });
         }
         
-        // Tạm thời bỏ qua kiểm tra xác thực email
-        // if (user.role !== 'admin' && !user.isVerified) {
-        //   console.log(`User not verified: ${user.username}`);
-        //   return done(null, false, { message: 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.' });
-        // }
+        // Kiểm tra xác thực email (trừ admin)
+        if (user.role !== 'admin' && !user.isVerified) {
+          console.log(`User not verified: ${user.username}`);
+          return done(null, false, { message: 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.' });
+        }
         
         console.log(`User found: ${user.username}, checking password...`);
         
