@@ -93,7 +93,69 @@ const translations: TranslationsType = {
         subtitle: "Khám phá các công cụ AI tiên tiến để tạo nội dung chuyên nghiệp",
         description: "Bộ công cụ toàn diện giúp bạn tạo, tối ưu và quản lý nội dung hiệu quả",
         benefits: "Lợi ích",
-        viewServices: "Xem dịch vụ"
+        viewServices: "Xem dịch vụ",
+        categories: {
+          content: {
+            title: "Tạo nội dung",
+            blog: {
+              title: "Bài viết blog",
+              description: "Tạo bài viết blog chuyên nghiệp với cấu trúc tối ưu SEO"
+            },
+            social: {
+              title: "Nội dung mạng xã hội",
+              description: "Tạo nội dung hấp dẫn cho Facebook, Instagram và TikTok"
+            },
+            email: {
+              title: "Email marketing",
+              description: "Tạo email chiến dịch chuyên nghiệp với tỷ lệ mở cao"
+            }
+          },
+          analytics: {
+            title: "Tối ưu & Phân tích",
+            keywords: {
+              title: "Nghiên cứu từ khóa",
+              description: "Phân tích và đề xuất từ khóa có tiềm năng chuyển đổi cao"
+            },
+            performance: {
+              title: "Phân tích hiệu suất",
+              description: "Theo dõi hiệu suất và tối ưu nội dung dựa trên dữ liệu"
+            },
+            seo: {
+              title: "Tối ưu SEO",
+              description: "Cải thiện thứ hạng tìm kiếm với công cụ SEO tự động"
+            }
+          },
+          automation: {
+            title: "Tự động hóa",
+            scheduling: {
+              title: "Lên lịch đăng bài",
+              description: "Tự động đăng nội dung lên các nền tảng mạng xã hội"
+            },
+            integration: {
+              title: "Tích hợp API",
+              description: "Kết nối với hơn 50+ công cụ và nền tảng phổ biến"
+            },
+            workflow: {
+              title: "Quy trình làm việc",
+              description: "Tạo quy trình tự động để tối ưu hiệu quả công việc"
+            }
+          }
+        },
+        aiContent: {
+          benefit1: "Tạo nội dung chất lượng cao",
+          benefit2: "Tối ưu SEO tự động",
+          benefit3: "Hỗ trợ đa ngôn ngữ"
+        },
+        seoOptimization: {
+          benefit1: "Phân tích từ khóa thông minh",
+          benefit2: "Cấu trúc nội dung tối ưu",
+          benefit3: "Tăng thứ hạng tìm kiếm"
+        },
+        platformIntegration: {
+          benefit1: "Kết nối đa nền tảng",
+          benefit2: "Đăng bài tự động",
+          benefit3: "Quản lý tập trung"
+        }
       },
       pricing: {
         title: "Bảng giá linh hoạt",
@@ -215,7 +277,69 @@ const translations: TranslationsType = {
         subtitle: "Discover advanced AI tools for professional content creation",
         description: "Comprehensive toolkit to help you create, optimize and manage content effectively",
         benefits: "Benefits",
-        viewServices: "View Services"
+        viewServices: "View Services",
+        categories: {
+          content: {
+            title: "Content Creation",
+            blog: {
+              title: "Blog Articles",
+              description: "Create professional blog posts with SEO-optimized structure"
+            },
+            social: {
+              title: "Social Media Content",
+              description: "Generate engaging content for Facebook, Instagram and TikTok"
+            },
+            email: {
+              title: "Email Marketing",
+              description: "Create professional email campaigns with high open rates"
+            }
+          },
+          analytics: {
+            title: "Optimization & Analytics",
+            keywords: {
+              title: "Keyword Research",
+              description: "Analyze and suggest keywords with high conversion potential"
+            },
+            performance: {
+              title: "Performance Analytics",
+              description: "Track performance and optimize content based on data"
+            },
+            seo: {
+              title: "SEO Optimization",
+              description: "Improve search rankings with automated SEO tools"
+            }
+          },
+          automation: {
+            title: "Automation",
+            scheduling: {
+              title: "Post Scheduling",
+              description: "Automatically publish content to social media platforms"
+            },
+            integration: {
+              title: "API Integration",
+              description: "Connect with 50+ popular tools and platforms"
+            },
+            workflow: {
+              title: "Workflows",
+              description: "Create automated workflows to optimize work efficiency"
+            }
+          }
+        },
+        aiContent: {
+          benefit1: "Generate high-quality content",
+          benefit2: "Automatic SEO optimization",
+          benefit3: "Multi-language support"
+        },
+        seoOptimization: {
+          benefit1: "Smart keyword analysis",
+          benefit2: "Optimized content structure",
+          benefit3: "Improve search rankings"
+        },
+        platformIntegration: {
+          benefit1: "Multi-platform connectivity",
+          benefit2: "Automatic posting",
+          benefit3: "Centralized management"
+        }
       },
       pricing: {
         title: "Flexible Pricing",
