@@ -7,6 +7,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ReactQuill Dark Mode Styles */
+.dark .ql-editor {
+  color: white !important;
+  background-color: #374151 !important;
+}
+
+.dark .ql-toolbar {
+  border-color: #4b5563 !important;
+  background-color: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-stroke {
+  stroke: white !important;
+}
+
+.dark .ql-toolbar .ql-fill {
+  fill: white !important;
+}
+
+.dark .ql-toolbar button:hover {
+  background-color: #4b5563 !important;
+}
+
+.dark .ql-toolbar button.ql-active {
+  background-color: #6b7280 !important;
+}
+
+.dark .ql-container {
+  border-color: #4b5563 !important;
+}
+
+/* ReactQuill Light Mode Enhancement */
+.ql-editor {
+  min-height: 300px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ql-toolbar {
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.ql-container {
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
 /* Custom styles to override shadcn/ui button styles in social media previews */
 :root button.social-preview-button.social-preview-button,
 :root button.social-preview-button[data-variant="default"],

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AdminLayout } from "@/components/admin/Layout";
 import { FileText, Save, Eye, Globe, AlertCircle } from "lucide-react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   Form,
   FormControl,
@@ -47,6 +49,23 @@ interface LegalPage {
 export default function LegalPagesManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("privacy-policy");
+
+  // ReactQuill configuration
+  const quillModules = useMemo(() => ({
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['blockquote', 'code-block'],
+      ['link'],
+      ['clean']
+    ],
+  }), []);
+
+  const quillFormats = [
+    'header', 'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'blockquote', 'code-block', 'link'
+  ];
 
   // Fetch legal pages data
   const { data: legalPages, isLoading } = useQuery({
@@ -287,16 +306,21 @@ export default function LegalPagesManagement() {
                           <FormItem>
                             <FormLabel>Nội dung (Tiếng Việt)</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Nhập nội dung trang bằng tiếng Việt..."
-                                rows={20}
-                                className="font-mono text-sm"
-                                {...field}
-                              />
+                              <div className="bg-white dark:bg-gray-800 rounded-md border">
+                                <ReactQuill
+                                  theme="snow"
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  modules={quillModules}
+                                  formats={quillFormats}
+                                  placeholder="Nhập nội dung trang bằng tiếng Việt..."
+                                  style={{ minHeight: '300px' }}
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-gray-500">
-                              Hỗ trợ HTML và Markdown. Sử dụng các thẻ như &lt;h1&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt; để định dạng.
+                              Sử dụng thanh công cụ để định dạng văn bản với tiêu đề, in đậm, in nghiêng, danh sách, liên kết, v.v.
                             </p>
                           </FormItem>
                         )}
@@ -328,16 +352,21 @@ export default function LegalPagesManagement() {
                           <FormItem>
                             <FormLabel>Content (English)</FormLabel>
                             <FormControl>
-                              <Textarea
-                                placeholder="Enter page content in English..."
-                                rows={20}
-                                className="font-mono text-sm"
-                                {...field}
-                              />
+                              <div className="bg-white dark:bg-gray-800 rounded-md border">
+                                <ReactQuill
+                                  theme="snow"
+                                  value={field.value || ""}
+                                  onChange={field.onChange}
+                                  modules={quillModules}
+                                  formats={quillFormats}
+                                  placeholder="Enter page content in English..."
+                                  style={{ minHeight: '300px' }}
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-gray-500">
-                              Supports HTML and Markdown. Use tags like &lt;h1&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt; for formatting.
+                              Use the toolbar to format text with headers, bold, italic, lists, links, etc.
                             </p>
                           </FormItem>
                         )}
