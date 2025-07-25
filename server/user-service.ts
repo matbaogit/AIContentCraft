@@ -21,7 +21,7 @@ export async function registerUser(userData: InsertUser): Promise<{
 }> {
   try {
     // Kiểm tra xem email đã tồn tại chưa
-    const existingUser = await storage.getUserByUsername(userData.email);
+    const existingUser = await storage.getUserByUsername(userData.email || '');
     if (existingUser) {
       return { 
         success: false, 
@@ -36,7 +36,10 @@ export async function registerUser(userData: InsertUser): Promise<{
 
     // Tạo người dùng mới với token xác thực
     const user = await storage.createUser({
-      ...userData,
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      fullName: userData.fullName,
       verificationToken,
       verificationTokenExpiry: tokenExpiry,
       isVerified: false
@@ -44,7 +47,7 @@ export async function registerUser(userData: InsertUser): Promise<{
 
     // Lấy ID của gói dùng thử từ system settings
     const trialPlanIdSetting = await storage.getSetting('trial_plan_id');
-    if (trialPlanIdSetting) {
+    if (trialPlanIdSetting && typeof trialPlanIdSetting === 'string') {
       const trialPlanId = parseInt(trialPlanIdSetting);
       
       // Kiểm tra gói dùng thử tồn tại
@@ -65,7 +68,7 @@ export async function registerUser(userData: InsertUser): Promise<{
         });
         
         // Cộng credit từ gói dùng thử
-        if (trialPlan.value > 0) {
+        if (trialPlan.value && trialPlan.value > 0) {
           await storage.addUserCredits(
             user.id, 
             Number(trialPlan.value), 

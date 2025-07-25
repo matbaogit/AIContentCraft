@@ -75,7 +75,7 @@ async function loadSmtpConfigFromDatabase() {
           user: dbConfig.smtpUsername,
           pass: dbConfig.smtpPassword
         },
-        from: dbConfig.emailSender
+        from: `SEO AI Writer <${dbConfig.smtpUsername}>`
       };
       console.log('SMTP configuration loaded from database');
     } else {
@@ -110,7 +110,7 @@ export async function updateSmtpConfig(config: {
         user: config.smtpUsername,
         pass: config.smtpPassword
       },
-      from: config.emailSender
+      from: `SEO AI Writer <${config.smtpUsername}>`
     };
 
     console.log('SMTP configuration updated in memory');

@@ -73,6 +73,8 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [isVerified, setIsVerified] = useState(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState("");
   const [referralCode, setReferralCode] = useState<string>("");
   const { toast } = useToast();
   
@@ -172,6 +174,17 @@ export default function AuthPage() {
       password: data.password,
       fullName: data.fullName,
       referralCode: data.referralCode,
+    }, {
+      onSuccess: (response) => {
+        if (response.requireVerification) {
+          setRegistrationSuccess(true);
+          setRegistrationEmail(data.email);
+          toast({
+            title: "Đăng ký thành công!",
+            description: "Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư để kích hoạt tài khoản.",
+          });
+        }
+      }
     });
   };
 
@@ -307,6 +320,39 @@ export default function AuthPage() {
             
             <div className="mt-8">
               <div className="bg-slate-800/50 backdrop-blur-sm py-8 px-6 shadow-lg rounded-xl border border-slate-700/50">
+                {registrationSuccess ? (
+                  <div className="text-center space-y-4">
+                    <div className="text-green-400 text-6xl mb-4">✓</div>
+                    <h3 className="text-xl font-semibold text-white">Đăng ký thành công!</h3>
+                    <p className="text-slate-300">
+                      Chúng tôi đã gửi email xác thực đến <span className="font-medium text-white">{registrationEmail}</span>
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      Vui lòng kiểm tra hộp thư (bao gồm cả thư mục spam) và nhấp vào liên kết để kích hoạt tài khoản của bạn.
+                    </p>
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => {
+                          setRegistrationSuccess(false);
+                          setActiveTab("login");
+                        }}
+                        className="w-full bg-primary hover:bg-primary/90"
+                      >
+                        Đã xác thực - Đăng nhập
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setRegistrationSuccess(false);
+                          registerForm.reset();
+                        }}
+                        className="w-full bg-transparent text-slate-200 border-slate-700 hover:bg-slate-700/50"
+                      >
+                        Đăng ký lại
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="w-full flex mb-6 border-b border-slate-700">
                     <TabsTrigger value="login" className="flex-1 text-slate-300">{t("nav.login")}</TabsTrigger>
@@ -502,6 +548,7 @@ export default function AuthPage() {
                     </Form>
                   </TabsContent>
                 </Tabs>
+                )}
 
                 <div className="mt-6">
                   {/* Temporarily hidden social login buttons */}

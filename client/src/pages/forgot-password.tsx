@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLanguage } from "@/hooks/use-language";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -14,120 +17,144 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Mail, CheckCircle } from "lucide-react";
 import Head from "@/components/head";
+import { apiRequest } from "@/lib/queryClient";
 
-// Forgot password form schema
 const forgotPasswordSchema = z.object({
-  email: z.string().email({
-    message: "Vui lòng nhập một địa chỉ email hợp lệ",
-  }),
+  email: z.string()
+    .min(1, { message: "Email là bắt buộc" })
+    .email({ message: "Vui lòng nhập email hợp lệ" })
+    .max(100, { message: "Email không được quá 100 ký tự" }),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
-  const [location, navigate] = useLocation();
-  const [status, setStatus] = useState<string>("idle");
-  
-  // Forgot password form
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: "",
     },
   });
-  
-  const onSubmit = async (data: ForgotPasswordFormValues) => {
-    setStatus("submitting");
+
+  const onSubmit = async (values: ForgotPasswordFormValues) => {
+    setIsSubmitting(true);
     
     try {
-      const response = await fetch("/api/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-        }),
-      });
+      const response = await apiRequest("POST", "/api/forgot-password", values);
+      const data = await response.json();
       
-      // Bất kể phản hồi thế nào, ta đều hiển thị thông báo thành công
-      // Điều này giúp tránh rò rỉ thông tin về việc tài khoản có tồn tại không
-      setStatus("success");
+      if (data.success) {
+        setIsSubmitted(true);
+        toast({
+          title: "Thành công",
+          description: data.message || "Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn.",
+        });
+      } else {
+        toast({
+          title: "Lỗi",
+          description: data.error || "Có lỗi xảy ra khi gửi yêu cầu",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Forgot password error:", error);
-      // Vẫn hiển thị thành công để tránh rò rỉ thông tin
-      setStatus("success");
+      toast({
+        title: "Lỗi",
+        description: "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
+
   return (
     <>
       <Head>
-        <title>{t("auth.forgotPassword.title")} - {t("common.appName")}</title>
+        <title>Quên mật khẩu - SEO AI Writer</title>
       </Head>
       
-      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-900">
-        <div className="max-w-md w-full space-y-8 bg-slate-800/50 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 shadow-lg">
-          <div className="text-center">
-            <h2 className="mt-6 text-3xl font-extrabold text-slate-100">{t("auth.forgotPassword.title")}</h2>
-            
-            <div className="mt-8">
-              {status === "idle" && (
-                <div className="space-y-6">
-                  <div className="flex justify-center mb-4">
-                    <Mail className="h-16 w-16 text-primary" />
-                  </div>
-                  <p className="text-slate-300 mb-4">{t("auth.forgotPassword.instructions")}</p>
-                  
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-200">{t("auth.forgotPassword.email")}</FormLabel>
-                            <FormControl>
-                              <Input type="email" className="bg-slate-700/50 border-slate-600" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button
-                        type="submit"
-                        className="w-full bg-primary hover:bg-primary/90"
-                        disabled={status === "submitting"}
-                      >
-                        {status === "submitting" ? t("common.loading") : t("auth.forgotPassword.submit")}
-                      </Button>
-                    </form>
-                  </Form>
-                  
-                  <div className="text-center mt-4">
-                    <Button variant="link" className="text-primary" onClick={() => navigate("/auth")}>
-                      {t("auth.forgotPassword.backToLogin")}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {status === "success" && (
-                <div className="flex flex-col items-center">
-                  <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                  <p className="text-slate-300 mb-6">{t("auth.forgotPassword.success")}</p>
-                  <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => navigate("/auth")}>
-                    {t("auth.forgotPassword.backToLogin")}
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">
+              Quên mật khẩu
+            </CardTitle>
+            <CardDescription className="text-center">
+              {isSubmitted 
+                ? "Chúng tôi đã gửi hướng dẫn đặt lại mật khẩu đến email của bạn"
+                : "Nhập email để nhận hướng dẫn đặt lại mật khẩu"
+              }
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            {!isSubmitted ? (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="Nhập địa chỉ email của bạn"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Đang gửi..." : "Gửi hướng dẫn"}
                   </Button>
+                </form>
+              </Form>
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="text-green-600 dark:text-green-400">
+                  ✓ Email đã được gửi thành công
                 </div>
-              )}
+                <p className="text-sm text-muted-foreground">
+                  Kiểm tra hộp thư (bao gồm cả thư mục spam) và nhấp vào liên kết trong email để đặt lại mật khẩu.
+                </p>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    form.reset();
+                  }}
+                >
+                  Gửi lại email
+                </Button>
+              </div>
+            )}
+            
+            <div className="mt-6 text-center">
+              <Link href="/auth">
+                <Button variant="ghost" className="text-sm">
+                  ← Quay lại đăng nhập
+                </Button>
+              </Link>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </>
   );

@@ -188,31 +188,12 @@ export function setupAuth(app: Express) {
         }
       }
 
-      // Trả về thành công nhưng không đăng nhập tự động
-      // Người dùng cần xác thực email trước
-      // Tự động xác thực tài khoản ngay khi đăng ký thành công (tính năng tạm thời)
-      if (result.user) {
-        await storage.updateUser(result.user.id, {
-          isVerified: true,
-          verificationToken: null,
-          verificationTokenExpiry: null
-        });
-        
-        // Đăng nhập người dùng ngay sau khi đăng ký
-        req.login(result.user, (err) => {
-          if (err) return next(err);
-          return res.status(201).json({
-            success: true,
-            message: "Đăng ký thành công. Bạn đã được đăng nhập tự động.",
-            data: result.user
-          });
-        });
-      } else {
-        return res.status(201).json({
-          success: true,
-          message: "Đăng ký thành công."
-        });
-      }
+      // Trả về thành công và yêu cầu người dùng xác thực email
+      return res.status(201).json({
+        success: true,
+        message: "Đăng ký thành công! Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư và nhấp vào liên kết để kích hoạt tài khoản.",
+        requireVerification: true
+      });
     } catch (error) {
       console.error("Registration error:", error);
       next(error);
@@ -282,16 +263,16 @@ export function setupAuth(app: Express) {
   // Đặt lại mật khẩu
   app.post("/api/reset-password", async (req, res) => {
     try {
-      const { token, newPassword } = req.body;
+      const { token, password } = req.body;
       
-      if (!token || !newPassword) {
+      if (!token || !password) {
         return res.status(400).json({
           success: false,
           error: "Token và mật khẩu mới là bắt buộc"
         });
       }
       
-      const result = await resetPassword(token, newPassword);
+      const result = await resetPassword(token, password);
       
       if (!result.success) {
         return res.status(400).json({
