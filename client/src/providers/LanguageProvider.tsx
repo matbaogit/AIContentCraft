@@ -87,7 +87,60 @@ const translations: TranslationsType = {
             description: "Theo dõi hiệu suất và SEO"
           }
         }
+      },
+      features: {
+        title: "Tính năng mạnh mẽ",
+        subtitle: "Khám phá các công cụ AI tiên tiến để tạo nội dung chuyên nghiệp",
+        description: "Bộ công cụ toàn diện giúp bạn tạo, tối ưu và quản lý nội dung hiệu quả",
+        benefits: "Lợi ích",
+        viewServices: "Xem dịch vụ"
+      },
+      pricing: {
+        title: "Bảng giá linh hoạt",
+        subtitle: "Chọn gói phù hợp với nhu cầu của bạn",
+        packages: {
+          basic: "Cơ bản",
+          advanced: "Nâng cao", 
+          professional: "Chuyên nghiệp",
+          storageBasic: "Lưu trữ cơ bản",
+          storageAdvanced: "Lưu trữ nâng cao",
+          storagePro: "Lưu trữ chuyên nghiệp"
+        },
+        features: {
+          credits: "tín dụng",
+          wordsPerCredit: "từ/tín dụng",
+          seoOptimization: "Tối ưu SEO",
+          support: "Hỗ trợ",
+          supportEmail: "email",
+          supportPriority: "ưu tiên",
+          support247: "24/7",
+          saving: "tiết kiệm",
+          maxArticles: "bài viết tối đa",
+          storage: "dung lượng",
+          backup: "sao lưu tự động",
+          analytics: "phân tích nâng cao"
+        }
+      },
+      faq: {
+        title: "Câu hỏi thường gặp",
+        subtitle: "Tìm câu trả lời cho những thắc mắc phổ biến"
+      },
+      feedback: {
+        title: "Góp ý & Phản hồi",
+        subtitle: "Ý kiến của bạn rất quan trọng với chúng tôi"
+      },
+      stats: {
+        articles: "Bài viết đã tạo",
+        users: "Người dùng hài lòng", 
+        keywords: "Từ khóa được tối ưu",
+        languages: "Ngôn ngữ hỗ trợ"
       }
+    },
+    nav: {
+      features: "tính năng",
+      pricing: "giá cả",
+      faq: "câu hỏi",
+      contact: "liên hệ"
     }
   },
   en: {
@@ -156,7 +209,60 @@ const translations: TranslationsType = {
             description: "Track performance and SEO"
           }
         }
+      },
+      features: {
+        title: "Powerful Features",
+        subtitle: "Discover advanced AI tools for professional content creation",
+        description: "Comprehensive toolkit to help you create, optimize and manage content effectively",
+        benefits: "Benefits",
+        viewServices: "View Services"
+      },
+      pricing: {
+        title: "Flexible Pricing",
+        subtitle: "Choose a plan that fits your needs",
+        packages: {
+          basic: "Basic",
+          advanced: "Advanced",
+          professional: "Professional", 
+          storageBasic: "Basic Storage",
+          storageAdvanced: "Advanced Storage",
+          storagePro: "Pro Storage"
+        },
+        features: {
+          credits: "credits",
+          wordsPerCredit: "words/credit",
+          seoOptimization: "SEO Optimization",
+          support: "Support",
+          supportEmail: "email",
+          supportPriority: "priority",
+          support247: "24/7",
+          saving: "savings",
+          maxArticles: "max articles",
+          storage: "storage",
+          backup: "auto backup",
+          analytics: "advanced analytics"
+        }
+      },
+      faq: {
+        title: "Frequently Asked Questions",
+        subtitle: "Find answers to common questions"
+      },
+      feedback: {
+        title: "Feedback & Suggestions",
+        subtitle: "Your opinion matters to us"
+      },
+      stats: {
+        articles: "Articles Created",
+        users: "Happy Users",
+        keywords: "Keywords Optimized", 
+        languages: "Languages Supported"
       }
+    },
+    nav: {
+      features: "features",
+      pricing: "pricing",
+      faq: "faq",
+      contact: "contact"
     }
   }
 };
