@@ -56,26 +56,34 @@ interface SafeReactQuillProps {
 }
 
 const SafeReactQuill = ({ value, onChange, placeholder, modules, formats }: SafeReactQuillProps) => {
+  const [localValue, setLocalValue] = useState(value || "");
+  
+  // Update local value when prop value changes
+  useEffect(() => {
+    setLocalValue(value || "");
+  }, [value]);
+
   const handleChange = useCallback((content: string) => {
-    try {
-      onChange(content);
-    } catch (error) {
-      console.warn("ReactQuill warning suppressed:", error);
+    if (content !== localValue) {
+      setLocalValue(content);
+      try {
+        onChange(content);
+      } catch (error) {
+        console.warn("ReactQuill warning suppressed:", error);
+      }
     }
-  }, [onChange]);
+  }, [localValue, onChange]);
 
   return (
-    <div key={`quill-${Date.now()}`}>
-      <ReactQuill
-        theme="snow"
-        value={value || ""}
-        onChange={handleChange}
-        modules={modules}
-        formats={formats}
-        placeholder={placeholder}
-        style={{ minHeight: '300px' }}
-      />
-    </div>
+    <ReactQuill
+      theme="snow"
+      value={localValue}
+      onChange={handleChange}
+      modules={modules}
+      formats={formats}
+      placeholder={placeholder}
+      style={{ minHeight: '300px' }}
+    />
   );
 };
 
@@ -183,18 +191,25 @@ export default function LegalPagesManagement() {
     },
   });
 
-  // Reset form when tab changes
-  useEffect(() => {
+  // Reset form when tab changes - using useMemo to prevent re-renders
+  const formData = useMemo(() => {
     if (currentPage) {
-      form.reset({
+      return {
         title_vi: currentPage.title_vi,
         title_en: currentPage.title_en,
         content_vi: currentPage.content_vi,
         content_en: currentPage.content_en,
         lastUpdated: new Date().toISOString().split('T')[0],
-      });
+      };
     }
-  }, [activeTab, currentPage, form]);
+    return null;
+  }, [currentPage?.id, activeTab]);
+
+  useEffect(() => {
+    if (formData) {
+      form.reset(formData);
+    }
+  }, [formData]);
 
   const onSubmit = (data: LegalPageFormValues) => {
     if (!currentPage) return;

@@ -175,35 +175,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/legal-pages/:path', async (req, res) => {
     try {
       const pathParam = req.params.path;
-      console.log('=== Legal Pages API Debug ===');
-      console.log('Requested path param:', pathParam);
-      
-      // Convert parameter to full path format
       const pagePath = `/${pathParam}`;
-      console.log('Converted to full path:', pagePath);
-      
-      // Get all pages first for debugging
-      const allPages = await db.select().from(schema.legalPages);
-      console.log('All pages in database:');
-      allPages.forEach(p => {
-        console.log(`- ID: ${p.id}, Path: "${p.path}", Title VI: ${p.title_vi}`);
-      });
       
       const [page] = await db
         .select()
         .from(schema.legalPages)
         .where(eq(schema.legalPages.path, pagePath));
 
-      console.log('Found page:', page ? `Yes (ID: ${page.id})` : 'No');
-
       if (!page) {
         return res.status(404).json({
           success: false,
-          error: 'Legal page not found',
-          debug: {
-            requestedPath: pagePath,
-            availablePaths: allPages.map(p => p.path)
-          }
+          error: 'Legal page not found'
         });
       }
 
@@ -215,8 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error fetching public legal page:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch legal page',
-        details: error.message
+        error: 'Failed to fetch legal page'
       });
     }
   });
