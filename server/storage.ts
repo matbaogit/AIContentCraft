@@ -21,6 +21,14 @@ export interface IStorage {
   updateUserPassword(id: number, newPassword: string): Promise<schema.User | null>;
   deleteUser(id: number): Promise<boolean>;
   listUsers(page: number, limit: number): Promise<{ users: schema.User[], total: number }>;
+  getAllUsers(): Promise<schema.User[]>;
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    totalArticles: number;
+    totalImages: number;
+    totalCreditsUsed: number;
+    recentUsers: schema.User[];
+  }>;
   
   // Article management
   getArticle(id: number): Promise<schema.Article | null>;
@@ -1597,6 +1605,72 @@ class DatabaseStorage implements IStorage {
       referredReward: parseInt(settings['referred_credit_reward'] || '20'),
       enabled: settings['referral_system_enabled'] === 'true'
     };
+  }
+
+  async getAllUsers(): Promise<schema.User[]> {
+    try {
+      const users = await db.query.users.findMany({
+        orderBy: [desc(schema.users.createdAt)]
+      });
+      return users;
+    } catch (error) {
+      console.error('Error getting all users:', error);
+      return [];
+    }
+  }
+
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    totalArticles: number;
+    totalImages: number;
+    totalCreditsUsed: number;
+    recentUsers: schema.User[];
+  }> {
+    try {
+      // Get total users count
+      const [{ totalUsers }] = await db
+        .select({ totalUsers: sql`count(*)`.mapWith(Number) })
+        .from(schema.users);
+
+      // Get total articles count
+      const [{ totalArticles }] = await db
+        .select({ totalArticles: sql`count(*)`.mapWith(Number) })
+        .from(schema.articles);
+
+      // Get total images count
+      const [{ totalImages }] = await db
+        .select({ totalImages: sql`count(*)`.mapWith(Number) })
+        .from(schema.images);
+
+      // Get total credits used (sum of all credit transactions with negative amounts)
+      const [{ totalCreditsUsed }] = await db
+        .select({ totalCreditsUsed: sql`COALESCE(SUM(ABS(amount)), 0)`.mapWith(Number) })
+        .from(schema.creditTransactions)
+        .where(sql`${schema.creditTransactions.amount} < 0`);
+
+      // Get recent users (last 5)
+      const recentUsers = await db.query.users.findMany({
+        orderBy: [desc(schema.users.createdAt)],
+        limit: 5
+      });
+
+      return {
+        totalUsers: totalUsers || 0,
+        totalArticles: totalArticles || 0,
+        totalImages: totalImages || 0,
+        totalCreditsUsed: totalCreditsUsed || 0,
+        recentUsers
+      };
+    } catch (error) {
+      console.error('Error getting admin stats:', error);
+      return {
+        totalUsers: 0,
+        totalArticles: 0,
+        totalImages: 0,
+        totalCreditsUsed: 0,
+        recentUsers: []
+      };
+    }
   }
 }
 
