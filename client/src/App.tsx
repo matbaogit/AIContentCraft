@@ -66,9 +66,9 @@ import CreditHistory from "@/pages/dashboard/credit-history";
 import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
 import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
 import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
-import PrivacyPolicy from "@/pages/privacy-policy";
-import DataDeletion from "@/pages/data-deletion";
-import TermsOfService from "@/pages/terms-of-service";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import DataDeletion from "@/pages/DataDeletion";
+import TermsOfService from "@/pages/TermsOfService";
 import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
 
@@ -164,9 +164,10 @@ function Router() {
       {/* Demo routes */}
       <Route path="/demo/facebook-connect" component={FacebookConnect} />
       
-      {/* Public compliance pages */}
+      {/* Public compliance pages */}  
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/data-deletion" component={DataDeletion} />
+      <Route path="/terms-of-service" component={TermsOfService} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

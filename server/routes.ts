@@ -167,6 +167,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Public Legal Pages API ==========
+  // Get public legal page by path (no authentication required)
+  app.get('/api/legal-pages/:path', async (req, res) => {
+    try {
+      const pagePath = `/${req.params.path}`;
+      
+      const [page] = await db
+        .select()
+        .from(schema.legalPages)
+        .where(eq(schema.legalPages.path, pagePath));
+
+      if (!page) {
+        return res.status(404).json({
+          success: false,
+          error: 'Legal page not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: page
+      });
+    } catch (error) {
+      console.error('Error fetching public legal page:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch legal page'
+      });
+    }
+  });
+
   // Data deletion request endpoint
   app.post('/api/data-deletion-request', async (req, res) => {
     try {
