@@ -38,8 +38,8 @@ export function FeedbackForm() {
   const form = useForm<FeedbackFormValues>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
-      name: user?.fullName || "",
-      email: user?.email || "",
+      name: (typeof user?.fullName === 'string' ? user.fullName : '') || "",
+      email: (typeof user?.email === 'string' ? user.email : '') || "",
       subject: "",
       message: "",
     },
@@ -54,8 +54,8 @@ export function FeedbackForm() {
         description: t("landing.feedback.success.description"),
       });
       form.reset({
-        name: user?.fullName || "",
-        email: user?.email || "",
+        name: (typeof user?.fullName === 'string' ? user.fullName : '') || "",
+        email: (typeof user?.email === 'string' ? user.email : '') || "",
         subject: "",
         message: "",
       });

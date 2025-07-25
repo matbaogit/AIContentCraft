@@ -244,7 +244,30 @@ const translations: TranslationsType = {
       },
       feedback: {
         title: "Góp ý & Phản hồi",
-        subtitle: "Ý kiến của bạn rất quan trọng với chúng tôi"
+        subtitle: "Ý kiến của bạn rất quan trọng với chúng tôi",
+        contact: "liên hệ",
+        form: {
+          name: "Họ tên",
+          namePlaceholder: "Nhập họ tên của bạn",
+          subject: "Chủ đề",
+          subjectPlaceholder: "Nhập chủ đề phản hồi",
+          message: "Tin nhắn",
+          messagePlaceholder: "Nhập nội dung phản hồi của bạn",
+          submit: "Gửi phản hồi"
+        },
+        validation: {
+          nameMin: "Họ tên phải có ít nhất 2 ký tự",
+          emailInvalid: "Email không hợp lệ",
+          subjectMin: "Chủ đề phải có ít nhất 5 ký tự",
+          messageMin: "Tin nhắn phải có ít nhất 10 ký tự"
+        },
+        success: {
+          title: "Gửi thành công!",
+          description: "Cảm ơn bạn đã gửi phản hồi. Chúng tôi sẽ liên hệ sớm nhất."
+        },
+        error: {
+          description: "Có lỗi xảy ra khi gửi phản hồi. Vui lòng thử lại."
+        }
       },
       stats: {
         articles: "Bài viết đã tạo",
@@ -495,8 +518,31 @@ const translations: TranslationsType = {
         }
       },
       feedback: {
-        title: "Feedback & Suggestions",
-        subtitle: "Your opinion matters to us"
+        title: "Feedback & Suggestions", 
+        subtitle: "Your opinion matters to us",
+        contact: "contact",
+        form: {
+          name: "Name",
+          namePlaceholder: "Enter your name",
+          subject: "Subject",
+          subjectPlaceholder: "Enter feedback subject",
+          message: "Message",
+          messagePlaceholder: "Enter your feedback message",
+          submit: "Send Feedback"
+        },
+        validation: {
+          nameMin: "Name must be at least 2 characters",
+          emailInvalid: "Invalid email address",
+          subjectMin: "Subject must be at least 5 characters",
+          messageMin: "Message must be at least 10 characters"
+        },
+        success: {
+          title: "Sent successfully!",
+          description: "Thank you for your feedback. We will contact you soon."
+        },
+        error: {
+          description: "An error occurred while sending feedback. Please try again."
+        }
       },
       stats: {
         articles: "Articles Created",
