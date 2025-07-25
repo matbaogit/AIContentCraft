@@ -5,251 +5,188 @@ async function seedLegalPages() {
   try {
     console.log('🌱 Seeding legal pages...');
 
-    const pages = [
+    // Check if legal pages already exist
+    const existingPages = await db.select().from(legalPages);
+    
+    if (existingPages.length > 0) {
+      console.log('✅ Legal pages already exist, skipping seed...');
+      return;
+    }
+
+    // Insert legal pages data
+    const legalPagesData = [
       {
         id: 'privacy-policy',
-        title_vi: 'Chính Sách Bảo Mật',
+        title_vi: 'Chính sách bảo mật',
         title_en: 'Privacy Policy',
-        content_vi: `# Chính Sách Bảo Mật
+        content_vi: `# Chính sách bảo mật
 
-## 1. Thông Tin Chúng Tôi Thu Thập
-- Thông tin cá nhân khi đăng ký tài khoản
-- Dữ liệu sử dụng dịch vụ
-- Thông tin kỹ thuật từ thiết bị
+## 1. Thông tin chúng tôi thu thập
+Chúng tôi thu thập thông tin khi bạn đăng ký tài khoản, sử dụng dịch vụ, hoặc liên hệ với chúng tôi.
 
-## 2. Cách Chúng Tôi Sử Dụng Thông Tin
+## 2. Cách chúng tôi sử dụng thông tin
+Thông tin của bạn được sử dụng để:
 - Cung cấp và cải thiện dịch vụ
-- Liên lạc với người dùng
-- Đảm bảo bảo mật hệ thống
+- Gửi thông báo quan trọng
+- Hỗ trợ khách hàng
 
-## 3. Chia Sẻ Thông Tin
-Chúng tôi cam kết không bán hoặc chia sẻ thông tin cá nhân với bên thứ ba.
+## 3. Bảo mật thông tin
+Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng các biện pháp bảo mật phù hợp.
 
-## 4. Bảo Mật Dữ Liệu
-Sử dụng mã hóa và các biện pháp bảo mật tiêu chuẩn công nghiệp.
+## 4. Chia sẻ thông tin
+Chúng tôi không bán, cho thuê hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba trừ khi có sự đồng ý của bạn.
 
-## 5. Quyền Của Người Dùng
-- Truy cập dữ liệu cá nhân
-- Yêu cầu chỉnh sửa hoặc xóa
-- Rút lại sự đồng ý`,
+## 5. Liên hệ
+Nếu có câu hỏi về chính sách này, vui lòng liên hệ với chúng tôi.`,
         content_en: `# Privacy Policy
 
 ## 1. Information We Collect
-- Personal information during account registration
-- Service usage data
-- Technical information from your device
+We collect information when you register an account, use our services, or contact us.
 
 ## 2. How We Use Information
-- Provide and improve our services
-- Communicate with users
-- Ensure system security
+Your information is used to:
+- Provide and improve services
+- Send important notifications
+- Customer support
 
-## 3. Information Sharing
-We are committed to not selling or sharing personal information with third parties.
+## 3. Information Security
+We are committed to protecting your personal information with appropriate security measures.
 
-## 4. Data Security
-Using encryption and industry-standard security measures.
+## 4. Information Sharing
+We do not sell, rent, or share your personal information with third parties without your consent.
 
-## 5. User Rights
-- Access personal data
-- Request editing or deletion
-- Withdraw consent`,
+## 5. Contact
+If you have questions about this policy, please contact us.`,
         path: '/privacy-policy',
-        description: 'Chính sách bảo vệ thông tin người dùng',
+        lastUpdated: new Date()
       },
       {
         id: 'data-deletion',
-        title_vi: 'Hướng Dẫn Xóa Dữ Liệu',
+        title_vi: 'Hướng dẫn xóa dữ liệu',
         title_en: 'Data Deletion Instructions',
-        content_vi: `# Hướng Dẫn Xóa Dữ Liệu
+        content_vi: `# Hướng dẫn xóa dữ liệu
 
-## Tổng Quan
-Bạn có quyền yêu cầu xóa hoàn toàn dữ liệu cá nhân và tài khoản khỏi hệ thống SEO AI Writer.
+## Cách xóa tài khoản và dữ liệu cá nhân
 
-## Các Cách Xóa Dữ Liệu
+### 1. Xóa tài khoản
+- Đăng nhập vào tài khoản của bạn
+- Vào phần "Cài đặt tài khoản"
+- Chọn "Xóa tài khoản"
+- Xác nhận quyết định của bạn
 
-### 1. Tự Xóa Trong Tài Khoản
-- Đăng nhập vào tài khoản
-- Vào mục 'Cài đặt tài khoản'
-- Chọn 'Xóa tài khoản'
+### 2. Dữ liệu sẽ được xóa
+- Thông tin cá nhân
+- Bài viết và nội dung đã tạo
+- Lịch sử sử dụng dịch vụ
+- Dữ liệu thanh toán
 
-### 2. Gửi Yêu Cầu Qua Email
-Gửi email đến privacy@seoaiwriter.com với thông tin:
-- Tên đầy đủ
-- Email đăng ký tài khoản
-- Lý do yêu cầu xóa
+### 3. Thời gian xử lý
+Yêu cầu xóa dữ liệu sẽ được xử lý trong vòng 30 ngày.
 
-### 3. Biểu Mẫu Trực Tuyến
-Điền form trực tuyến để gửi yêu cầu xóa dữ liệu.
-
-## Thời Gian Xử Lý
-- Xác nhận nhận yêu cầu: Ngay lập tức
-- Xác minh danh tính: 1-3 ngày làm việc
-- Xóa dữ liệu: 7-14 ngày làm việc
-
-## Dữ Liệu Sẽ Được Xóa
-- Thông tin tài khoản
-- Nội dung đã tạo
-- Dữ liệu sử dụng
-- Kết nối bên ngoài`,
+### 4. Liên hệ hỗ trợ
+Nếu cần hỗ trợ, vui lòng liên hệ với chúng tôi qua email hoặc chat hỗ trợ.`,
         content_en: `# Data Deletion Instructions
 
-## Overview
-You have the right to request complete deletion of your personal data and account from the SEO AI Writer system.
+## How to delete your account and personal data
 
-## Data Deletion Methods
-
-### 1. Self-Delete in Account
+### 1. Delete Account
 - Log in to your account
-- Go to 'Account Settings'
-- Select 'Delete Account'
+- Go to "Account Settings"
+- Select "Delete Account"
+- Confirm your decision
 
-### 2. Email Request
-Send email to privacy@seoaiwriter.com with information:
-- Full name
-- Registered email address
-- Reason for deletion request
+### 2. Data to be deleted
+- Personal information
+- Articles and created content
+- Service usage history
+- Payment data
 
-### 3. Online Form
-Fill out the online form to submit a data deletion request.
+### 3. Processing time
+Data deletion requests will be processed within 30 days.
 
-## Processing Timeline
-- Request confirmation: Immediately
-- Identity verification: 1-3 business days
-- Data deletion: 7-14 business days
-
-## Data to be Deleted
-- Account information
-- Created content
-- Usage data
-- External connections`,
+### 4. Support contact
+If you need support, please contact us via email or support chat.`,
         path: '/data-deletion',
-        description: 'Hướng dẫn yêu cầu xóa dữ liệu cá nhân',
+        lastUpdated: new Date()
       },
       {
         id: 'terms-of-service',
-        title_vi: 'Điều Khoản Dịch Vụ',
+        title_vi: 'Điều khoản dịch vụ',
         title_en: 'Terms of Service',
-        content_vi: `# Điều Khoản Dịch Vụ
+        content_vi: `# Điều khoản dịch vụ
 
-## Chấp Nhận Điều Khoản
-Bằng việc sử dụng SEO AI Writer, bạn đồng ý tuân thủ các điều khoản này.
+## 1. Chấp nhận điều khoản
+Bằng cách sử dụng dịch vụ của chúng tôi, bạn đồng ý với các điều khoản này.
 
-## Mô Tả Dịch Vụ
-SEO AI Writer cung cấp:
-- Tạo nội dung bằng AI
-- Tối ưu hóa SEO
-- Tạo hình ảnh tự động
-- Quản lý nội dung
-- Tích hợp mạng xã hội
+## 2. Sử dụng dịch vụ
+- Bạn phải từ 18 tuổi trở lên để sử dụng dịch vụ
+- Không được sử dụng dịch vụ cho mục đích bất hợp pháp
+- Tôn trọng quyền sở hữu trí tuệ
 
-## Tài Khoản Người Dùng
-Bạn có trách nhiệm:
-- Cung cấp thông tin chính xác
-- Bảo mật thông tin đăng nhập
-- Tuân thủ quy định sử dụng
+## 3. Tài khoản người dùng
+- Bạn chịu trách nhiệm bảo mật thông tin tài khoản
+- Thông báo ngay nếu phát hiện tài khoản bị xâm nhập
 
-## Chính Sách Sử Dụng
-Không được:
-- Tạo nội dung bất hợp pháp
-- Vi phạm bản quyền
-- Spam hoặc lừa đảo
-- Can thiệp vào hệ thống
+## 4. Thanh toán và hoàn tiền
+- Thanh toán được xử lý an toàn
+- Chính sách hoàn tiền áp dụng theo quy định
 
-## Thanh Toán và Hoàn Tiền
-- Thanh toán qua cổng an toàn
-- Hoàn tiền trong 7 ngày cho gói chưa sử dụng
-- Không hoàn tiền cho tín dụng đã sử dụng
+## 5. Chấm dứt dịch vụ
+Chúng tôi có quyền chấm dứt dịch vụ nếu bạn vi phạm điều khoản.
 
-## Quyền Sở Hữu Trí Tuệ
-- Bạn giữ quyền sở hữu nội dung tạo ra
-- Chúng tôi sở hữu mã nguồn và công nghệ
-
-## Giới Hạn Trách Nhiệm
-- Dịch vụ cung cấp 'như hiện tại'
-- Không đảm bảo hoạt động liên tục
-- Trách nhiệm tối đa bằng số tiền đã thanh toán`,
+## 6. Thay đổi điều khoản
+Chúng tôi có thể cập nhật điều khoản này. Thay đổi sẽ có hiệu lực ngay khi được đăng tải.`,
         content_en: `# Terms of Service
 
-## Acceptance of Terms
-By using SEO AI Writer, you agree to comply with these terms.
+## 1. Acceptance of Terms
+By using our service, you agree to these terms.
 
-## Service Description
-SEO AI Writer provides:
-- AI-powered content generation
-- SEO optimization
-- Automated image generation
-- Content management
-- Social media integration
+## 2. Use of Service
+- You must be 18 years or older to use the service
+- Do not use the service for illegal purposes
+- Respect intellectual property rights
 
-## User Accounts
-You are responsible for:
-- Providing accurate information
-- Securing login credentials
-- Complying with usage policies
+## 3. User Accounts
+- You are responsible for account security
+- Report immediately if you detect account intrusion
 
-## Usage Policy
-You must not:
-- Create illegal content
-- Violate copyrights
-- Send spam or fraud
-- Interfere with systems
+## 4. Payment and Refunds
+- Payments are processed securely
+- Refund policy applies as specified
 
-## Payment and Refunds
-- Payment through secure gateways
-- Refunds within 7 days for unused packages
-- No refunds for used credits
+## 5. Service Termination
+We reserve the right to terminate service if you violate the terms.
 
-## Intellectual Property
-- You retain ownership of created content
-- We own source code and technology
-
-## Limitation of Liability
-- Service provided 'as is'
-- No guarantee of continuous operation
-- Maximum liability equals amount paid`,
+## 6. Terms Changes
+We may update these terms. Changes will take effect immediately upon posting.`,
         path: '/terms-of-service',
-        description: 'Các điều khoản và điều kiện sử dụng',
+        lastUpdated: new Date()
       }
     ];
 
-    // Insert legal pages with upsert logic
-    for (const page of pages) {
-      console.log(`📄 Seeding legal page: ${page.id}`);
-      
-      await db.insert(legalPages)
-        .values(page)
-        .onConflictDoUpdate({
-          target: legalPages.id,
-          set: {
-            title_vi: page.title_vi,
-            title_en: page.title_en,
-            content_vi: page.content_vi,
-            content_en: page.content_en,
-            path: page.path,
-            description: page.description,
-            lastUpdated: new Date(),
-            updatedAt: new Date(),
-          }
-        });
-    }
-
+    const insertedPages = await db.insert(legalPages).values(legalPagesData).returning();
+    
     console.log('✅ Legal pages seeded successfully!');
+    console.log(`📄 Created ${insertedPages.length} legal pages:`);
+    insertedPages.forEach(page => {
+      console.log(`  - ${page.id}: ${page.title_vi} / ${page.title_en}`);
+    });
+    
   } catch (error) {
     console.error('❌ Error seeding legal pages:', error);
     throw error;
   }
 }
 
-// Run if called directly  
+// Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   seedLegalPages()
     .then(() => {
-      console.log('🎉 Seeding completed!');
+      console.log('🎉 Legal pages seed completed!');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Seeding failed:', error);
+      console.error('💥 Legal pages seed failed:', error);
       process.exit(1);
     });
 }

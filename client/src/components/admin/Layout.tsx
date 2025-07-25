@@ -104,6 +104,11 @@ function Layout({ children, title }: AdminLayoutProps) {
       icon: <Gift className="h-5 w-5" />,
     },
     {
+      href: "/admin/legal-pages",
+      label: "Trang pháp lý",
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
       href: "/admin/history",
       label: t("admin.history"),
       icon: <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
