@@ -48,24 +48,35 @@ export default function LegalPagesManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("privacy-policy");
 
-  // Temporary static data until backend is ready
-  const isLoading = false;
-  const legalPages = { success: true, data: null };
+  // Fetch legal pages data
+  const { data: legalPages, isLoading } = useQuery({
+    queryKey: ["/api/admin/legal-pages"],
+    retry: false,
+  });
 
-  // Temporary mutation for testing
+  // Update legal page mutation
   const updatePageMutation = useMutation({
     mutationFn: async ({ pageId, data }: { pageId: string; data: LegalPageFormValues }) => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { success: true, data };
+      const response = await apiRequest("PUT", `/api/admin/legal-pages/${pageId}`, data);
+      return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Cập nhật thành công",
-        description: "Nội dung trang đã được cập nhật",
-      });
+      if (data.success) {
+        toast({
+          title: "Cập nhật thành công",
+          description: "Nội dung trang đã được cập nhật",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/legal-pages"] });
+      } else {
+        toast({
+          title: "Lỗi",
+          description: data.error || "Có lỗi xảy ra khi cập nhật",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error) => {
+      console.error("Update error:", error);
       toast({
         title: "Lỗi",
         description: "Không thể cập nhật nội dung",
