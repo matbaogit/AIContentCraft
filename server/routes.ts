@@ -235,13 +235,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userRole = req.user.role || 'user';
       
+      // For admin users, show all menus (user + admin)
+      // For regular users, show only user menus
+      let whereCondition;
+      if (userRole === 'admin') {
+        whereCondition = sql`${schema.sidebarMenuItems.isEnabled} = true`;
+      } else {
+        whereCondition = sql`${schema.sidebarMenuItems.isEnabled} = true 
+                            AND ${schema.sidebarMenuItems.requiredRole} = 'user'`;
+      }
+      
       const menuItems = await db.select()
         .from(schema.sidebarMenuItems)
-        .where(
-          sql`${schema.sidebarMenuItems.isEnabled} = true 
-              AND (${schema.sidebarMenuItems.requiredRole} = 'user' 
-                   OR ${schema.sidebarMenuItems.requiredRole} = ${userRole})`
-        )
+        .where(whereCondition)
         .orderBy(schema.sidebarMenuItems.sortOrder);
 
       return res.status(200).json({
