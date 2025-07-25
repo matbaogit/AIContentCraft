@@ -81,18 +81,16 @@ export default function PublicPagesAdmin() {
   const { data: pages, isLoading } = useQuery({
     queryKey: ['/api/admin/public-pages'],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/public-pages');
-      return response.data as PublicPage[];
+      const response = await apiRequest('GET', '/api/admin/public-pages');
+      const data = await response.json();
+      return data.data as PublicPage[];
     }
   });
 
   // Create page mutation
   const createPageMutation = useMutation({
     mutationFn: async (pageData: PageFormData) => {
-      return await apiRequest('/api/admin/public-pages', {
-        method: 'POST',
-        body: JSON.stringify(pageData)
-      });
+      return await apiRequest('POST', '/api/admin/public-pages', pageData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/public-pages'] });
@@ -115,10 +113,7 @@ export default function PublicPagesAdmin() {
   // Update page mutation
   const updatePageMutation = useMutation({
     mutationFn: async ({ id, pageData }: { id: number; pageData: Partial<PageFormData> }) => {
-      return await apiRequest(`/api/admin/public-pages/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(pageData)
-      });
+      return await apiRequest('PUT', `/api/admin/public-pages/${id}`, pageData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/public-pages'] });
@@ -142,9 +137,7 @@ export default function PublicPagesAdmin() {
   // Delete page mutation
   const deletePageMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/public-pages/${id}`, {
-        method: 'DELETE'
-      });
+      return await apiRequest('DELETE', `/api/admin/public-pages/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/public-pages'] });
