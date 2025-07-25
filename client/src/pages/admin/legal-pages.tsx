@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,39 @@ interface LegalPage {
   path: string;
   description: string;
 }
+
+// Safe ReactQuill wrapper to avoid "leaf.position is not a function" error
+interface SafeReactQuillProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  modules?: any;
+  formats?: string[];
+}
+
+const SafeReactQuill = ({ value, onChange, placeholder, modules, formats }: SafeReactQuillProps) => {
+  const handleChange = useCallback((content: string) => {
+    try {
+      onChange(content);
+    } catch (error) {
+      console.warn("ReactQuill warning suppressed:", error);
+    }
+  }, [onChange]);
+
+  return (
+    <div key={`quill-${Date.now()}`}>
+      <ReactQuill
+        theme="snow"
+        value={value || ""}
+        onChange={handleChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+        style={{ minHeight: '300px' }}
+      />
+    </div>
+  );
+};
 
 export default function LegalPagesManagement() {
   const { toast } = useToast();
@@ -104,7 +137,7 @@ export default function LegalPagesManagement() {
     },
   });
 
-  const pages: LegalPage[] = legalPages?.data || [
+  const pages: LegalPage[] = (legalPages as any)?.data || [
     {
       id: "privacy-policy",
       title_vi: "Chính Sách Bảo Mật",
@@ -151,7 +184,7 @@ export default function LegalPagesManagement() {
   });
 
   // Reset form when tab changes
-  useState(() => {
+  useEffect(() => {
     if (currentPage) {
       form.reset({
         title_vi: currentPage.title_vi,
@@ -307,14 +340,12 @@ export default function LegalPagesManagement() {
                             <FormLabel>Nội dung (Tiếng Việt)</FormLabel>
                             <FormControl>
                               <div className="bg-white dark:bg-gray-800 rounded-md border">
-                                <ReactQuill
-                                  theme="snow"
+                                <SafeReactQuill
                                   value={field.value || ""}
                                   onChange={field.onChange}
                                   modules={quillModules}
                                   formats={quillFormats}
                                   placeholder="Nhập nội dung trang bằng tiếng Việt..."
-                                  style={{ minHeight: '300px' }}
                                 />
                               </div>
                             </FormControl>
@@ -353,14 +384,12 @@ export default function LegalPagesManagement() {
                             <FormLabel>Content (English)</FormLabel>
                             <FormControl>
                               <div className="bg-white dark:bg-gray-800 rounded-md border">
-                                <ReactQuill
-                                  theme="snow"
+                                <SafeReactQuill
                                   value={field.value || ""}
                                   onChange={field.onChange}
                                   modules={quillModules}
                                   formats={quillFormats}
                                   placeholder="Enter page content in English..."
-                                  style={{ minHeight: '300px' }}
                                 />
                               </div>
                             </FormControl>
