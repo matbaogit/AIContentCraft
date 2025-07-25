@@ -240,28 +240,67 @@ class DatabaseStorage implements IStorage {
   
   async deleteUser(id: number): Promise<boolean> {
     try {
+      console.log(`[deleteUser] Starting deletion process for user ID: ${id}`);
+      
       // Delete all related records first to maintain referential integrity
       
       // Delete user's articles
+      console.log(`[deleteUser] Deleting articles for user ${id}`);
       await db.delete(schema.articles)
         .where(eq(schema.articles.userId, id));
       
       // Delete user's connections
+      console.log(`[deleteUser] Deleting connections for user ${id}`);
       await db.delete(schema.connections)
         .where(eq(schema.connections.userId, id));
       
       // Delete user's credit transactions
+      console.log(`[deleteUser] Deleting credit transactions for user ${id}`);
       await db.delete(schema.creditTransactions)
         .where(eq(schema.creditTransactions.userId, id));
       
       // Delete user's plans
+      console.log(`[deleteUser] Deleting user plans for user ${id}`);
       await db.delete(schema.userPlans)
         .where(eq(schema.userPlans.userId, id));
       
+      // Delete referral transactions where user is referrer
+      console.log(`[deleteUser] Deleting referral transactions where user ${id} is referrer`);
+      await db.delete(schema.referralTransactions)
+        .where(eq(schema.referralTransactions.referrerId, id));
+      
+      // Delete referral transactions where user is referred
+      console.log(`[deleteUser] Deleting referral transactions where user ${id} is referred`);
+      await db.delete(schema.referralTransactions)
+        .where(eq(schema.referralTransactions.referredUserId, id));
+      
+      // Update any users who were referred by this user to clear referredBy field
+      console.log(`[deleteUser] Clearing referredBy field for users referred by ${id}`);
+      await db.update(schema.users)
+        .set({ referredBy: null })
+        .where(eq(schema.users.referredBy, id));
+      
+      // Delete user's images
+      console.log(`[deleteUser] Deleting images for user ${id}`);
+      await db.delete(schema.images)
+        .where(eq(schema.images.userId, id));
+      
+      // Delete user's scheduled posts
+      console.log(`[deleteUser] Deleting scheduled posts for user ${id}`);
+      await db.delete(schema.scheduledPosts)
+        .where(eq(schema.scheduledPosts.userId, id));
+      
+      // Delete user's credit usage history
+      console.log(`[deleteUser] Deleting credit usage history for user ${id}`);
+      await db.delete(schema.creditUsageHistory)
+        .where(eq(schema.creditUsageHistory.userId, id));
+      
       // Finally delete the user
+      console.log(`[deleteUser] Deleting user ${id}`);
       await db.delete(schema.users)
         .where(eq(schema.users.id, id));
       
+      console.log(`[deleteUser] Successfully deleted user ${id} and all related data`);
       return true;
     } catch (error) {
       console.error("Error deleting user:", error);
