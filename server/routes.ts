@@ -84,6 +84,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
   registerAdminRoutes(app);
 
+  // Data deletion request endpoint
+  app.post('/api/data-deletion-request', async (req, res) => {
+    try {
+      const { email, fullName, reason } = req.body;
+      
+      // Basic validation
+      if (!email || !fullName || !reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'Vui lòng điền đầy đủ thông tin'
+        });
+      }
+
+      // Log the deletion request (you might want to save this to database)
+      console.log('=== DATA DELETION REQUEST ===');
+      console.log('Email:', email);
+      console.log('Full Name:', fullName);
+      console.log('Reason:', reason);
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('IP:', req.ip);
+      
+      // Here you could save to a deletion_requests table
+      // For now, we'll just log it and return success
+      
+      // In a real application, you might want to:
+      // 1. Save the request to a database table
+      // 2. Send an email to admins
+      // 3. Send confirmation email to user
+      // 4. Create a ticket in your support system
+      
+      res.json({
+        success: true,
+        message: 'Yêu cầu xóa dữ liệu đã được ghi nhận'
+      });
+      
+    } catch (error) {
+      console.error('Error processing data deletion request:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Có lỗi xảy ra khi xử lý yêu cầu'
+      });
+    }
+  });
+
   // ========== Public Translations API ==========
   // Get all translations (public endpoint)
   app.get('/api/public/translations', async (req, res) => {

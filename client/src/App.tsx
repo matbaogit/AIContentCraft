@@ -67,6 +67,7 @@ import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
 import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import DataDeletion from "@/pages/data-deletion";
+import TermsOfService from "@/pages/terms-of-service";
 import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
 
@@ -99,6 +100,9 @@ function Router() {
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/data-deletion" component={DataDeletion} />
+      <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/api/docs" component={ApiDocs} />
       
       {/* Protected Dashboard routes */}

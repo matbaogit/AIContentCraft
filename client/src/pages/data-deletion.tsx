@@ -1,298 +1,686 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { useLanguage } from "@/hooks/use-language";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Trash2, Shield, CheckCircle, AlertTriangle, Mail } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Trash2, AlertTriangle, CheckCircle, Mail, User, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import Head from "@/components/head";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 
-export default function DataDeletion() {
+const deletionRequestSchema = z.object({
+  email: z.string().email({ message: "Vui lòng nhập email hợp lệ" }),
+  fullName: z.string().min(2, { message: "Họ tên phải có ít nhất 2 ký tự" }),
+  reason: z.string().min(10, { message: "Lý do phải có ít nhất 10 ký tự" }),
+});
+
+type DeletionRequestValues = z.infer<typeof deletionRequestSchema>;
+
+export default function DataDeletionPage() {
+  const { language } = useLanguage();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [reason, setReason] = useState("");
-  const [facebookUserId, setFacebookUserId] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const deletionMutation = useMutation({
-    mutationFn: async (data: { email: string; reason: string; facebookUserId?: string }) => {
-      const response = await fetch('/api/data-deletion-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+  const content = {
+    vi: {
+      title: "Hướng Dẫn Xóa Dữ Liệu",
+      subtitle: "Cách yêu cầu xóa dữ liệu cá nhân và tài khoản của bạn",
+      lastUpdated: "Cập nhật lần cuối: 25 tháng 7, 2025",
+      backToDashboard: "Quay lại Dashboard",
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      sections: {
+        overview: {
+          title: "Tổng Quan",
+          content: "Bạn có quyền yêu cầu xóa hoàn toàn dữ liệu cá nhân và tài khoản khỏi hệ thống SEO AI Writer. Trang này hướng dẫn chi tiết về quy trình xóa dữ liệu."
+        },
+        rights: {
+          title: "Quyền Của Bạn",
+          items: [
+            "Yêu cầu xóa hoàn toàn tài khoản",
+            "Xóa tất cả dữ liệu cá nhân",
+            "Xóa nội dung đã tạo (bài viết, hình ảnh)",
+            "Xóa lịch sử sử dụng dịch vụ",
+            "Hủy tất cả kết nối mạng xã hội",
+            "Xóa dữ liệu thanh toán (nếu có)"
+          ]
+        },
+        methods: {
+          title: "Các Cách Xóa Dữ Liệu",
+          selfService: {
+            title: "1. Tự Xóa Trong Tài Khoản",
+            steps: [
+              "Đăng nhập vào tài khoản SEO AI Writer",
+              "Vào mục 'Cài đặt tài khoản'",
+              "Chọn 'Xóa tài khoản'",
+              "Xác nhận bằng mật khẩu",
+              "Dữ liệu sẽ được xóa trong 30 ngày"
+            ]
+          },
+          emailRequest: {
+            title: "2. Gửi Yêu Cầu Qua Email",
+            content: "Gửi email đến privacy@seoaiwriter.com với thông tin:",
+            requirements: [
+              "Tên đầy đủ",
+              "Email đăng ký tài khoản",
+              "Lý do yêu cầu xóa",
+              "Xác nhận danh tính (nếu cần)"
+            ]
+          },
+          webForm: {
+            title: "3. Biểu Mẫu Trực Tuyến",
+            content: "Điền form bên dưới để gửi yêu cầu xóa dữ liệu"
+          }
+        },
+        timeline: {
+          title: "Thời Gian Xử Lý",
+          steps: [
+            {
+              step: "Nhận yêu cầu",
+              time: "Ngay lập tức",
+              description: "Chúng tôi xác nhận đã nhận được yêu cầu của bạn"
+            },
+            {
+              step: "Xác minh danh tính",
+              time: "1-3 ngày làm việc",
+              description: "Xác minh để đảm bảo an toàn tài khoản"
+            },
+            {
+              step: "Xóa dữ liệu",
+              time: "7-14 ngày làm việc",
+              description: "Xóa hoàn toàn dữ liệu khỏi hệ thống"
+            },
+            {
+              step: "Xác nhận hoàn tất",
+              time: "15-30 ngày",
+              description: "Thông báo quá trình xóa đã hoàn tất"
+            }
+          ]
+        },
+        dataDeleted: {
+          title: "Dữ Liệu Sẽ Được Xóa",
+          categories: [
+            {
+              category: "Thông tin tài khoản",
+              items: ["Tên đăng nhập", "Email", "Họ tên", "Thông tin liên hệ"]
+            },
+            {
+              category: "Nội dung đã tạo",
+              items: ["Bài viết", "Hình ảnh", "Nội dung social media", "Template"]
+            },
+            {
+              category: "Dữ liệu sử dụng",
+              items: ["Lịch sử tạo nội dung", "Thống kê sử dụng", "Log hoạt động"]
+            },
+            {
+              category: "Kết nối bên ngoài",
+              items: ["Liên kết Facebook", "Liên kết WordPress", "API keys", "OAuth tokens"]
+            }
+          ]
+        },
+        important: {
+          title: "Lưu Ý Quan Trọng",
+          warnings: [
+            "Quá trình xóa dữ liệu là KHÔNG THỂ HOÀN TÁC",
+            "Tất cả nội dung và tài liệu sẽ bị mất vĩnh viễn",
+            "Gói dịch vụ đã thanh toán sẽ không được hoàn tiền",
+            "Dữ liệu backup có thể được lưu tối đa 90 ngày để tuân thủ pháp luật",
+            "Một số thông tin có thể được giữ lại cho mục đích pháp lý hoặc kế toán"
+          ]
+        },
+        beforeDelete: {
+          title: "Trước Khi Xóa",
+          recommendations: [
+            "Tải xuống tất cả nội dung quan trọng",
+            "Hủy liên kết các tài khoản mạng xã hội",
+            "Sao lưu dữ liệu cần thiết",
+            "Cân nhắc kỹ quyết định",
+            "Liên hệ hỗ trợ nếu có thắc mắc"
+          ]
+        },
+        form: {
+          title: "Biểu Mẫu Yêu Cầu Xóa Dữ Liệu",
+          email: "Email tài khoản",
+          emailPlaceholder: "your-email@example.com",
+          fullName: "Họ và tên",
+          fullNamePlaceholder: "Nguyễn Văn A",
+          reason: "Lý do yêu cầu xóa",
+          reasonPlaceholder: "Vui lòng mô tả lý do bạn muốn xóa tài khoản...",
+          submit: "Gửi Yêu Cầu",
+          submitting: "Đang gửi...",
+          success: "Đã gửi yêu cầu thành công",
+          successMessage: "Chúng tôi đã nhận được yêu cầu xóa dữ liệu của bạn. Bạn sẽ nhận được email xác nhận trong vòng 24 giờ."
+        }
       }
+    },
+    en: {
+      title: "Data Deletion Instructions",
+      subtitle: "How to request deletion of your personal data and account",
+      lastUpdated: "Last updated: July 25, 2025",
+      backToDashboard: "Back to Dashboard",
       
-      return await response.json();
-    },
-    onSuccess: (response) => {
-      toast({
-        title: "Yêu cầu đã được gửi",
-        description: `Mã yêu cầu: ${response.data.requestId}. Chúng tôi sẽ xử lý trong vòng 30 ngày.`,
-      });
-      // Reset form
-      setEmail("");
-      setReason("");
-      setFacebookUserId("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Lỗi",
-        description: error.message || "Không thể gửi yêu cầu. Vui lòng thử lại hoặc liên hệ support.",
-        variant: "destructive"
-      });
+      sections: {
+        overview: {
+          title: "Overview",
+          content: "You have the right to request complete deletion of your personal data and account from the SEO AI Writer system. This page provides detailed instructions on the data deletion process."
+        },
+        rights: {
+          title: "Your Rights",
+          items: [
+            "Request complete account deletion",
+            "Delete all personal data",
+            "Delete created content (articles, images)",
+            "Delete service usage history",
+            "Cancel all social media connections",
+            "Delete payment data (if any)"
+          ]
+        },
+        methods: {
+          title: "Data Deletion Methods",
+          selfService: {
+            title: "1. Self-Delete in Account",
+            steps: [
+              "Log in to your SEO AI Writer account",
+              "Go to 'Account Settings'",
+              "Select 'Delete Account'",
+              "Confirm with password",
+              "Data will be deleted within 30 days"
+            ]
+          },
+          emailRequest: {
+            title: "2. Email Request",
+            content: "Send email to privacy@seoaiwriter.com with information:",
+            requirements: [
+              "Full name",
+              "Registered email address",
+              "Reason for deletion request",
+              "Identity verification (if needed)"
+            ]
+          },
+          webForm: {
+            title: "3. Online Form",
+            content: "Fill out the form below to submit a data deletion request"
+          }
+        },
+        timeline: {
+          title: "Processing Timeline",
+          steps: [
+            {
+              step: "Request received",
+              time: "Immediately",
+              description: "We confirm receipt of your request"
+            },
+            {
+              step: "Identity verification",
+              time: "1-3 business days",
+              description: "Verification to ensure account security"
+            },
+            {
+              step: "Data deletion",
+              time: "7-14 business days",
+              description: "Complete removal of data from systems"
+            },
+            {
+              step: "Completion confirmation",
+              time: "15-30 days",
+              description: "Notification that deletion is complete"
+            }
+          ]
+        },
+        dataDeleted: {
+          title: "Data to be Deleted",
+          categories: [
+            {
+              category: "Account information",
+              items: ["Username", "Email", "Full name", "Contact information"]
+            },
+            {
+              category: "Created content",
+              items: ["Articles", "Images", "Social media content", "Templates"]
+            },
+            {
+              category: "Usage data",
+              items: ["Content creation history", "Usage statistics", "Activity logs"]
+            },
+            {
+              category: "External connections",
+              items: ["Facebook links", "WordPress links", "API keys", "OAuth tokens"]
+            }
+          ]
+        },
+        important: {
+          title: "Important Notes",
+          warnings: [
+            "Data deletion process is IRREVERSIBLE",
+            "All content and documents will be permanently lost",
+            "Paid service packages will not be refunded",
+            "Backup data may be retained for up to 90 days for legal compliance",
+            "Some information may be retained for legal or accounting purposes"
+          ]
+        },
+        beforeDelete: {
+          title: "Before Deleting",
+          recommendations: [
+            "Download all important content",
+            "Unlink social media accounts",
+            "Backup necessary data",
+            "Consider your decision carefully",
+            "Contact support if you have questions"
+          ]
+        },
+        form: {
+          title: "Data Deletion Request Form",
+          email: "Account email",
+          emailPlaceholder: "your-email@example.com",
+          fullName: "Full name",
+          fullNamePlaceholder: "John Doe",
+          reason: "Reason for deletion request",
+          reasonPlaceholder: "Please describe why you want to delete your account...",
+          submit: "Submit Request",
+          submitting: "Submitting...",
+          success: "Request submitted successfully",
+          successMessage: "We have received your data deletion request. You will receive a confirmation email within 24 hours."
+        }
+      }
     }
-  });
-
-  const handleSubmitRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !reason) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    deletionMutation.mutate({
-      email,
-      reason,
-      facebookUserId: facebookUserId || undefined
-    });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-4">
-              <Trash2 className="h-8 w-8 text-red-600 dark:text-red-400" />
-            </div>
-            <CardTitle className="text-3xl font-bold">Yêu cầu Xóa Dữ liệu</CardTitle>
-            <p className="text-gray-600 dark:text-gray-400">
-              Quản lý và xóa dữ liệu cá nhân của bạn khỏi hệ thống SEO AI Writer
-            </p>
-          </CardHeader>
-          
-          <CardContent className="space-y-8">
-            {/* Information Section */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                <Shield className="h-6 w-6 text-blue-600" />
-                Quyền của bạn
-              </h2>
-              
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium">Xóa tài khoản</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Xóa hoàn toàn tài khoản và tất cả dữ liệu liên quan
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium">Xóa nội dung</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Xóa tất cả bài viết và nội dung đã tạo
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium">Ngắt kết nối Facebook</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Hủy quyền truy cập Facebook và xóa access token
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium">Xóa lịch sử</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Xóa lịch sử sử dụng tín dụng và hoạt động
-                      </p>
-                    </div>
-                  </div>
-                </div>
+  const t = content[language] || content.vi;
+
+  const form = useForm<DeletionRequestValues>({
+    resolver: zodResolver(deletionRequestSchema),
+    defaultValues: {
+      email: "",
+      fullName: "",
+      reason: "",
+    },
+  });
+
+  const onSubmit = async (values: DeletionRequestValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      const response = await apiRequest("POST", "/api/data-deletion-request", values);
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsSubmitted(true);
+        toast({
+          title: t.sections.form.success,
+          description: t.sections.form.successMessage,
+        });
+      } else {
+        toast({
+          title: "Lỗi",
+          description: data.error || "Có lỗi xảy ra khi gửi yêu cầu",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Data deletion request error:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể kết nối đến máy chủ. Vui lòng thử lại sau.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isSubmitted) {
+    return (
+      <>
+        <Head>
+          <title>{t.title} - SEO AI Writer</title>
+        </Head>
+        
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4 mx-auto">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
-            </section>
-
-            <Separator />
-
-            {/* Request Form */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Gửi yêu cầu xóa dữ liệu</h2>
-              
-              <Alert className="mb-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Lưu ý quan trọng:</strong> Việc xóa dữ liệu là không thể hoàn tác. 
-                  Vui lòng cân nhắc kỹ trước khi gửi yêu cầu.
-                </AlertDescription>
-              </Alert>
-
-              <form onSubmit={handleSubmitRequest} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email liên hệ *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      required
-                    />
-                    <p className="text-xs text-gray-500">
-                      Email để chúng tôi xác nhận và phản hồi yêu cầu
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="facebook-id">Facebook User ID (nếu có)</Label>
-                    <Input
-                      id="facebook-id"
-                      value={facebookUserId}
-                      onChange={(e) => setFacebookUserId(e.target.value)}
-                      placeholder="Ví dụ: 1234567890"
-                    />
-                    <p className="text-xs text-gray-500">
-                      ID Facebook nếu bạn đã kết nối tài khoản
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="reason">Lý do yêu cầu xóa dữ liệu *</Label>
-                  <Textarea
-                    id="reason"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Vui lòng mô tả lý do bạn muốn xóa dữ liệu và loại dữ liệu cụ thể cần xóa..."
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={deletionMutation.isPending}
-                >
-                  {deletionMutation.isPending ? "Đang gửi..." : "Gửi yêu cầu xóa dữ liệu"}
+              <CardTitle className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {t.sections.form.success}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
+                {t.sections.form.successMessage}
+              </p>
+              <Link href="/dashboard">
+                <Button className="w-full">
+                  {t.backToDashboard}
                 </Button>
-              </form>
-            </section>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
-            <Separator />
-
-            {/* Process Information */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Quy trình xử lý</h2>
-              
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-blue-600 dark:text-blue-400 font-bold text-lg">1</span>
-                    </div>
-                    <h3 className="font-medium mb-2">Nhận yêu cầu</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Chúng tôi xác nhận yêu cầu qua email trong vòng 24h
-                    </p>
-                  </div>
-                  
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-yellow-600 dark:text-yellow-400 font-bold text-lg">2</span>
-                    </div>
-                    <h3 className="font-medium mb-2">Xác minh</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Xác minh danh tính và quyền sở hữu dữ liệu
-                    </p>
-                  </div>
-                  
-                  <div className="text-center p-4 border rounded-lg">
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-green-600 dark:text-green-400 font-bold text-lg">3</span>
-                    </div>
-                    <h3 className="font-medium mb-2">Thực hiện</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Xóa dữ liệu và gửi xác nhận hoàn thành
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg">
-                  <h3 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">
-                    Thời gian xử lý
-                  </h3>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <li>• Xác nhận yêu cầu: 1-2 ngày làm việc</li>
-                    <li>• Xác minh và xử lý: 7-15 ngày làm việc</li>
-                    <li>• Hoàn tất và thông báo: 30 ngày tối đa</li>
-                  </ul>
-                </div>
+  return (
+    <>
+      <Head>
+        <title>{t.title} - SEO AI Writer</title>
+        <meta name="description" content={t.subtitle} />
+      </Head>
+      
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {/* Header */}
+          <div className="mb-8">
+            <Link href="/dashboard">
+              <Button variant="outline" className="mb-4">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t.backToDashboard}
+              </Button>
+            </Link>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full mb-4">
+                <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-            </section>
-
-            <Separator />
-
-            {/* Alternative Contact */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Hỗ trợ khác</h2>
-              
-              <div className="bg-blue-50 dark:bg-blue-950 p-6 rounded-lg">
-                <div className="flex items-start gap-4">
-                  <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
-                      Liên hệ trực tiếp
-                    </h3>
-                    <p className="text-blue-700 dark:text-blue-300 mb-4">
-                      Nếu bạn gặp khó khăn với form trên hoặc cần hỗ trợ khẩn cấp, 
-                      vui lòng liên hệ trực tiếp qua email:
-                    </p>
-                    <div className="space-y-2 text-blue-700 dark:text-blue-300">
-                      <p><strong>Email hỗ trợ:</strong> support@seoaiwriter.com</p>
-                      <p><strong>Email bảo mật:</strong> privacy@seoaiwriter.com</p>
-                      <p><strong>Thời gian phản hồi:</strong> 24-48 giờ</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
-              <p>
-                Trang này tuân thủ GDPR và các quy định bảo mật dữ liệu hiện hành. 
-                Mọi yêu cầu sẽ được xử lý một cách bảo mật và chuyên nghiệp.
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                {t.title}
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-2">
+                {t.subtitle}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t.lastUpdated}
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-6">
+            {/* Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="w-5 h-5 mr-2 text-blue-600" />
+                  {t.sections.overview.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {t.sections.overview.content}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Rights */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                  {t.sections.rights.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {t.sections.rights.items.map((item, index) => (
+                    <li key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Methods */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-purple-600" />
+                  {t.sections.methods.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Self Service */}
+                <div>
+                  <h4 className="font-semibold text-purple-600 dark:text-purple-400 mb-3">
+                    {t.sections.methods.selfService.title}
+                  </h4>
+                  <ol className="space-y-2">
+                    {t.sections.methods.selfService.steps.map((step, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="inline-flex items-center justify-center w-6 h-6 bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400 rounded-full text-xs font-semibold mr-3 mt-0.5 flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="text-gray-700 dark:text-gray-300">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Email Request */}
+                <div>
+                  <h4 className="font-semibold text-blue-600 dark:text-blue-400 mb-3">
+                    {t.sections.methods.emailRequest.title}
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                    {t.sections.methods.emailRequest.content}
+                  </p>
+                  <ul className="space-y-2">
+                    {t.sections.methods.emailRequest.requirements.map((req, index) => (
+                      <li key={index} className="flex items-start">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300">{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Web Form */}
+                <div>
+                  <h4 className="font-semibold text-orange-600 dark:text-orange-400 mb-3">
+                    {t.sections.methods.webForm.title}
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {t.sections.methods.webForm.content}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timeline */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2 text-indigo-600" />
+                  {t.sections.timeline.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {t.sections.timeline.steps.map((step, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="inline-flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 rounded-full text-sm font-semibold">
+                          {index + 1}
+                        </div>
+                        {index < t.sections.timeline.steps.length - 1 && (
+                          <div className="w-px h-12 bg-gray-300 dark:bg-gray-600 mt-2" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-gray-900 dark:text-white">
+                          {step.step}
+                        </h5>
+                        <p className="text-sm text-indigo-600 dark:text-indigo-400 mb-1">
+                          {step.time}
+                        </p>
+                        <p className="text-gray-700 dark:text-gray-300">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Data Categories */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Trash2 className="w-5 h-5 mr-2 text-red-600" />
+                  {t.sections.dataDeleted.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {t.sections.dataDeleted.categories.map((category, index) => (
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <h5 className="font-semibold text-gray-900 dark:text-white mb-3">
+                        {category.category}
+                      </h5>
+                      <ul className="space-y-1">
+                        {category.items.map((item, itemIndex) => (
+                          <li key={itemIndex} className="flex items-start">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-2 mr-2 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Important Warnings */}
+            <Card className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950">
+              <CardHeader>
+                <CardTitle className="flex items-center text-orange-600 dark:text-orange-400">
+                  <AlertTriangle className="w-5 h-5 mr-2" />
+                  {t.sections.important.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {t.sections.important.warnings.map((warning, index) => (
+                    <li key={index} className="flex items-start">
+                      <AlertTriangle className="w-5 h-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-orange-800 dark:text-orange-200 font-medium">{warning}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Before Delete */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                  {t.sections.beforeDelete.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {t.sections.beforeDelete.recommendations.map((rec, index) => (
+                    <li key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Deletion Request Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Mail className="w-5 h-5 mr-2 text-blue-600" />
+                  {t.sections.form.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.sections.form.email}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder={t.sections.form.emailPlaceholder}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.sections.form.fullName}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={t.sections.form.fullNamePlaceholder}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t.sections.form.reason}</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder={t.sections.form.reasonPlaceholder}
+                              rows={4}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" disabled={isSubmitting} className="w-full">
+                      {isSubmitting ? t.sections.form.submitting : t.sections.form.submit}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
