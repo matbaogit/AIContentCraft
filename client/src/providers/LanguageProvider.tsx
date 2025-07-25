@@ -123,6 +123,10 @@ const translations: TranslationsType = {
             seo: {
               title: "Tối ưu SEO",
               description: "Cải thiện thứ hạng tìm kiếm với công cụ SEO tự động"
+            },
+            technical: {
+              title: "Tối ưu kỹ thuật",
+              description: "Tự động tối ưu cấu trúc và thẻ meta để tăng điểm SEO kỹ thuật"
             }
           },
           automation: {
@@ -138,6 +142,21 @@ const translations: TranslationsType = {
             workflow: {
               title: "Quy trình làm việc",
               description: "Tạo quy trình tự động để tối ưu hiệu quả công việc"
+            }
+          },
+          management: {
+            title: "Quản lý & Xuất bản",
+            templates: {
+              title: "Thư viện mẫu",
+              description: "Truy cập thư viện đa dạng mẫu nội dung chuyên nghiệp"
+            },
+            multilingual: {
+              title: "Hỗ trợ đa ngôn ngữ",
+              description: "Tạo và tối ưu nội dung cho nhiều thị trường ngôn ngữ khác nhau"
+            },
+            dashboard: {
+              title: "Bảng điều khiển",
+              description: "Quản lý tất cả nội dung và lịch xuất bản từ một giao diện"
             }
           }
         },
@@ -155,7 +174,8 @@ const translations: TranslationsType = {
           benefit1: "Kết nối đa nền tảng",
           benefit2: "Đăng bài tự động",
           benefit3: "Quản lý tập trung"
-        }
+        },
+        powerfulFeatures: "Tính năng mạnh mẽ"
       },
       pricing: {
         title: "Bảng giá linh hoạt",
@@ -320,6 +340,10 @@ const translations: TranslationsType = {
             seo: {
               title: "SEO Optimization",
               description: "Improve search rankings with automated SEO tools"
+            },
+            technical: {
+              title: "Technical Optimization",
+              description: "Automatically optimize structure and meta tags to improve technical SEO scores"
             }
           },
           automation: {
@@ -335,6 +359,21 @@ const translations: TranslationsType = {
             workflow: {
               title: "Workflows",
               description: "Create automated workflows to optimize work efficiency"
+            }
+          },
+          management: {
+            title: "Management & Publishing",
+            templates: {
+              title: "Template Library",
+              description: "Access diverse library of professional content templates"
+            },
+            multilingual: {
+              title: "Multi-language Support",
+              description: "Create and optimize content for different language markets"
+            },
+            dashboard: {
+              title: "Dashboard",
+              description: "Manage all content and publishing schedules from one interface"
             }
           }
         },
@@ -352,7 +391,8 @@ const translations: TranslationsType = {
           benefit1: "Multi-platform connectivity",
           benefit2: "Automatic posting",
           benefit3: "Centralized management"
-        }
+        },
+        powerfulFeatures: "Powerful Features"
       },
       pricing: {
         title: "Flexible Pricing",
