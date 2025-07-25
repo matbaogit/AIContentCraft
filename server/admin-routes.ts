@@ -1143,7 +1143,7 @@ export function registerAdminRoutes(app: Express) {
 
       // Create nodemailer transporter and send test email
       
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         host: smtpSettings.smtpServer,
         port: smtpSettings.smtpPort,
         secure: smtpSettings.smtpPort === 465, // true for 465, false for other ports
