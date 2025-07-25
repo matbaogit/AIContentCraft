@@ -5,6 +5,7 @@ import { z } from "zod";
 import { format, subHours, subDays } from "date-fns";
 import * as schema from "@shared/schema";
 import { eq } from "drizzle-orm";
+import * as nodemailer from "nodemailer";
 
 /**
  * Registers admin routes for admin panel functionality
@@ -1140,19 +1141,66 @@ export function registerAdminRoutes(app: Express) {
         });
       }
 
-      // Here you would implement actual email sending test
-      // For now, we'll just return success
-      console.log('Email test requested for:', email, 'with settings:', smtpSettings);
+      // Create nodemailer transporter and send test email
+      
+      const transporter = nodemailer.createTransporter({
+        host: smtpSettings.smtpServer,
+        port: smtpSettings.smtpPort,
+        secure: smtpSettings.smtpPort === 465, // true for 465, false for other ports
+        auth: {
+          user: smtpSettings.smtpUsername,
+          pass: smtpSettings.smtpPassword,
+        },
+      });
+
+      // Send test email
+      const info = await transporter.sendMail({
+        from: smtpSettings.emailSender,
+        to: email,
+        subject: 'Test Email từ SEO AI Writer',
+        html: `
+          <h2>Test Email thành công!</h2>
+          <p>Cài đặt SMTP của bạn đã được cấu hình đúng.</p>
+          <p><strong>Máy chủ SMTP:</strong> ${smtpSettings.smtpServer}</p>
+          <p><strong>Cổng:</strong> ${smtpSettings.smtpPort}</p>
+          <p><strong>Người gửi:</strong> ${smtpSettings.emailSender}</p>
+          <p>Thời gian gửi: ${new Date().toLocaleString('vi-VN')}</p>
+        `,
+      });
+
+      console.log('Test email sent successfully:', {
+        messageId: info.messageId,
+        to: email,
+        smtpServer: smtpSettings.smtpServer
+      });
 
       return res.status(200).json({
         success: true,
-        message: "Test email would be sent successfully"
+        message: `Email test đã được gửi thành công đến ${email}`,
+        data: {
+          messageId: info.messageId,
+          accepted: info.accepted,
+          rejected: info.rejected
+        }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error testing email settings:", error);
+      
+      let errorMessage = "Failed to test email settings";
+      if (error.code === 'ECONNREFUSED') {
+        errorMessage = "Không thể kết nối đến SMTP server. Kiểm tra lại host và port.";
+      } else if (error.code === 'EAUTH') {
+        errorMessage = "Xác thực SMTP thất bại. Kiểm tra lại username và password.";
+      } else if (error.code === 'ESOCKET') {
+        errorMessage = "Lỗi kết nối socket. Kiểm tra lại cấu hình SMTP.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       return res.status(500).json({
         success: false,
-        error: "Failed to test email settings"
+        error: errorMessage,
+        details: error.code || error.name || 'Unknown error'
       });
     }
   });
