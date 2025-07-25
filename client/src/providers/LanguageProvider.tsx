@@ -44,7 +44,8 @@ const translations: TranslationsType = {
       next: "Tiếp theo",
       confirm: "Xác nhận",
       yes: "Có",
-      no: "Không"
+      no: "Không",
+      appName: "SEO AI Writer"
     },
     admin: {
       dashboard: "Bảng điều khiển",
@@ -60,6 +61,33 @@ const translations: TranslationsType = {
       title: "Bảng điều khiển",
       myArticles: "Bài viết của tôi",
       imageLibrary: "Thư viện hình ảnh"
+    },
+    landing: {
+      hero: {
+        badge: "Công cụ AI tạo nội dung hàng đầu",
+        title: "Tạo nội dung SEO chuyên nghiệp với AI",
+        subtitle: "Tạo bài viết SEO chất lượng cao, tối ưu từ khóa và đăng tự động lên mạng xã hội với sức mạnh trí tuệ nhân tạo",
+        tryFree: "Dùng thử miễn phí",
+        viewDemo: "Xem demo",
+        features: {
+          aiContent: {
+            title: "Nội dung AI",
+            description: "Tạo bài viết chất lượng cao với AI"
+          },
+          multilingual: {
+            title: "Đa ngôn ngữ",
+            description: "Hỗ trợ tiếng Việt và tiếng Anh"
+          },
+          integration: {
+            title: "Tích hợp",
+            description: "Kết nối với mạng xã hội và WordPress"
+          },
+          analytics: {
+            title: "Phân tích",
+            description: "Theo dõi hiệu suất và SEO"
+          }
+        }
+      }
     }
   },
   en: {
@@ -85,7 +113,8 @@ const translations: TranslationsType = {
       next: "Next",
       confirm: "Confirm",
       yes: "Yes",
-      no: "No"
+      no: "No",
+      appName: "SEO AI Writer"
     },
     admin: {
       dashboard: "Dashboard",
@@ -101,6 +130,33 @@ const translations: TranslationsType = {
       title: "Dashboard",
       myArticles: "My Articles",
       imageLibrary: "Image Library"
+    },
+    landing: {
+      hero: {
+        badge: "Leading AI Content Creation Tool",
+        title: "Create Professional SEO Content with AI",
+        subtitle: "Generate high-quality SEO articles, optimize keywords, and automatically post to social media with the power of artificial intelligence",
+        tryFree: "Try Free",
+        viewDemo: "View Demo",
+        features: {
+          aiContent: {
+            title: "AI Content",
+            description: "Generate high-quality articles with AI"
+          },
+          multilingual: {
+            title: "Multilingual",
+            description: "Support for Vietnamese and English"
+          },
+          integration: {
+            title: "Integration",
+            description: "Connect with social media and WordPress"
+          },
+          analytics: {
+            title: "Analytics",
+            description: "Track performance and SEO"
+          }
+        }
+      }
     }
   }
 };
