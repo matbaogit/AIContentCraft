@@ -1355,4 +1355,179 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // ========== Public Pages Management ==========
+  // Get all public pages
+  app.get("/api/admin/public-pages", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const pages = await storage.getAllPublicPages();
+      return res.status(200).json({
+        success: true,
+        data: pages
+      });
+    } catch (error) {
+      console.error("Error getting public pages:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get public pages"
+      });
+    }
+  });
+
+  // Get single public page
+  app.get("/api/admin/public-pages/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { id } = req.params;
+      const pageId = parseInt(id, 10);
+      if (isNaN(pageId)) {
+        return res.status(400).json({ success: false, error: "Invalid page ID" });
+      }
+
+      const pages = await storage.getAllPublicPages();
+      const page = pages.find(p => p.id === pageId);
+      
+      if (!page) {
+        return res.status(404).json({ success: false, error: "Page not found" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: page
+      });
+    } catch (error) {
+      console.error("Error getting public page:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get public page"
+      });
+    }
+  });
+
+  // Create new public page
+  app.post("/api/admin/public-pages", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const pageData = schema.insertPublicPageSchema.parse(req.body);
+      const userId = req.user?.id;
+      
+      const newPage = await storage.createPublicPage({
+        ...pageData,
+        lastEditedBy: userId
+      });
+      
+      if (!newPage) {
+        return res.status(500).json({ success: false, error: "Failed to create page" });
+      }
+
+      return res.status(201).json({
+        success: true,
+        data: newPage
+      });
+    } catch (error) {
+      console.error("Error creating public page:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ success: false, error: "Validation error", details: error.errors });
+      }
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create public page"
+      });
+    }
+  });
+
+  // Update public page
+  app.put("/api/admin/public-pages/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { id } = req.params;
+      const pageId = parseInt(id, 10);
+      if (isNaN(pageId)) {
+        return res.status(400).json({ success: false, error: "Invalid page ID" });
+      }
+
+      const updateData = req.body;
+      const userId = req.user?.id;
+      
+      const updatedPage = await storage.updatePublicPage(pageId, {
+        ...updateData,
+        lastEditedBy: userId
+      });
+      
+      if (!updatedPage) {
+        return res.status(404).json({ success: false, error: "Page not found" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: updatedPage
+      });
+    } catch (error) {
+      console.error("Error updating public page:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update public page"
+      });
+    }
+  });
+
+  // Delete public page
+  app.delete("/api/admin/public-pages/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { id } = req.params;
+      const pageId = parseInt(id, 10);
+      if (isNaN(pageId)) {
+        return res.status(400).json({ success: false, error: "Invalid page ID" });
+      }
+
+      const success = await storage.deletePublicPage(pageId);
+      
+      if (!success) {
+        return res.status(404).json({ success: false, error: "Page not found or could not be deleted" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Page deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting public page:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to delete public page"
+      });
+    }
+  });
 }

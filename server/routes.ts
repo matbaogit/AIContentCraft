@@ -5800,5 +5800,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Public Pages Routes (Accessible to everyone) ==========
+  app.get("/api/public-pages/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const page = await storage.getPublicPage(slug);
+      
+      if (!page || !page.isPublished) {
+        return res.status(404).json({ success: false, error: "Page not found" });
+      }
+
+      res.json({ success: true, data: page });
+    } catch (error) {
+      console.error("Error getting public page:", error);
+      res.status(500).json({ success: false, error: "Failed to get page" });
+    }
+  });
+
+  app.get("/api/public-pages", async (req, res) => {
+    try {
+      const pages = await storage.getAllPublicPages();
+      const publishedPages = pages.filter(page => page.isPublished);
+      
+      res.json({ success: true, data: publishedPages });
+    } catch (error) {
+      console.error("Error getting public pages:", error);
+      res.status(500).json({ success: false, error: "Failed to get pages" });
+    }
+  });
+
   return httpServer;
 }

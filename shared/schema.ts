@@ -472,6 +472,23 @@ export const sidebarMenuItems = pgTable('sidebar_menu_items', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Public Pages table
+export const publicPages = pgTable('public_pages', {
+  id: serial('id').primaryKey(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(), // URL slug
+  title: varchar('title', { length: 200 }).notNull(), // page title
+  titleEn: varchar('title_en', { length: 200 }), // English title
+  content: text('content').notNull(), // page content in Vietnamese
+  contentEn: text('content_en'), // page content in English
+  metaDescription: varchar('meta_description', { length: 300 }), // SEO meta description
+  metaDescriptionEn: varchar('meta_description_en', { length: 300 }), // English meta description
+  isPublished: boolean('is_published').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  lastEditedBy: integer('last_edited_by').references(() => users.id), // admin who last edited
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Workspace Relations
 export const workspacesRelations = relations(workspaces, ({ one, many }) => ({
   owner: one(users, { fields: [workspaces.ownerId], references: [users.id] }),
@@ -758,9 +775,21 @@ export const insertPublishingLogsSchema = createInsertSchema(publishingLogs, {
 export const insertSidebarMenuItemSchema = createInsertSchema(sidebarMenuItems);
 export const selectSidebarMenuItemSchema = createSelectSchema(sidebarMenuItems);
 
+// Public Pages Schemas
+export const insertPublicPageSchema = createInsertSchema(publicPages, {
+  slug: (schema) => schema.min(1, "URL slug is required").max(100, "URL slug too long"),
+  title: (schema) => schema.min(1, "Title is required").max(200, "Title too long"),
+  content: (schema) => schema.min(1, "Content is required"),
+});
+export const selectPublicPageSchema = createSelectSchema(publicPages);
+
 // Sidebar Menu Items Types
 export type SidebarMenuItem = z.infer<typeof selectSidebarMenuItemSchema>;
 export type InsertSidebarMenuItem = z.infer<typeof insertSidebarMenuItemSchema>;
+
+// Public Pages Types
+export type PublicPage = z.infer<typeof selectPublicPageSchema>;
+export type InsertPublicPage = z.infer<typeof insertPublicPageSchema>;
 
 // Social Media Types
 export type SocialConnection = z.infer<typeof selectSocialConnectionSchema>;

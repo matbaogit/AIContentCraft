@@ -130,6 +130,13 @@ export interface IStorage {
   getReferralTransactions(userId: number, page: number, limit: number): Promise<{ transactions: any[], total: number }>;
   getReferralSettings(): Promise<{ referrerReward: number; referredReward: number; enabled: boolean }>;
 
+  // Public pages management
+  getPublicPage(slug: string): Promise<schema.PublicPage | null>;
+  getAllPublicPages(): Promise<schema.PublicPage[]>;
+  createPublicPage(pageData: schema.InsertPublicPage): Promise<schema.PublicPage | null>;
+  updatePublicPage(id: number, pageData: Partial<schema.InsertPublicPage>): Promise<schema.PublicPage | null>;
+  deletePublicPage(id: number): Promise<boolean>;
+
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -1709,6 +1716,67 @@ class DatabaseStorage implements IStorage {
         totalCreditsUsed: 0,
         recentUsers: []
       };
+    }
+  }
+
+  // Public Pages Management
+  async getPublicPage(slug: string): Promise<schema.PublicPage | null> {
+    try {
+      const page = await db.query.publicPages.findFirst({
+        where: eq(schema.publicPages.slug, slug)
+      });
+      return page || null;
+    } catch (error) {
+      console.error('Error getting public page:', error);
+      return null;
+    }
+  }
+
+  async getAllPublicPages(): Promise<schema.PublicPage[]> {
+    try {
+      const pages = await db.query.publicPages.findMany({
+        orderBy: [asc(schema.publicPages.sortOrder), asc(schema.publicPages.title)]
+      });
+      return pages;
+    } catch (error) {
+      console.error('Error getting all public pages:', error);
+      return [];
+    }
+  }
+
+  async createPublicPage(pageData: schema.InsertPublicPage): Promise<schema.PublicPage | null> {
+    try {
+      const [page] = await db.insert(schema.publicPages)
+        .values(pageData)
+        .returning();
+      return page;
+    } catch (error) {
+      console.error('Error creating public page:', error);
+      return null;
+    }
+  }
+
+  async updatePublicPage(id: number, pageData: Partial<schema.InsertPublicPage>): Promise<schema.PublicPage | null> {
+    try {
+      const [page] = await db.update(schema.publicPages)
+        .set({ ...pageData, updatedAt: new Date() })
+        .where(eq(schema.publicPages.id, id))
+        .returning();
+      return page;
+    } catch (error) {
+      console.error('Error updating public page:', error);
+      return null;
+    }
+  }
+
+  async deletePublicPage(id: number): Promise<boolean> {
+    try {
+      await db.delete(schema.publicPages)
+        .where(eq(schema.publicPages.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting public page:', error);
+      return false;
     }
   }
 }
