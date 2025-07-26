@@ -295,6 +295,13 @@ class DatabaseStorage implements IStorage {
       await db.delete(schema.creditUsageHistory)
         .where(eq(schema.creditUsageHistory.userId, id));
       
+      // Delete user's referral records BEFORE deleting user
+      console.log(`[deleteUser] Deleting referrals for user ${id}`);
+      await db.delete(schema.referrals)
+        .where(eq(schema.referrals.userId, id));
+      
+      console.log(`[deleteUser] Referrals deleted, now deleting user ${id}`);
+      
       // Finally delete the user
       console.log(`[deleteUser] Deleting user ${id}`);
       await db.delete(schema.users)
