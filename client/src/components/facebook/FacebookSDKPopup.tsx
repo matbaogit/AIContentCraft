@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Facebook } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface FacebookSDKPopupProps {
   onSuccess: (accessToken: string, userInfo: any) => void;
@@ -22,7 +23,24 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
+  // Get Facebook OAuth settings from admin
+  const { data: adminSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+    retry: false,
+  });
+
   useEffect(() => {
+    // Only load SDK if we have admin settings
+    if (!adminSettings?.success) return;
+
+    const facebookAppId = adminSettings.data?.facebookAppId;
+    const enableFacebookOAuth = adminSettings.data?.enableFacebookOAuth;
+
+    if (!enableFacebookOAuth || !facebookAppId) {
+      console.log('Facebook OAuth not enabled or App ID not configured');
+      return;
+    }
+
     // Load Facebook SDK
     const loadFacebookSDK = () => {
       // Check if SDK is already loaded
@@ -34,7 +52,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
       // Initialize Facebook SDK
       window.fbAsyncInit = function() {
         window.FB.init({
-          appId: '665827136508049',
+          appId: facebookAppId,
           cookie: true,
           xfbml: true,
           version: 'v21.0'
@@ -72,7 +90,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
     };
 
     loadFacebookSDK();
-  }, []);
+  }, [adminSettings]);
 
   const handleFacebookLogin = () => {
     if (!isSDKLoaded || !window.FB) {
@@ -136,6 +154,27 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
     });
   };
 
+  // Check if Facebook OAuth is configured
+  const facebookAppId = adminSettings?.data?.facebookAppId;
+  const enableFacebookOAuth = adminSettings?.data?.enableFacebookOAuth;
+  const isConfigured = enableFacebookOAuth && facebookAppId;
+
+  if (adminSettings?.success && !isConfigured) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Kết nối Facebook</h3>
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+            <p className="text-sm text-orange-800 dark:text-orange-200">
+              <strong>Chưa cấu hình:</strong> Facebook OAuth chưa được thiết lập bởi admin. 
+              Vui lòng liên hệ admin để cấu hình Facebook App ID và bật tính năng này trong phần "Cài đặt Social OAuth".
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="text-center">
@@ -153,7 +192,7 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
 
       <Button
         onClick={handleFacebookLogin}
-        disabled={!isSDKLoaded || isConnecting || loading}
+        disabled={!isSDKLoaded || isConnecting || loading || !isConfigured}
         className="w-full bg-[#1877f2] hover:bg-[#166fe5] text-white"
         size="lg"
       >
