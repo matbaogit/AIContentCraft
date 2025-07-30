@@ -36,8 +36,9 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
     const facebookAppId = adminSettings.data?.facebookAppId;
     const enableFacebookOAuth = adminSettings.data?.enableFacebookOAuth;
 
-    if (!enableFacebookOAuth || !facebookAppId) {
-      console.log('Facebook OAuth not enabled or App ID not configured');
+    const isEnabled = enableFacebookOAuth === true || enableFacebookOAuth === 'true';
+    
+    if (!isEnabled || !facebookAppId) {
       return;
     }
 
@@ -157,7 +158,8 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
   // Check if Facebook OAuth is configured
   const facebookAppId = adminSettings?.data?.facebookAppId;
   const enableFacebookOAuth = adminSettings?.data?.enableFacebookOAuth;
-  const isConfigured = enableFacebookOAuth && facebookAppId;
+  const isEnabled = enableFacebookOAuth === true || enableFacebookOAuth === 'true';
+  const isConfigured = isEnabled && facebookAppId;
 
   if (adminSettings?.success && !isConfigured) {
     return (
