@@ -615,9 +615,22 @@ export default function CreateSocialContent() {
     
     let content = '';
     
-    if (generatedContent && Array.isArray(generatedContent)) {
+    // Priority 1: Check if generatedContent is a direct response object with data array
+    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+      console.log('Found generated content with data array, searching for platform content...');
+      const platformContent = generatedContent.data.find((item: any) => {
+        console.log('Checking item:', item, 'platform match:', item.platform === platform);
+        return item.platform === platform;
+      });
+      
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+        console.log('Found platform-specific content from data array:', content);
+      }
+    }
+    // Priority 2: Check if generatedContent is already an array
+    else if (generatedContent && Array.isArray(generatedContent)) {
       console.log('Searching for platform content in generated array...');
-      // Find content for the specific platform
       const platformContent = generatedContent.find((item: any) => {
         console.log('Checking item:', item, 'platform match:', item.platform === platform);
         return item.platform === platform;
@@ -625,17 +638,22 @@ export default function CreateSocialContent() {
       
       if (platformContent && platformContent.content) {
         content = platformContent.content;
-        console.log('Found platform-specific content:', content);
-      } else {
-        console.log('No platform-specific content found, using extracted content as fallback');
-        console.log('Available platforms in generated content:', generatedContent.map(item => item.platform));
-        if (extractedContent) {
-          content = extractedContent;
-        }
+        console.log('Found platform-specific content from array:', content);
       }
-    } else if (extractedContent) {
-      console.log('No generated content array, using extracted content');
-      content = extractedContent;
+    }
+    
+    // Only fallback to extracted content if no generated content found
+    if (!content) {
+      console.log('No platform-specific content found in generatedContent');
+      console.log('Available platforms in generated content:', 
+        generatedContent?.data ? generatedContent.data.map((item: any) => item.platform) :
+        Array.isArray(generatedContent) ? generatedContent.map((item: any) => item.platform) : 'none'
+      );
+      
+      if (extractedContent) {
+        console.log('Using extracted content as fallback');
+        content = extractedContent;
+      }
     }
     
     console.log('Final content to publish:', content?.substring(0, 100));
@@ -659,20 +677,25 @@ export default function CreateSocialContent() {
   };
 
   const handleSchedulePost = (platform: string) => {
-    // Check if we have generated content first, fallback to extracted content
     let content = '';
     
-    if (generatedContent && Array.isArray(generatedContent)) {
-      // Find content for the specific platform
+    // Priority 1: Check if generatedContent is a direct response object with data array
+    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+      const platformContent = generatedContent.data.find((item: any) => item.platform === platform);
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+      }
+    }
+    // Priority 2: Check if generatedContent is already an array
+    else if (generatedContent && Array.isArray(generatedContent)) {
       const platformContent = generatedContent.find((item: any) => item.platform === platform);
       if (platformContent && platformContent.content) {
         content = platformContent.content;
-      } else if (extractedContent) {
-        // Fallback to extracted content if no platform-specific content
-        content = extractedContent;
       }
-    } else if (extractedContent) {
-      // Use extracted content as fallback
+    }
+    
+    // Only fallback to extracted content if no generated content found
+    if (!content && extractedContent) {
       content = extractedContent;
     }
     
@@ -712,14 +735,23 @@ export default function CreateSocialContent() {
     // Get platform-specific content, fallback to extracted content
     let content = '';
     
-    if (generatedContent && Array.isArray(generatedContent)) {
+    // Priority 1: Check if generatedContent is a direct response object with data array
+    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+      const platformContent = generatedContent.data.find((item: any) => item.platform === schedulingPlatform);
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+      }
+    }
+    // Priority 2: Check if generatedContent is already an array
+    else if (generatedContent && Array.isArray(generatedContent)) {
       const platformContent = generatedContent.find((item: any) => item.platform === schedulingPlatform);
       if (platformContent && platformContent.content) {
         content = platformContent.content;
-      } else if (extractedContent) {
-        content = extractedContent;
       }
-    } else if (extractedContent) {
+    }
+    
+    // Only fallback to extracted content if no generated content found
+    if (!content && extractedContent) {
       content = extractedContent;
     }
     
