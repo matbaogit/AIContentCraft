@@ -249,8 +249,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">Kết nối tài khoản Facebook</h3>
-              <p className="text-gray-600 mb-2">
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Kết nối tài khoản Facebook</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
                 Đăng nhập vào Facebook để lấy danh sách Pages bạn quản lý
               </p>
               <div className="flex items-center justify-center space-x-2 mb-4">
@@ -289,8 +289,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                   <Users className="w-8 h-8 text-green-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Chọn Pages muốn kết nối</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Chọn Pages muốn kết nối</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Chọn các Facebook Pages bạn muốn kết nối để đăng bài
               </p>
             </div>
@@ -307,7 +307,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                   </div>
                 ) : (
                   availablePages.map((page) => (
-                    <Card key={page.id} className="cursor-pointer hover:bg-gray-50">
+                    <Card key={page.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700">
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
                           <Checkbox
@@ -322,8 +322,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                             />
                           )}
                           <div className="flex-1">
-                            <h4 className="font-medium">{page.name}</h4>
-                            <p className="text-sm text-gray-600">{page.category}</p>
+                            <h4 className="font-medium text-gray-900 dark:text-gray-100">{page.name}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{page.category}</p>
                             <div className="flex flex-wrap gap-1 mt-2">
                               {page.tasks?.map((task) => (
                                 <Badge key={task} variant="secondary" className="text-xs">
