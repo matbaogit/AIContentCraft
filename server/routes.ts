@@ -2931,19 +2931,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Prepare webhook payload - try simple format first to test size limits
-      const simpleContent = extractedContent ? extractedContent.substring(0, 500) + "..." : "";
+      // Prepare webhook payload - let webhook generate platform-specific content
+      // Don't send extracted_data - let webhook create fresh content for each platform
       
       // Force genSEO to false when using existing article
       const shouldGenSEO = contentSource === 'existing-article' ? false : (genSEO || false);
       console.log('shouldGenSEO calculated:', shouldGenSEO);
       
+      // Create platform-specific content based on extracted content
+      const baseDescription = extractedContent ? 
+        extractedContent.replace(/<[^>]*>/g, '').substring(0, 200) + "..." : 
+        "Tạo nội dung mạng xã hội về chủ đề được chọn";
+      
       const finalWebhookPayload = {
-        topic: "phim anime",
-        keywords: "anime, hoạt hình, Naruto, Attack on Titan", 
+        topic: baseDescription,
+        keywords: "CNTT, công nghệ thông tin, AI, blockchain, IoT", 
         url: referenceLink || "",
-        extract_content: "false",
-        extracted_data: simpleContent,
+        extract_content: "false", // Don't extract - generate new content
+        extracted_data: "", // Empty - let webhook generate platform-specific content
         post_to_linkedin: platforms.includes('linkedin') ? "true" : "false",
         post_to_facebook: platforms.includes('facebook') ? "true" : "false",
         post_to_x: platforms.includes('twitter') ? "true" : "false",

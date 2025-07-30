@@ -605,8 +605,24 @@ export default function CreateSocialContent() {
   };
 
   const handlePublishNow = (platform: string) => {
-    // Check if we have extracted content (for simple flow)
-    if (!extractedContent) {
+    // Check if we have generated content first, fallback to extracted content
+    let content = '';
+    
+    if (generatedContent && Array.isArray(generatedContent)) {
+      // Find content for the specific platform
+      const platformContent = generatedContent.find((item: any) => item.platform === platform);
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+      } else if (extractedContent) {
+        // Fallback to extracted content if no platform-specific content
+        content = extractedContent;
+      }
+    } else if (extractedContent) {
+      // Use extracted content as fallback
+      content = extractedContent;
+    }
+    
+    if (!content) {
       toast({
         title: t('common.error', 'Lỗi'),
         description: t('dashboard.create.socialContent.noContentToPost', 'Không có nội dung để đăng'),
@@ -617,15 +633,31 @@ export default function CreateSocialContent() {
 
     setPublishingStatus(prev => ({ ...prev, [platform]: 'publishing' }));
     
-    // Use extractedContent for simple social media content
-    const content = extractedContent;
     const imageUrls = selectedImage ? [selectedImage.imageUrl || selectedImage.url] : [];
     
+    console.log(`Publishing to ${platform}:`, { content, imageUrls });
     publishNowMutation.mutate({ platform, content, imageUrls });
   };
 
   const handleSchedulePost = (platform: string) => {
-    if (!extractedContent) {
+    // Check if we have generated content first, fallback to extracted content
+    let content = '';
+    
+    if (generatedContent && Array.isArray(generatedContent)) {
+      // Find content for the specific platform
+      const platformContent = generatedContent.find((item: any) => item.platform === platform);
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+      } else if (extractedContent) {
+        // Fallback to extracted content if no platform-specific content
+        content = extractedContent;
+      }
+    } else if (extractedContent) {
+      // Use extracted content as fallback
+      content = extractedContent;
+    }
+    
+    if (!content) {
       toast({
         title: "Lỗi",
         description: "Không có nội dung để lên lịch",
@@ -658,10 +690,33 @@ export default function CreateSocialContent() {
       return;
     }
 
-    const content = extractedContent;
+    // Get platform-specific content, fallback to extracted content
+    let content = '';
+    
+    if (generatedContent && Array.isArray(generatedContent)) {
+      const platformContent = generatedContent.find((item: any) => item.platform === schedulingPlatform);
+      if (platformContent && platformContent.content) {
+        content = platformContent.content;
+      } else if (extractedContent) {
+        content = extractedContent;
+      }
+    } else if (extractedContent) {
+      content = extractedContent;
+    }
+    
+    if (!content) {
+      toast({
+        title: "Lỗi",
+        description: "Không có nội dung để lên lịch",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const imageUrls = selectedImage ? [selectedImage.imageUrl || selectedImage.url] : [];
     
     setPublishingStatus(prev => ({ ...prev, [schedulingPlatform]: 'publishing' }));
+    console.log(`Scheduling ${schedulingPlatform}:`, { content, imageUrls, scheduledTime });
     schedulePostMutation.mutate({ 
       platform: schedulingPlatform, 
       content, 
