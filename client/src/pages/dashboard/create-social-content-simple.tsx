@@ -605,22 +605,41 @@ export default function CreateSocialContent() {
   };
 
   const handlePublishNow = (platform: string) => {
-    // Check if we have generated content first, fallback to extracted content
+    // Debug logging
+    console.log('=== PUBLISH NOW DEBUG ===');
+    console.log('Platform:', platform);
+    console.log('Generated Content:', generatedContent);
+    console.log('Generated Content Type:', typeof generatedContent);
+    console.log('Is Array:', Array.isArray(generatedContent));
+    console.log('Extracted Content preview:', extractedContent?.substring(0, 100));
+    
     let content = '';
     
     if (generatedContent && Array.isArray(generatedContent)) {
+      console.log('Searching for platform content in generated array...');
       // Find content for the specific platform
-      const platformContent = generatedContent.find((item: any) => item.platform === platform);
+      const platformContent = generatedContent.find((item: any) => {
+        console.log('Checking item:', item, 'platform match:', item.platform === platform);
+        return item.platform === platform;
+      });
+      
       if (platformContent && platformContent.content) {
         content = platformContent.content;
-      } else if (extractedContent) {
-        // Fallback to extracted content if no platform-specific content
-        content = extractedContent;
+        console.log('Found platform-specific content:', content);
+      } else {
+        console.log('No platform-specific content found, using extracted content as fallback');
+        console.log('Available platforms in generated content:', generatedContent.map(item => item.platform));
+        if (extractedContent) {
+          content = extractedContent;
+        }
       }
     } else if (extractedContent) {
-      // Use extracted content as fallback
+      console.log('No generated content array, using extracted content');
       content = extractedContent;
     }
+    
+    console.log('Final content to publish:', content?.substring(0, 100));
+    console.log('=== END DEBUG ===');
     
     if (!content) {
       toast({
