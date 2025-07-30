@@ -367,15 +367,15 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                   <Shield className="w-8 h-8 text-orange-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Xác nhận kết nối</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Xác nhận kết nối</h3>
+              <p className="text-gray-600 dark:text-gray-400">
                 Xác nhận các Pages sẽ được kết nối với quyền đăng bài
               </p>
             </div>
 
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {selectedPagesData.map((page) => (
-                <Card key={page.id}>
+                <Card key={page.id} className="border border-gray-200 dark:border-gray-700">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-3">
                       {page.picture && (
@@ -386,10 +386,10 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                         />
                       )}
                       <div className="flex-1">
-                        <h4 className="font-medium">{page.name}</h4>
-                        <p className="text-sm text-gray-600">{page.category}</p>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{page.name}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{page.category}</p>
                       </div>
-                      <Badge variant="outline" className="text-green-600 border-green-600">
+                      <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-600 dark:border-green-400">
                         Có quyền đăng bài
                       </Badge>
                     </div>
@@ -398,12 +398,12 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               ))}
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-start space-x-3">
-                <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-blue-900">Quyền được cấp:</p>
-                  <ul className="mt-1 text-blue-800 space-y-1">
+                  <p className="font-medium text-blue-900 dark:text-blue-100">Quyền được cấp:</p>
+                  <ul className="mt-1 text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• Đăng bài lên Pages được chọn</li>
                     <li>• Đọc engagement metrics</li>
                     <li>• Quản lý nội dung Posts</li>
