@@ -30,17 +30,43 @@
       // Biến toàn cục để vô hiệu hóa plugin hiển thị lỗi
       window.__RUNTIME_ERROR_OVERLAY_ACTIVE = false;
       
-      // Lọc các lỗi liên quan đến ResizeObserver
+      // Lọc các lỗi liên quan đến ResizeObserver và Facebook SDK
       window.__RUNTIME_ERROR_FILTER_FN = function(error) {
         if (!error || !error.message) return false;
         return error.message.includes('ResizeObserver loop') || 
-               error.message.includes('ResizeObserver is not defined');
+               error.message.includes('ResizeObserver is not defined') ||
+               error.message.includes('Failed to fetch') && error.stack && error.stack.includes('facebook.net') ||
+               error.message.includes('getLoginStatusCORS') ||
+               error.message.includes('connect.facebook.net');
       };
       
       // Gọi hàm ẩn overlay lỗi
       if (window.__HIDE_ALL_ERROR_OVERLAYS) {
         window.__HIDE_ALL_ERROR_OVERLAYS();
       }
+      
+      // Xử lý lỗi Facebook SDK CORS
+      window.addEventListener('error', function(event) {
+        if (event.error && event.error.message && 
+            (event.error.message.includes('Failed to fetch') && 
+             event.error.stack && event.error.stack.includes('facebook.net'))) {
+          console.log('Error retrieving login status, fetch cancelled.');
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return false;
+        }
+      });
+      
+      // Xử lý unhandled promise rejections từ Facebook SDK
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && 
+            (event.reason.message.includes('Failed to fetch') && 
+             event.reason.stack && event.reason.stack.includes('facebook.net'))) {
+          console.log('Error retrieving login status, fetch cancelled.');
+          event.preventDefault();
+          return false;
+        }
+      });
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

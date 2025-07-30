@@ -40,6 +40,20 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
           version: 'v21.0'
         });
         
+        // Override the getLoginStatus to prevent CORS errors
+        const originalGetLoginStatus = window.FB.getLoginStatus;
+        window.FB.getLoginStatus = function(callback: any, forceRefresh?: boolean) {
+          try {
+            originalGetLoginStatus.call(this, function(response: any) {
+              callback(response);
+            }, forceRefresh);
+          } catch (error) {
+            console.log('Error retrieving login status, fetch cancelled.');
+            // Return a default "unknown" status to prevent errors
+            callback({ status: 'unknown', authResponse: null });
+          }
+        };
+        
         setIsSDKLoaded(true);
         console.log('Facebook SDK initialized with v21.0 (from user HTML)');
       };
