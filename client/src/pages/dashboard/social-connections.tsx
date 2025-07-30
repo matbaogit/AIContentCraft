@@ -15,8 +15,7 @@ import { Plus, Settings, CheckCircle, XCircle, Facebook, Twitter, Linkedin, Inst
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/Layout";
-import { FacebookConnectModal } from "@/components/facebook/FacebookConnectModal";
-import { FacebookSDKPopup } from "@/components/facebook/FacebookSDKPopup";
+import { FacebookConnectionWizard } from "@/components/facebook/FacebookConnectionWizard";
 
 interface Connection {
   id: number;
@@ -74,8 +73,7 @@ export default function SocialConnections() {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showFacebookModal, setShowFacebookModal] = useState(false);
-  const [showFacebookSDKPopup, setShowFacebookSDKPopup] = useState(false);
+  const [showFacebookWizard, setShowFacebookWizard] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [form, setForm] = useState<ConnectionForm>({
     platform: '',
@@ -111,7 +109,7 @@ export default function SocialConnections() {
     retry: false,
   });
   
-  const connections = connectionsResponse?.data || [];
+  const connections = connectionsResponse && connectionsResponse.data ? connectionsResponse.data : [];
 
   // Create connection mutation
   const createMutation = useMutation({
@@ -193,7 +191,7 @@ export default function SocialConnections() {
   };
 
   const handleFacebookOAuth = () => {
-    setShowFacebookSDKPopup(true);
+    setShowFacebookWizard(true);
   };
 
   const handleFacebookConnectionSaved = (connection: any) => {
@@ -343,11 +341,11 @@ export default function SocialConnections() {
                     </p>
                     <Button 
                       type="button" 
-                      onClick={() => setShowFacebookModal(true)}
+                      onClick={() => setShowFacebookWizard(true)}
                       className="w-full"
                     >
                       <Facebook className="w-4 h-4 mr-2" />
-                      Chọn phương thức kết nối
+                      Kết nối Facebook Pages
                     </Button>
                   </div>
                 )}
@@ -591,70 +589,11 @@ export default function SocialConnections() {
           </DialogContent>
         </Dialog>
 
-        {/* Facebook Connect Modal */}
-        <FacebookConnectModal 
-          open={showFacebookModal}
-          onOpenChange={setShowFacebookModal}
-          onConnectionSaved={(connection) => {
-            // Handle successful connection
-            queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
-            setShowFacebookModal(false);
-            setShowCreateDialog(false);
-            toast({
-              title: "Facebook kết nối thành công!",
-              description: "Tài khoản Facebook đã được kết nối thành công.",
-            });
-          }}
+        {/* Facebook Connection Wizard */}
+        <FacebookConnectionWizard
+          isOpen={showFacebookWizard}
+          onClose={() => setShowFacebookWizard(false)}
         />
-
-        {/* Facebook SDK Popup Direct */}
-        {showFacebookSDKPopup && (
-          <FacebookSDKPopup
-            onSuccess={async (accessToken: string, userInfo: any) => {
-              try {
-                // Save connection to database
-                const connectionData = {
-                  platform: 'facebook',
-                  accountName: `Facebook - ${userInfo.name}`,
-                  accountId: userInfo.id,
-                  accessToken: accessToken,
-                  settings: {
-                    userInfo: userInfo,
-                    connectedAt: new Date().toISOString(),
-                    method: 'popup_sdk'
-                  }
-                };
-
-                await apiRequest('POST', '/api/social-connections', connectionData);
-                
-                queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
-                toast({
-                  title: "Thành công",
-                  description: `Đã kết nối Facebook cho ${userInfo.name}`,
-                });
-                setShowFacebookSDKPopup(false);
-              } catch (error: any) {
-                toast({
-                  title: "Lỗi",
-                  description: error.message || "Có lỗi xảy ra khi lưu kết nối",
-                  variant: "destructive",
-                });
-                setShowFacebookSDKPopup(false);
-              }
-            }}
-            onError={(error: any) => {
-              toast({
-                title: "Lỗi kết nối Facebook",
-                description: error.message || "Không thể kết nối với Facebook",
-                variant: "destructive",
-              });
-              setShowFacebookSDKPopup(false);
-            }}
-            onCancel={() => {
-              setShowFacebookSDKPopup(false);
-            }}
-          />
-        )}
       </div>
     </DashboardLayout>
   );
