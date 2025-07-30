@@ -4,22 +4,27 @@ import { scheduledPosts } from '../shared/schema';
 import * as schema from '../shared/schema';
 import { eq, and, lte, desc } from 'drizzle-orm';
 
-// Helper function to convert HTML to plain text
+// Helper function to convert HTML to plain text with proper line breaks
 function htmlToPlainText(html: string): string {
   if (!html) return '';
   
-  // Remove HTML tags
+  // Convert block elements to line breaks before removing tags
   let text = html
-    .replace(/<[^>]*>/g, '')           // Remove HTML tags
-    .replace(/&nbsp;/g, ' ')          // Replace &nbsp; with space
-    .replace(/&amp;/g, '&')           // Replace &amp; with &
-    .replace(/&lt;/g, '<')            // Replace &lt; with <
-    .replace(/&gt;/g, '>')            // Replace &gt; with >
-    .replace(/&quot;/g, '"')          // Replace &quot; with "
-    .replace(/&#39;/g, '\'')          // Replace &#39; with '
-    .replace(/&apos;/g, '\'')         // Replace &apos; with '
-    .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
-    .trim();                          // Remove leading/trailing whitespace
+    .replace(/<\/?(p|div|h[1-6]|br)>/gi, '\n')    // Block elements to line breaks
+    .replace(/<\/li>/gi, '\n')                     // List items to line breaks
+    .replace(/<li>/gi, '• ')                       // List items with bullet points
+    .replace(/<ul>|<\/ul>|<ol>|<\/ol>/gi, '\n')   // List containers to line breaks
+    .replace(/<[^>]*>/g, '')                       // Remove all remaining HTML tags
+    .replace(/&nbsp;/g, ' ')                       // Replace &nbsp; with space
+    .replace(/&amp;/g, '&')                        // Replace &amp; with &
+    .replace(/&lt;/g, '<')                         // Replace &lt; with <
+    .replace(/&gt;/g, '>')                         // Replace &gt; with >
+    .replace(/&quot;/g, '"')                       // Replace &quot; with "
+    .replace(/&#39;/g, '\'')                       // Replace &#39; with '
+    .replace(/&apos;/g, '\'')                      // Replace &apos; with '
+    .replace(/\n\s*\n/g, '\n')                     // Replace multiple line breaks with single
+    .replace(/^\s+|\s+$/gm, '')                    // Remove leading/trailing whitespace from each line
+    .trim();                                       // Remove leading/trailing whitespace
   
   return text;
 }
