@@ -271,6 +271,11 @@ export class PostScheduler {
         throw new Error('Facebook Access Token không được tìm thấy trong kết nối');
       }
 
+      // Check if token is expired
+      if (connection.expiresAt && new Date() > new Date(connection.expiresAt)) {
+        throw new Error('Facebook Access Token đã hết hạn. Vui lòng vào "Kết nối mạng xã hội" để kết nối lại Facebook.');
+      }
+
       // Get Facebook user/page info first
       const meResponse = await fetch(`https://graph.facebook.com/me?access_token=${accessToken}`);
       if (!meResponse.ok) {

@@ -1615,8 +1615,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.redirect('/dashboard/social-connections?error=token_exchange_failed');
       }
 
-      const accessToken = tokenData.access_token;
-      const expiresIn = tokenData.expires_in;
+      let accessToken = tokenData.access_token;
+      let expiresIn = tokenData.expires_in;
+      
+      // Exchange for long-lived token (60 days)
+      try {
+        const longLivedResponse = await fetch(
+          `https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=${facebookAppId}&client_secret=${facebookAppSecret}&fb_exchange_token=${accessToken}`
+        );
+
+        if (longLivedResponse.ok) {
+          const longLivedData = await longLivedResponse.json();
+          accessToken = longLivedData.access_token;
+          expiresIn = longLivedData.expires_in || 5184000; // 60 days default
+          console.log('Successfully exchanged for long-lived token, expires in:', expiresIn, 'seconds');
+        } else {
+          console.warn('Failed to get long-lived token, using short-lived token');
+        }
+      } catch (error) {
+        console.warn('Error exchanging for long-lived token:', error);
+      }
 
       // Get user's Facebook pages
       const pagesResponse = await fetch(
@@ -4695,6 +4713,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ success: false, error: 'Connection not found' });
       }
 
+      // For Facebook connections, revoke the access token for security
+      if (connection.platform === 'facebook' && connection.accessToken) {
+        try {
+          // Revoke access token on Facebook's side
+          const revokeUrl = `https://graph.facebook.com/me/permissions?access_token=${connection.accessToken}`;
+          await fetch(revokeUrl, { method: 'DELETE' });
+          console.log('Facebook access token revoked for connection:', connectionId);
+        } catch (error) {
+          console.warn('Failed to revoke Facebook token:', error);
+          // Continue with deletion even if revoke fails
+        }
+      }
+
       await storage.deleteSocialConnection(connectionId);
       res.json({ success: true });
     } catch (error) {
@@ -5135,6 +5166,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const accessToken = connection.accessToken;
           if (!accessToken) {
             throw new Error('Facebook Access Token không được tìm thấy trong kết nối');
+          }
+
+          // Check if token is expired
+          if (connection.expiresAt && new Date() > new Date(connection.expiresAt)) {
+            throw new Error('Facebook Access Token đã hết hạn. Vui lòng vào "Kết nối mạng xã hội" để kết nối lại Facebook.');
           }
 
           // Get Facebook user/page info first
