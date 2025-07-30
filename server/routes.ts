@@ -2995,9 +2995,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         webhookResult = { message: 'Final webhook executed successfully but returned non-JSON response' };
       }
 
+      console.log('=== WEBHOOK RESPONSE DEBUG ===');
       console.log('Final webhook result:', webhookResult);
+      console.log('Type:', typeof webhookResult);
+      console.log('Is Array:', Array.isArray(webhookResult));
+      if (Array.isArray(webhookResult)) {
+        console.log('Array length:', webhookResult.length);
+        webhookResult.forEach((item, index) => {
+          console.log(`Item ${index}:`, item);
+        });
+      }
+      console.log('=== END WEBHOOK DEBUG ===');
 
-      // Return webhook response to frontend
+      // Return webhook response to frontend - ensure it's the actual webhook data
       res.json({ 
         success: true, 
         data: webhookResult || { message: 'Content approved and sent to Social Media Content webhook' }
