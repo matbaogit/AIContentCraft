@@ -68,6 +68,51 @@
         }
       });
     </script>
+    
+    <!-- Facebook SDK for JavaScript -->
+    <script>
+      window.fbAsyncInit = function() {
+        // Initialize Facebook SDK with dynamic App ID from admin settings
+        fetch('/api/admin/settings')
+          .then(response => response.json())
+          .then(data => {
+            console.log('Admin settings response:', data);
+            if (data.success && data.data) {
+              // Handle both array and object format
+              let facebookAppId;
+              if (Array.isArray(data.data)) {
+                facebookAppId = data.data.find(setting => setting.key === 'facebook_app_id')?.value;
+              } else if (data.data.facebookAppId) {
+                facebookAppId = data.data.facebookAppId;
+              }
+              
+              if (facebookAppId) {
+                FB.init({
+                  appId: facebookAppId,
+                  cookie: true,
+                  xfbml: true,
+                  version: 'v18.0'
+                });
+                console.log('Facebook SDK initialized with App ID:', facebookAppId);
+              } else {
+                console.warn('Facebook App ID not found in admin settings');
+              }
+            }
+          })
+          .catch(error => {
+            console.warn('Failed to load Facebook App ID from admin settings:', error);
+          });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "https://connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

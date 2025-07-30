@@ -46,6 +46,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
   const [availablePages, setAvailablePages] = useState<FacebookPage[]>([]);
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sdkReady, setSdkReady] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -57,30 +58,56 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
       setUserInfo(null);
       setAvailablePages([]);
       setSelectedPages([]);
+      setSdkReady(false);
+      
+      // Check SDK status periodically
+      const checkSDK = () => {
+        if (typeof window !== 'undefined' && (window as any).FB) {
+          setSdkReady(true);
+        }
+      };
+      
+      checkSDK();
+      const interval = setInterval(checkSDK, 1000);
+      
+      // Cleanup interval when component unmounts or isOpen changes
+      setTimeout(() => {
+        clearInterval(interval);
+      }, 10000); // Stop checking after 10 seconds
     }
   }, [isOpen]);
+
+  // Check if Facebook SDK is loaded
+  const checkFacebookSDK = (): boolean => {
+    if (typeof window !== 'undefined' && (window as any).FB) {
+      return true;
+    }
+    toast({
+      title: "Lỗi Facebook SDK",
+      description: "Facebook SDK chưa được tải. Vui lòng thử lại sau vài giây.",
+      variant: "destructive",
+    });
+    return false;
+  };
 
   // Step 1: Facebook Login
   const handleFacebookLogin = () => {
     setIsLoading(true);
     
-    if (!window.FB) {
-      toast({
-        title: "Lỗi Facebook SDK",
-        description: "Facebook SDK chưa được tải. Vui lòng thử lại.",
-        variant: "destructive",
-      });
+    if (!checkFacebookSDK()) {
       setIsLoading(false);
       return;
     }
 
-    window.FB.login((response: any) => {
+    const FB = (window as any).FB;
+
+    FB.login((response: any) => {
       if (response.authResponse) {
         const accessToken = response.authResponse.accessToken;
         setUserAccessToken(accessToken);
         
         // Get user info
-        window.FB.api('/me', { fields: 'id,name,picture' }, (userResponse: any) => {
+        FB.api('/me', { fields: 'id,name,picture' }, (userResponse: any) => {
           if (userResponse && !userResponse.error) {
             setUserInfo(userResponse);
             setCurrentStep('selectPages');
@@ -111,7 +138,14 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
   const fetchUserPages = (accessToken: string) => {
     setIsLoading(true);
     
-    window.FB.api('/me/accounts', { access_token: accessToken }, (response: any) => {
+    if (!checkFacebookSDK()) {
+      setIsLoading(false);
+      return;
+    }
+
+    const FB = (window as any).FB;
+    
+    FB.api('/me/accounts', { access_token: accessToken }, (response: any) => {
       if (response && response.data && !response.error) {
         setAvailablePages(response.data);
       } else {
@@ -216,14 +250,20 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-2">Kết nối tài khoản Facebook</h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-2">
                 Đăng nhập vào Facebook để lấy danh sách Pages bạn quản lý
               </p>
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <div className={`w-2 h-2 rounded-full ${sdkReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <span className={`text-sm ${sdkReady ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {sdkReady ? 'Facebook SDK sẵn sàng' : 'Đang tải Facebook SDK...'}
+                </span>
+              </div>
             </div>
             <Button 
               onClick={handleFacebookLogin}
-              disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isLoading || !sdkReady}
+              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
               {isLoading ? (
                 <>
