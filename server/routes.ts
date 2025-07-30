@@ -14,6 +14,26 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 
+// Helper function to convert HTML to plain text
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  
+  // Remove HTML tags
+  let text = html
+    .replace(/<[^>]*>/g, '')           // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')          // Replace &nbsp; with space
+    .replace(/&amp;/g, '&')           // Replace &amp; with &
+    .replace(/&lt;/g, '<')            // Replace &lt; with <
+    .replace(/&gt;/g, '>')            // Replace &gt; with >
+    .replace(/&quot;/g, '"')          // Replace &quot; with "
+    .replace(/&#39;/g, '\'')          // Replace &#39; with '
+    .replace(/&apos;/g, '\'')         // Replace &apos; with '
+    .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
+    .trim();                          // Remove leading/trailing whitespace
+  
+  return text;
+}
+
 // Helper function to log credit usage history
 async function logCreditUsage(
   userId: number,
@@ -5141,7 +5161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
               
               uploadData.append('source', imageBlob);
-              uploadData.append('message', content);
+              uploadData.append('message', htmlToPlainText(content));
               uploadData.append('access_token', accessToken);
 
               const photoResponse = await fetch(`https://graph.facebook.com/${userData.id}/photos`, {
@@ -5167,7 +5187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Fallback: post with image URL
               const postData = {
-                message: content,
+                message: htmlToPlainText(content),
                 link: imageUrl,
                 access_token: accessToken
               };
@@ -5197,7 +5217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             // Text-only post
             const postData = {
-              message: content,
+              message: htmlToPlainText(content),
               access_token: accessToken
             };
 

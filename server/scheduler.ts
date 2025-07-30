@@ -4,6 +4,26 @@ import { scheduledPosts } from '../shared/schema';
 import * as schema from '../shared/schema';
 import { eq, and, lte, desc } from 'drizzle-orm';
 
+// Helper function to convert HTML to plain text
+function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  
+  // Remove HTML tags
+  let text = html
+    .replace(/<[^>]*>/g, '')           // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')          // Replace &nbsp; with space
+    .replace(/&amp;/g, '&')           // Replace &amp; with &
+    .replace(/&lt;/g, '<')            // Replace &lt; with <
+    .replace(/&gt;/g, '>')            // Replace &gt; with >
+    .replace(/&quot;/g, '"')          // Replace &quot; with "
+    .replace(/&#39;/g, '\'')          // Replace &#39; with '
+    .replace(/&apos;/g, '\'')         // Replace &apos; with '
+    .replace(/\s+/g, ' ')             // Replace multiple spaces with single space
+    .trim();                          // Remove leading/trailing whitespace
+  
+  return text;
+}
+
 interface ScheduledPostJob {
   id: number;
   userId: number;
@@ -256,8 +276,8 @@ export class PostScheduler {
       const userData = await meResponse.json();
       console.log('Facebook user data:', userData);
 
-      // Prepare post content
-      let postContent = post.content;
+      // Prepare post content - convert HTML to plain text for Facebook
+      let postContent = htmlToPlainText(post.content);
       
       // If there are images, we need to handle them
       let images: string[] = [];
@@ -501,7 +521,7 @@ export class PostScheduler {
 
   private async publishToInstagramBusiness(post: ScheduledPostJob, connection: any, accessToken: string, accountData: any): Promise<any> {
     try {
-      const content = post.content || '';
+      const content = htmlToPlainText(post.content || '');
       const imageUrls = Array.isArray(post.imageUrls) ? post.imageUrls : 
                        (post.imageUrls ? [post.imageUrls] : []);
       
