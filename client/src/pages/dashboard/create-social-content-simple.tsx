@@ -642,18 +642,14 @@ export default function CreateSocialContent() {
       }
     }
     
-    // Only fallback to extracted content if no generated content found
+    // NEVER fallback to extracted content - require generated content
     if (!content) {
-      console.log('No platform-specific content found in generatedContent');
+      console.log('ERROR: No platform-specific generated content found!');
       console.log('Available platforms in generated content:', 
         generatedContent?.data ? generatedContent.data.map((item: any) => item.platform) :
         Array.isArray(generatedContent) ? generatedContent.map((item: any) => item.platform) : 'none'
       );
-      
-      if (extractedContent) {
-        console.log('Using extracted content as fallback');
-        content = extractedContent;
-      }
+      console.log('Refusing to use extracted content as fallback');
     }
     
     console.log('Final content to publish:', content?.substring(0, 100));
@@ -661,8 +657,8 @@ export default function CreateSocialContent() {
     
     if (!content) {
       toast({
-        title: t('common.error', 'Lỗi'),
-        description: t('dashboard.create.socialContent.noContentToPost', 'Không có nội dung để đăng'),
+        title: "Lỗi",
+        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi đăng bài.",
         variant: "destructive"
       });
       return;
@@ -694,15 +690,11 @@ export default function CreateSocialContent() {
       }
     }
     
-    // Only fallback to extracted content if no generated content found
-    if (!content && extractedContent) {
-      content = extractedContent;
-    }
-    
+    // NEVER use extracted content - require generated content only
     if (!content) {
       toast({
         title: "Lỗi",
-        description: "Không có nội dung để lên lịch",
+        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.",
         variant: "destructive"
       });
       return;
@@ -750,15 +742,11 @@ export default function CreateSocialContent() {
       }
     }
     
-    // Only fallback to extracted content if no generated content found
-    if (!content && extractedContent) {
-      content = extractedContent;
-    }
-    
+    // NEVER use extracted content - require generated content only
     if (!content) {
       toast({
         title: "Lỗi",
-        description: "Không có nội dung để lên lịch",
+        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.",
         variant: "destructive"
       });
       return;
