@@ -135,6 +135,14 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Thành công',
         en: 'Success'
       },
+      'dashboard.create.socialContent.generatingContent': {
+        vi: 'Đang tạo nội dung...',
+        en: 'Generating content...'
+      },
+      'dashboard.create.socialContent.nextStep': {
+        vi: 'Tiếp theo',
+        en: 'Next'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

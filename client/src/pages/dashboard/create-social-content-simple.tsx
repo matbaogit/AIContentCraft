@@ -368,7 +368,7 @@ export default function CreateSocialContent() {
         title: `Social Media Image - ${new Date().toLocaleDateString('vi-VN')}`,
         prompt,
         sourceText: extractedContent || '',
-        articleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : undefined
+        articleId: formData.selectedArticleId ? formData.selectedArticleId : undefined
       });
       return await response.json();
     },
@@ -500,7 +500,7 @@ export default function CreateSocialContent() {
         } : null,
         // Include extracted content and reference info
         extractedContent: extractedContent,
-        sourceArticleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : undefined,
+        sourceArticleId: formData.selectedArticleId ? formData.selectedArticleId : undefined,
         referenceLink: formData.referenceLink
       };
       
@@ -1453,7 +1453,7 @@ export default function CreateSocialContent() {
                   ) : generateSocialContentMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang tạo nội dung social...
+                      {t('dashboard.create.socialContent.generatingContent', 'Đang tạo nội dung social...')}
                     </>
                   ) : (
                     <>
@@ -1468,7 +1468,7 @@ export default function CreateSocialContent() {
                     variant="outline"
                     className="flex-none"
                   >
-                    Tiếp theo
+                    {t('dashboard.create.socialContent.nextStep', 'Tiếp theo')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}
@@ -1559,7 +1559,7 @@ export default function CreateSocialContent() {
                   {generateMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang tạo nội dung...
+                      {t('dashboard.create.socialContent.generatingContent', 'Đang tạo nội dung...')}
                     </>
                   ) : (
                     <>
@@ -1574,7 +1574,7 @@ export default function CreateSocialContent() {
                     variant="outline"
                     className="flex-none"
                   >
-                    Tiếp theo
+                    {t('dashboard.create.socialContent.nextStep', 'Tiếp theo')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}
