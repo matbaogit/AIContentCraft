@@ -279,6 +279,26 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Lỗi lên lịch',
         en: 'Schedule Error'
       },
+      'dashboard.create.socialContent.publishSuccess': {
+        vi: 'Đăng thành công',
+        en: 'Posted Successfully'
+      },
+      'dashboard.create.socialContent.publishSuccessMessage': {
+        vi: 'Bài viết đã được đăng lên',
+        en: 'Post has been published to'
+      },
+      'dashboard.create.socialContent.publishSuccessFull': {
+        vi: 'Đăng bài thành công!',
+        en: 'Post published successfully!'
+      },
+      'dashboard.create.socialContent.image': {
+        vi: 'Hình ảnh:',
+        en: 'Image:'
+      },
+      'dashboard.create.socialContent.scheduleSuccessFull': {
+        vi: 'Lên lịch thành công!',
+        en: 'Scheduled successfully!'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

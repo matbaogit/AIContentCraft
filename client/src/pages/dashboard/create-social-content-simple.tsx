@@ -165,8 +165,8 @@ export default function CreateSocialContent() {
         [variables.platform]: { success: true, url: data.data?.url } 
       }));
       toast({
-        title: "Đăng thành công",
-        description: `Bài viết đã được đăng lên ${variables.platform}`
+        title: t('dashboard.create.socialContent.publishSuccess', 'Đăng thành công'),
+        description: `${t('dashboard.create.socialContent.publishSuccessMessage', 'Bài viết đã được đăng lên')} ${variables.platform}`
       });
     },
     onError: (error: any, variables) => {
@@ -1019,7 +1019,7 @@ export default function CreateSocialContent() {
                         {/* Image Preview */}
                         {selectedImage && (
                           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                            <h4 className="font-medium mb-2">Hình ảnh:</h4>
+                            <h4 className="font-medium mb-2">{t('dashboard.create.socialContent.image', 'Hình ảnh:')}</h4>
                             <img 
                               src={selectedImage.imageUrl || selectedImage.url} 
                               alt={selectedImage.title || "Selected image"} 
@@ -1087,7 +1087,7 @@ export default function CreateSocialContent() {
                               <div className="flex items-center space-x-2">
                                 <CheckCircle className="w-4 h-4" />
                                 <span>
-                                  {publishStatus === 'published' ? 'Đăng bài thành công!' : 'Lên lịch thành công!'}
+                                  {publishStatus === 'published' ? t('dashboard.create.socialContent.publishSuccessFull', 'Đăng bài thành công!') : t('dashboard.create.socialContent.scheduleSuccessFull', 'Lên lịch thành công!')}
                                 </span>
                                 {result.url && (
                                   <a 
@@ -1118,7 +1118,7 @@ export default function CreateSocialContent() {
               <div className="flex justify-between pt-6">
                 <Button variant="outline" onClick={() => setCurrentStep(3)}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Quay lại
+                  {t('dashboard.create.socialContent.goBack', 'Quay lại')}
                 </Button>
                 
                 <div className="flex space-x-3">
