@@ -143,6 +143,22 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Tiếp theo',
         en: 'Next'
       },
+      'dashboard.create.socialContent.justNow': {
+        vi: 'Vừa xong',
+        en: 'Just now'
+      },
+      'dashboard.create.socialContent.like': {
+        vi: 'Thích',
+        en: 'Like'
+      },
+      'dashboard.create.socialContent.comment': {
+        vi: 'Bình luận',
+        en: 'Comment'
+      },
+      'dashboard.create.socialContent.share': {
+        vi: 'Chia sẻ',
+        en: 'Share'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

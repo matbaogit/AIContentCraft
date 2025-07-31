@@ -179,6 +179,50 @@ const translations: TranslationsType = {
       }
     },
     
+    auth: {
+      login: {
+        title: "Đăng nhập",
+        username: "Tên đăng nhập hoặc Email",
+        password: "Mật khẩu",
+        rememberMe: "Ghi nhớ đăng nhập",
+        forgotPassword: "Quên mật khẩu?",
+        submit: "Đăng nhập",
+        switchToRegister: "Chưa có tài khoản? Đăng ký ngay",
+        orContinueWith: "Hoặc đăng nhập với"
+      },
+      register: {
+        title: "Đăng ký",
+        name: "Họ tên",
+        email: "Email",
+        password: "Mật khẩu",
+        confirmPassword: "Xác nhận mật khẩu",
+        termsAgree: "Tôi đồng ý với",
+        terms: "Điều khoản dịch vụ",
+        and: "và",
+        privacy: "Chính sách bảo mật",
+        submit: "Đăng ký",
+        switchToLogin: "Đã có tài khoản? Đăng nhập"
+      }
+    },
+    
+    nav: {
+      features: "Tính năng",
+      pricing: "Bảng giá",
+      faq: "Hỏi đáp",
+      contact: "Liên hệ",
+      dashboard: "Bảng điều khiển",
+      login: "Đăng nhập",
+      register: "Đăng ký"
+    },
+    
+    authPage: {
+      highlights: {
+        seo: "Tạo nội dung chuẩn SEO chỉ trong vài phút",
+        integration: "Tích hợp đa nền tảng: WordPress, social media",
+        credits: "Hệ thống credits linh hoạt, chi phí tối ưu"
+      }
+    },
+    
     landing: {
       loadingData: "Đang tải dữ liệu...",
       viewAll: "Xem tất cả",
@@ -286,54 +330,8 @@ const translations: TranslationsType = {
           usageTitle: "Sử dụng tín dụng",
           usageTip: "Tín dụng được sử dụng khi tạo nội dung mới và không thể hoàn lại."
         }
-      }
-    },
-    
-    auth: {
-      login: {
-        title: "Đăng nhập",
-        username: "Tên đăng nhập hoặc Email",
-        password: "Mật khẩu",
-        rememberMe: "Ghi nhớ đăng nhập",
-        forgotPassword: "Quên mật khẩu?",
-        submit: "Đăng nhập",
-        switchToRegister: "Chưa có tài khoản? Đăng ký ngay",
-        orContinueWith: "Hoặc đăng nhập với"
       },
-      register: {
-        title: "Đăng ký",
-        name: "Họ tên",
-        email: "Email",
-        password: "Mật khẩu",
-        confirmPassword: "Xác nhận mật khẩu",
-        termsAgree: "Tôi đồng ý với",
-        terms: "Điều khoản dịch vụ",
-        and: "và",
-        privacy: "Chính sách bảo mật",
-        submit: "Đăng ký",
-        switchToLogin: "Đã có tài khoản? Đăng nhập"
-      }
-    },
-    
-    nav: {
-      features: "Tính năng",
-      pricing: "Bảng giá",
-      faq: "Hỏi đáp",
-      contact: "Liên hệ",
-      dashboard: "Bảng điều khiển",
-      login: "Đăng nhập",
-      register: "Đăng ký"
-    },
-    
-    authPage: {
-      highlights: {
-        seo: "Tạo nội dung chuẩn SEO chỉ trong vài phút",
-        integration: "Tích hợp đa nền tảng: WordPress, social media",
-        credits: "Hệ thống credits linh hoạt, chi phí tối ưu"
-      }
-    },
-    
-    landing: {
+      
       hero: {
         badge: "Công nghệ AI tiên tiến",
         title: "Tạo bài viết SEO chất lượng cao tức thì",

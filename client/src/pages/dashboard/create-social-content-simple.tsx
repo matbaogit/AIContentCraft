@@ -1836,7 +1836,7 @@ export default function CreateSocialContent() {
                             </div>
                             <div className="ml-3">
                               <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">Your Page</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Vừa xong</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.create.socialContent.justNow', 'Vừa xong')}</div>
                             </div>
                           </div>
                           
@@ -1860,21 +1860,21 @@ export default function CreateSocialContent() {
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <ThumbsUp className="w-4 h-4" />
-                                <span>Thích</span>
+                                <span>{t('dashboard.create.socialContent.like', 'Thích')}</span>
                               </button>
                               <button 
                                 className="social-preview-button flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-sm py-2 rounded transition-colors"
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <MessageCircle className="w-4 h-4" />
-                                <span>Bình luận</span>
+                                <span>{t('dashboard.create.socialContent.comment', 'Bình luận')}</span>
                               </button>
                               <button 
                                 className="social-preview-button flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-sm py-2 rounded transition-colors"
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <Share className="w-4 h-4" />
-                                <span>Chia sẻ</span>
+                                <span>{t('dashboard.create.socialContent.share', 'Chia sẻ')}</span>
                               </button>
                             </div>
                           </div>
@@ -1917,21 +1917,21 @@ export default function CreateSocialContent() {
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <ThumbsUp className="w-4 h-4" />
-                                <span>Thích</span>
+                                <span>{t('dashboard.create.socialContent.like', 'Thích')}</span>
                               </button>
                               <button 
                                 className="social-preview-button flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-sm py-1 rounded transition-colors"
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <MessageCircle className="w-4 h-4" />
-                                <span>Bình luận</span>
+                                <span>{t('dashboard.create.socialContent.comment', 'Bình luận')}</span>
                               </button>
                               <button 
                                 className="social-preview-button flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-sm py-1 rounded transition-colors"
                                 style={{ background: 'transparent', backgroundColor: 'transparent', border: '0', borderColor: 'transparent' }}
                               >
                                 <Share className="w-4 h-4" />
-                                <span>Chia sẻ</span>
+                                <span>{t('dashboard.create.socialContent.share', 'Chia sẻ')}</span>
                               </button>
                             </div>
                           </div>
