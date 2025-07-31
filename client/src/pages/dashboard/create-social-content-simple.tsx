@@ -910,25 +910,25 @@ export default function CreateSocialContent() {
                                 ) : (
                                   <Badge variant="destructive">
                                     <AlertCircle className="w-3 h-3 mr-1" />
-                                    Chưa kết nối
+                                    {t('dashboard.create.socialContent.notConnected', 'Chưa kết nối')}
                                   </Badge>
                                 )}
                                 {publishStatus === 'published' && (
                                   <Badge className="bg-green-100 text-green-800">
                                     <CheckCircle className="w-3 h-3 mr-1" />
-                                    Đã đăng
+                                    {t('dashboard.create.socialContent.published', 'Đã đăng')}
                                   </Badge>
                                 )}
                                 {publishStatus === 'scheduled' && (
                                   <Badge className="bg-blue-100 text-blue-800">
                                     <Clock className="w-3 h-3 mr-1" />
-                                    Đã lên lịch
+                                    {t('dashboard.create.socialContent.scheduled', 'Đã lên lịch')}
                                   </Badge>
                                 )}
                                 {publishStatus === 'error' && (
                                   <Badge variant="destructive">
                                     <AlertCircle className="w-3 h-3 mr-1" />
-                                    Lỗi
+                                    {t('dashboard.create.socialContent.error', 'Lỗi')}
                                   </Badge>
                                 )}
                               </div>

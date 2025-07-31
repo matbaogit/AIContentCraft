@@ -243,10 +243,6 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Bài viết đã lên lịch',
         en: 'Scheduled Article'
       },
-      'dashboard.create.socialContent.scheduled': {
-        vi: 'Đã lên lịch',
-        en: 'Scheduled'
-      },
       'dashboard.create.socialContent.scheduleFor': {
         vi: 'Lên lịch cho',
         en: 'Schedule for'
@@ -298,6 +294,18 @@ export function useDbTranslations(): UseDbTranslationsResult {
       'dashboard.create.socialContent.scheduleSuccessFull': {
         vi: 'Lên lịch thành công!',
         en: 'Scheduled successfully!'
+      },
+      'dashboard.create.socialContent.published': {
+        vi: 'Đã đăng',
+        en: 'Published'
+      },
+      'dashboard.create.socialContent.scheduled': {
+        vi: 'Đã lên lịch',
+        en: 'Scheduled'
+      },
+      'dashboard.create.socialContent.notConnected': {
+        vi: 'Chưa kết nối',
+        en: 'Not Connected'
       },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
