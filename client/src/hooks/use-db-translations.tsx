@@ -223,6 +223,62 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Đăng ngay',
         en: 'Post Now'
       },
+      'dashboard.create.socialContent.postAndSchedule': {
+        vi: 'Đăng bài và Lên lịch',
+        en: 'Post and Schedule'
+      },
+      'dashboard.create.socialContent.choosePostOrSchedule': {
+        vi: 'Chọn đăng ngay hoặc lên lịch cho từng nền tảng',
+        en: 'Choose to post now or schedule for each platform'
+      },
+      'dashboard.create.socialContent.connected': {
+        vi: 'Đã kết nối',
+        en: 'Connected'
+      },
+      'dashboard.create.socialContent.schedule': {
+        vi: 'Đặt lịch',
+        en: 'Schedule'
+      },
+      'dashboard.create.socialContent.scheduledArticle': {
+        vi: 'Bài viết đã lên lịch',
+        en: 'Scheduled Article'
+      },
+      'dashboard.create.socialContent.scheduled': {
+        vi: 'Đã lên lịch',
+        en: 'Scheduled'
+      },
+      'dashboard.create.socialContent.scheduleFor': {
+        vi: 'Lên lịch cho',
+        en: 'Schedule for'
+      },
+      'dashboard.create.socialContent.postError': {
+        vi: 'Lỗi đăng bài',
+        en: 'Post Error'
+      },
+      'dashboard.create.socialContent.noContentError': {
+        vi: 'Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi đăng bài.',
+        en: 'No content created for this platform. Please create content before posting.'
+      },
+      'dashboard.create.socialContent.noContentScheduleError': {
+        vi: 'Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.',
+        en: 'No content created for this platform. Please create content before scheduling.'
+      },
+      'dashboard.create.socialContent.error': {
+        vi: 'Lỗi',
+        en: 'Error'
+      },
+      'dashboard.create.socialContent.selectTimeError': {
+        vi: 'Vui lòng chọn thời gian đăng',
+        en: 'Please select a posting time'
+      },
+      'dashboard.create.socialContent.futureTimeError': {
+        vi: 'Thời gian đăng phải sau thời điểm hiện tại',
+        en: 'Posting time must be in the future'
+      },
+      'dashboard.create.socialContent.scheduleError': {
+        vi: 'Lỗi lên lịch',
+        en: 'Schedule Error'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

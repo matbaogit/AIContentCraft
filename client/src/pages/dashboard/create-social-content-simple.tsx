@@ -176,7 +176,7 @@ export default function CreateSocialContent() {
         [variables.platform]: { success: false, error: error.message } 
       }));
       toast({
-        title: "Lỗi đăng bài",
+        title: t('dashboard.create.socialContent.postError', 'Lỗi đăng bài'),
         description: error.message,
         variant: "destructive"
       });
@@ -225,7 +225,7 @@ export default function CreateSocialContent() {
         [variables.platform]: { success: false, error: error.message } 
       }));
       toast({
-        title: "Lỗi lên lịch",
+        title: t('dashboard.create.socialContent.scheduleError', 'Lỗi lên lịch'),
         description: error.message,
         variant: "destructive"
       });
@@ -689,8 +689,8 @@ export default function CreateSocialContent() {
     
     if (!content) {
       toast({
-        title: "Lỗi",
-        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi đăng bài.",
+        title: t('dashboard.create.socialContent.error', 'Lỗi'),
+        description: t('dashboard.create.socialContent.noContentError', 'Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi đăng bài.'),
         variant: "destructive"
       });
       return;
@@ -751,7 +751,7 @@ export default function CreateSocialContent() {
     if (!content) {
       toast({
         title: "Lỗi",
-        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.",
+        description: t('dashboard.create.socialContent.noContentScheduleError', 'Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.'),
         variant: "destructive"
       });
       return;
@@ -764,8 +764,8 @@ export default function CreateSocialContent() {
   const handleConfirmSchedule = () => {
     if (!scheduledTime) {
       toast({
-        title: "Lỗi",
-        description: "Vui lòng chọn thời gian đăng",
+        title: t('dashboard.create.socialContent.error', 'Lỗi'),
+        description: t('dashboard.create.socialContent.selectTimeError', 'Vui lòng chọn thời gian đăng'),
         variant: "destructive"
       });
       return;
@@ -774,8 +774,8 @@ export default function CreateSocialContent() {
     const scheduledDate = new Date(scheduledTime);
     if (scheduledDate <= new Date()) {
       toast({
-        title: "Lỗi",
-        description: "Thời gian đăng phải sau thời điểm hiện tại",
+        title: t('dashboard.create.socialContent.error', 'Lỗi'),
+        description: t('dashboard.create.socialContent.futureTimeError', 'Thời gian đăng phải sau thời điểm hiện tại'),
         variant: "destructive"
       });
       return;
@@ -828,7 +828,7 @@ export default function CreateSocialContent() {
     if (!content) {
       toast({
         title: "Lỗi",
-        description: "Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.",
+        description: t('dashboard.create.socialContent.noContentScheduleError', 'Không có nội dung đã tạo cho nền tảng này. Vui lòng tạo nội dung trước khi lên lịch.'),
         variant: "destructive"
       });
       return;
@@ -879,10 +879,10 @@ export default function CreateSocialContent() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Send className="w-6 h-6" />
-                <span>Đăng bài và Lên lịch</span>
+                <span>{t('dashboard.create.socialContent.postAndSchedule', 'Đăng bài và Lên lịch')}</span>
               </CardTitle>
               <p className="text-gray-600 dark:text-gray-400">
-                Chọn đăng ngay hoặc lên lịch cho từng nền tảng
+                {t('dashboard.create.socialContent.choosePostOrSchedule', 'Chọn đăng ngay hoặc lên lịch cho từng nền tảng')}
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -905,7 +905,7 @@ export default function CreateSocialContent() {
                                 {connectionStatus === 'connected' ? (
                                   <Badge variant="secondary" className="bg-green-100 text-green-800">
                                     <CheckCircle className="w-3 h-3 mr-1" />
-                                    Đã kết nối
+                                    {t('dashboard.create.socialContent.connected', 'Đã kết nối')}
                                   </Badge>
                                 ) : (
                                   <Badge variant="destructive">
@@ -1060,7 +1060,7 @@ export default function CreateSocialContent() {
                               >
                                 <Clock className="w-4 h-4" />
                                 <span>
-                                  {publishStatus === 'scheduled' ? 'Đã lên lịch' : 'Đặt lịch'}
+                                  {publishStatus === 'scheduled' ? t('dashboard.create.socialContent.scheduled', 'Đã lên lịch') : t('dashboard.create.socialContent.schedule', 'Đặt lịch')}
                                 </span>
                               </Button>
                             </>
@@ -1129,7 +1129,7 @@ export default function CreateSocialContent() {
                   
                   <Button onClick={() => window.location.href = '/dashboard/scheduled-posts'}>
                     <Calendar className="w-4 h-4 mr-2" />
-                    Bài viết đã lên lịch
+                    {t('dashboard.create.socialContent.scheduledArticle', 'Bài viết đã lên lịch')}
                   </Button>
                   
                   <Button 
@@ -1149,9 +1149,9 @@ export default function CreateSocialContent() {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <Card className="w-full max-w-md mx-4">
                 <CardHeader>
-                  <CardTitle>Đặt lịch đăng bài</CardTitle>
+                  <CardTitle>{t('dashboard.create.socialContent.schedule', 'Đặt lịch')}</CardTitle>
                   <p className="text-sm text-gray-600">
-                    Lên lịch cho {getPlatformName(schedulingPlatform)}
+                    {t('dashboard.create.socialContent.scheduleFor', 'Lên lịch cho')} {getPlatformName(schedulingPlatform)}
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
