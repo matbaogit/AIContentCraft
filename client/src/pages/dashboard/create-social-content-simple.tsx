@@ -1484,7 +1484,7 @@ export default function CreateSocialContent() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center space-x-2">
                   <Sparkles className="w-5 h-5" />
-                  <span>Bước 2: Tạo nội dung</span>
+                  <span>{t('dashboard.create.socialContent.step2Title', 'Bước 2: Tạo nội dung')}</span>
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -1508,7 +1508,7 @@ export default function CreateSocialContent() {
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4" />
-                      <span className="text-xs">Trích xuất lại</span>
+                      <span className="text-xs">{t('dashboard.create.socialContent.reExtract', 'Trích xuất lại')}</span>
                     </>
                   )}
                 </Button>
@@ -1516,7 +1516,7 @@ export default function CreateSocialContent() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
-                <Label>Chỉnh sửa nội dung</Label>
+                <Label>{t('dashboard.create.socialContent.editContent', 'Chỉnh sửa nội dung')}</Label>
                 <div className="bg-white dark:bg-gray-800 rounded-lg border">
                   <ReactQuill
                     value={extractedContent}
@@ -1548,7 +1548,7 @@ export default function CreateSocialContent() {
                     className="flex-none"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Quay lại
+                    {t('dashboard.create.socialContent.goBack', 'Quay lại')}
                   </Button>
                 )}
                 <Button
@@ -1564,7 +1564,7 @@ export default function CreateSocialContent() {
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Tạo nội dung cho tất cả nền tảng
+                      {t('dashboard.create.socialContent.generateForAllPlatforms', 'Tạo nội dung cho tất cả nền tảng')}
                     </>
                   )}
                 </Button>
