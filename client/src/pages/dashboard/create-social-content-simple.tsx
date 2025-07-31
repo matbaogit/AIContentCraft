@@ -939,7 +939,7 @@ export default function CreateSocialContent() {
                       <CardContent className="space-y-4">
                         {/* Content Preview */}
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <h4 className="font-medium mb-2">Nội dung:</h4>
+                          <h4 className="font-medium mb-2">{t('dashboard.create.socialContent.content', 'Nội dung:')}</h4>
                           <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
                             {(() => {
                               // Debug generated content
@@ -1047,8 +1047,8 @@ export default function CreateSocialContent() {
                                   <Send className="w-4 h-4" />
                                 )}
                                 <span>
-                                  {publishStatus === 'publishing' ? 'Đang đăng...' : 
-                                   publishStatus === 'published' ? 'Đã đăng' : 'Đăng ngay'}
+                                  {publishStatus === 'publishing' ? t('dashboard.create.socialContent.posting', 'Đang đăng...') : 
+                                   publishStatus === 'published' ? t('dashboard.create.socialContent.posted', 'Đã đăng') : t('dashboard.create.socialContent.postNow', 'Đăng ngay')}
                                 </span>
                               </Button>
                               
@@ -1096,7 +1096,7 @@ export default function CreateSocialContent() {
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:underline"
                                   >
-                                    Xem bài đăng
+                                    {t('dashboard.create.socialContent.viewPost', 'Xem bài đăng')}
                                   </a>
                                 )}
                               </div>
@@ -1124,7 +1124,7 @@ export default function CreateSocialContent() {
                 <div className="flex space-x-3">
                   <Button onClick={handleStartNew} variant="outline">
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Tạo nội dung mới
+                    {t('dashboard.create.socialContent.createNewContent', 'Tạo nội dung mới')}
                   </Button>
                   
                   <Button onClick={() => window.location.href = '/dashboard/scheduled-posts'}>
@@ -1137,7 +1137,7 @@ export default function CreateSocialContent() {
                     className="flex items-center space-x-2"
                   >
                     <Eye className="w-4 h-4" />
-                    <span>Xem bài viết</span>
+                    <span>{t('dashboard.create.socialContent.viewArticle', 'Xem bài viết')}</span>
                   </Button>
                 </div>
               </div>
@@ -1714,12 +1714,12 @@ export default function CreateSocialContent() {
                           {createImageMutation.isPending ? (
                             <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Đang tạo ảnh...
+                              {t('dashboard.create.socialContent.creatingImage', 'Đang tạo ảnh...')}
                             </>
                           ) : (
                             <>
                               <Plus className="w-4 h-4 mr-2" />
-                              Tạo hình ảnh
+                              {t('dashboard.create.socialContent.createImage', 'Tạo hình ảnh')}
                             </>
                           )}
                         </Button>
@@ -1729,7 +1729,7 @@ export default function CreateSocialContent() {
                     {/* Upload Image */}
                     {imageSource === 'upload' && (
                       <div className="space-y-3">
-                        <Label>Chọn file ảnh từ máy tính</Label>
+                        <Label>{t('dashboard.create.socialContent.selectImageFile', 'Chọn file ảnh từ máy tính')}</Label>
                         <Input
                           type="file"
                           accept="image/*"
@@ -1745,7 +1745,7 @@ export default function CreateSocialContent() {
                         {uploadImageMutation.isPending && (
                           <div className="text-center py-2">
                             <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                            <p className="text-sm text-muted-foreground mt-1">Đang upload...</p>
+                            <p className="text-sm text-muted-foreground mt-1">{t('dashboard.create.socialContent.uploading', 'Đang upload...')}</p>
                           </div>
                         )}
                       </div>
@@ -2052,7 +2052,7 @@ export default function CreateSocialContent() {
                   {saveMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang lưu...
+                      {t('dashboard.create.socialContent.saving', 'Đang lưu...')}
                     </>
                   ) : (
                     <>

@@ -175,6 +175,54 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Không có mô tả',
         en: 'No description'
       },
+      'dashboard.create.socialContent.saving': {
+        vi: 'Đang lưu...',
+        en: 'Saving...'
+      },
+      'dashboard.create.socialContent.posting': {
+        vi: 'Đang đăng...',
+        en: 'Posting...'
+      },
+      'dashboard.create.socialContent.viewPost': {
+        vi: 'Xem bài đăng',
+        en: 'View Post'
+      },
+      'dashboard.create.socialContent.viewArticle': {
+        vi: 'Xem bài viết',
+        en: 'View Article'
+      },
+      'dashboard.create.socialContent.createNewContent': {
+        vi: 'Tạo nội dung mới',
+        en: 'Create New Content'
+      },
+      'dashboard.create.socialContent.content': {
+        vi: 'Nội dung:',
+        en: 'Content:'
+      },
+      'dashboard.create.socialContent.creatingImage': {
+        vi: 'Đang tạo ảnh...',
+        en: 'Creating image...'
+      },
+      'dashboard.create.socialContent.createImage': {
+        vi: 'Tạo hình ảnh',
+        en: 'Create Image'
+      },
+      'dashboard.create.socialContent.selectImageFile': {
+        vi: 'Chọn file ảnh từ máy tính',
+        en: 'Select image file from computer'
+      },
+      'dashboard.create.socialContent.uploading': {
+        vi: 'Đang upload...',
+        en: 'Uploading...'
+      },
+      'dashboard.create.socialContent.posted': {
+        vi: 'Đã đăng',
+        en: 'Posted'
+      },
+      'dashboard.create.socialContent.postNow': {
+        vi: 'Đăng ngay',
+        en: 'Post Now'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'
