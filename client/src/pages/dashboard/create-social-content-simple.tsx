@@ -615,8 +615,40 @@ export default function CreateSocialContent() {
     
     let content = '';
     
-    // Priority 1: Check if generatedContent is a direct response object with data array
-    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+    // Priority 1: Check if generatedContent has content array with output objects
+    if (generatedContent && Array.isArray(generatedContent) && generatedContent.length > 0) {
+      console.log('Found generated content array, checking first item...');
+      const firstItem = generatedContent[0];
+      
+      if (firstItem && firstItem.output && typeof firstItem.output === 'object') {
+        console.log('Found output object:', firstItem.output);
+        
+        // Check common platform mappings
+        if (platform === 'facebook' && firstItem.output['Facebook']) {
+          content = firstItem.output['Facebook'];
+        } else if (platform === 'instagram' && firstItem.output['Instagram']) {
+          content = firstItem.output['Instagram'];
+        } else if (platform === 'twitter' && firstItem.output['Twitter']) {
+          content = firstItem.output['Twitter'];
+        } else if (platform === 'linkedin' && firstItem.output['LinkedIn']) {
+          content = firstItem.output['LinkedIn'];
+        }
+        // Try Vietnamese keys
+        else if (firstItem.output['Nội dung bài viết']) {
+          content = firstItem.output['Nội dung bài viết'];
+        }
+        // Try general content
+        else if (firstItem.output.content) {
+          content = firstItem.output.content;
+        }
+        
+        if (content) {
+          console.log('Found platform-specific content from output:', content);
+        }
+      }
+    }
+    // Priority 2: Check if generatedContent is a direct response object with data array
+    else if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
       console.log('Found generated content with data array, searching for platform content...');
       const platformContent = generatedContent.data.find((item: any) => {
         console.log('Checking item:', item, 'platform match:', item.platform === platform);
@@ -628,7 +660,7 @@ export default function CreateSocialContent() {
         console.log('Found platform-specific content from data array:', content);
       }
     }
-    // Priority 2: Check if generatedContent is already an array
+    // Priority 3: Check if generatedContent is already an array with platform objects
     else if (generatedContent && Array.isArray(generatedContent)) {
       console.log('Searching for platform content in generated array...');
       const platformContent = generatedContent.find((item: any) => {
@@ -675,14 +707,39 @@ export default function CreateSocialContent() {
   const handleSchedulePost = (platform: string) => {
     let content = '';
     
-    // Priority 1: Check if generatedContent is a direct response object with data array
-    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+    // Priority 1: Check if generatedContent has content array with output objects
+    if (generatedContent && Array.isArray(generatedContent) && generatedContent.length > 0) {
+      const firstItem = generatedContent[0];
+      
+      if (firstItem && firstItem.output && typeof firstItem.output === 'object') {
+        // Check common platform mappings
+        if (platform === 'facebook' && firstItem.output['Facebook']) {
+          content = firstItem.output['Facebook'];
+        } else if (platform === 'instagram' && firstItem.output['Instagram']) {
+          content = firstItem.output['Instagram'];
+        } else if (platform === 'twitter' && firstItem.output['Twitter']) {
+          content = firstItem.output['Twitter'];
+        } else if (platform === 'linkedin' && firstItem.output['LinkedIn']) {
+          content = firstItem.output['LinkedIn'];
+        }
+        // Try Vietnamese keys
+        else if (firstItem.output['Nội dung bài viết']) {
+          content = firstItem.output['Nội dung bài viết'];
+        }
+        // Try general content
+        else if (firstItem.output.content) {
+          content = firstItem.output.content;
+        }
+      }
+    }
+    // Priority 2: Check if generatedContent is a direct response object with data array
+    else if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
       const platformContent = generatedContent.data.find((item: any) => item.platform === platform);
       if (platformContent && platformContent.content) {
         content = platformContent.content;
       }
     }
-    // Priority 2: Check if generatedContent is already an array
+    // Priority 3: Check if generatedContent is already an array with platform objects
     else if (generatedContent && Array.isArray(generatedContent)) {
       const platformContent = generatedContent.find((item: any) => item.platform === platform);
       if (platformContent && platformContent.content) {
@@ -724,17 +781,42 @@ export default function CreateSocialContent() {
       return;
     }
 
-    // Get platform-specific content, fallback to extracted content
+    // Get platform-specific content
     let content = '';
     
-    // Priority 1: Check if generatedContent is a direct response object with data array
-    if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+    // Priority 1: Check if generatedContent has content array with output objects
+    if (generatedContent && Array.isArray(generatedContent) && generatedContent.length > 0) {
+      const firstItem = generatedContent[0];
+      
+      if (firstItem && firstItem.output && typeof firstItem.output === 'object') {
+        // Check common platform mappings
+        if (schedulingPlatform === 'facebook' && firstItem.output['Facebook']) {
+          content = firstItem.output['Facebook'];
+        } else if (schedulingPlatform === 'instagram' && firstItem.output['Instagram']) {
+          content = firstItem.output['Instagram'];
+        } else if (schedulingPlatform === 'twitter' && firstItem.output['Twitter']) {
+          content = firstItem.output['Twitter'];
+        } else if (schedulingPlatform === 'linkedin' && firstItem.output['LinkedIn']) {
+          content = firstItem.output['LinkedIn'];
+        }
+        // Try Vietnamese keys
+        else if (firstItem.output['Nội dung bài viết']) {
+          content = firstItem.output['Nội dung bài viết'];
+        }
+        // Try general content
+        else if (firstItem.output.content) {
+          content = firstItem.output.content;
+        }
+      }
+    }
+    // Priority 2: Check if generatedContent is a direct response object with data array
+    else if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
       const platformContent = generatedContent.data.find((item: any) => item.platform === schedulingPlatform);
       if (platformContent && platformContent.content) {
         content = platformContent.content;
       }
     }
-    // Priority 2: Check if generatedContent is already an array
+    // Priority 3: Check if generatedContent is already an array with platform objects
     else if (generatedContent && Array.isArray(generatedContent)) {
       const platformContent = generatedContent.find((item: any) => item.platform === schedulingPlatform);
       if (platformContent && platformContent.content) {
@@ -859,7 +941,78 @@ export default function CreateSocialContent() {
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                           <h4 className="font-medium mb-2">Nội dung:</h4>
                           <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                            {generatedContent?.[platform] || 'Không có nội dung'}
+                            {(() => {
+                              // Debug generated content
+                              console.log('=== DISPLAY CONTENT DEBUG ===');
+                              console.log('Platform:', platform);
+                              console.log('Generated Content:', generatedContent);
+                              console.log('Type:', typeof generatedContent);
+                              console.log('Is Array:', Array.isArray(generatedContent));
+                              if (Array.isArray(generatedContent) && generatedContent.length > 0) {
+                                console.log('First item:', generatedContent[0]);
+                                console.log('First item output:', generatedContent[0]?.output);
+                                if (generatedContent[0]?.output) {
+                                  console.log('Output keys:', Object.keys(generatedContent[0].output));
+                                }
+                              }
+                              
+                              // Get content for display using same logic as publish functions
+                              let content = '';
+                              
+                              // Priority 1: Check if generatedContent has content array with output objects
+                              if (generatedContent && Array.isArray(generatedContent) && generatedContent.length > 0) {
+                                const firstItem = generatedContent[0];
+                                if (firstItem && firstItem.output && typeof firstItem.output === 'object') {
+                                  // Try to find platform-specific content in output
+                                  const outputKeys = Object.keys(firstItem.output);
+                                  console.log('Available output keys:', outputKeys);
+                                  
+                                  // Check common platform mappings
+                                  if (platform === 'facebook' && firstItem.output['Facebook']) {
+                                    content = firstItem.output['Facebook'];
+                                  } else if (platform === 'instagram' && firstItem.output['Instagram']) {
+                                    content = firstItem.output['Instagram'];
+                                  } else if (platform === 'twitter' && firstItem.output['Twitter']) {
+                                    content = firstItem.output['Twitter'];
+                                  } else if (platform === 'linkedin' && firstItem.output['LinkedIn']) {
+                                    content = firstItem.output['LinkedIn'];
+                                  }
+                                  // Try Vietnamese keys
+                                  else if (firstItem.output['Nội dung bài viết']) {
+                                    content = firstItem.output['Nội dung bài viết'];
+                                  }
+                                  // Try general content
+                                  else if (firstItem.output.content) {
+                                    content = firstItem.output.content;
+                                  }
+                                  // Try output itself if it's a string
+                                  else if (typeof firstItem.output === 'string') {
+                                    content = firstItem.output;
+                                  }
+                                  
+                                  console.log('Found content:', content);
+                                }
+                              }
+                              // Priority 2: Check if generatedContent is a direct response object with data array
+                              else if (generatedContent && typeof generatedContent === 'object' && generatedContent.data && Array.isArray(generatedContent.data)) {
+                                const platformContent = generatedContent.data.find((item: any) => item.platform === platform);
+                                if (platformContent && platformContent.content) {
+                                  content = platformContent.content;
+                                }
+                              }
+                              // Priority 3: Check if generatedContent is already an array with platform objects
+                              else if (generatedContent && Array.isArray(generatedContent)) {
+                                const platformContent = generatedContent.find((item: any) => item.platform === platform);
+                                if (platformContent && platformContent.content) {
+                                  content = platformContent.content;
+                                }
+                              }
+                              
+                              console.log('Final display content:', content);
+                              console.log('=== END DISPLAY DEBUG ===');
+                              
+                              return content || 'Không có nội dung';
+                            })()}
                           </p>
                         </div>
 
