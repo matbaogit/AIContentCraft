@@ -1631,7 +1631,7 @@ export default function CreateSocialContent() {
                         className="flex flex-col items-center space-y-2 h-20"
                       >
                         <Upload className="w-6 h-6" />
-                        <span className="text-sm">Upload</span>
+                        <span className="text-sm">{t('dashboard.create.socialContent.upload', 'Upload')}</span>
                       </Button>
                     </div>
 
@@ -1676,11 +1676,11 @@ export default function CreateSocialContent() {
                                       style={{ display: 'none' }}
                                     >
                                       <ImageIcon className="w-6 h-6 mb-1" />
-                                      <span>Không thể tải</span>
+                                      <span>{t('dashboard.create.socialContent.failedToLoad', 'Không thể tải')}</span>
                                     </div>
                                   </div>
                                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
-                                    {image.title || image.prompt || 'Không có mô tả'}
+                                    {image.title || image.prompt || t('dashboard.create.socialContent.noDescription', 'Không có mô tả')}
                                   </p>
                                 </div>
                               ))
@@ -1754,7 +1754,7 @@ export default function CreateSocialContent() {
                     {/* Selected Image Preview */}
                     {selectedImage && (
                       <div className="space-y-2">
-                        <Label>Ảnh đã chọn</Label>
+                        <Label>{t('dashboard.create.socialContent.selectedImages', 'Ảnh đã chọn')}</Label>
                         <div className="border rounded-lg p-3">
                           <img
                             src={selectedImage.imageUrl || selectedImage.url}

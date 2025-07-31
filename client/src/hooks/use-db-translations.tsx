@@ -159,6 +159,22 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Chia sẻ',
         en: 'Share'
       },
+      'dashboard.create.socialContent.selectedImages': {
+        vi: 'Ảnh đã chọn',
+        en: 'Selected Images'
+      },
+      'dashboard.create.socialContent.failedToLoad': {
+        vi: 'Không thể tải',
+        en: 'Failed to load'
+      },
+      'dashboard.create.socialContent.upload': {
+        vi: 'Upload',
+        en: 'Upload'
+      },
+      'dashboard.create.socialContent.noDescription': {
+        vi: 'Không có mô tả',
+        en: 'No description'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'
