@@ -283,8 +283,8 @@ export default function CreateSocialContent() {
         setExtractedContent(content);
         setCurrentStep(2);
         toast({
-          title: "Thành công",
-          description: "Đã tạo nội dung social media thành công",
+          title: t('common.success', 'Thành công'),
+          description: t('dashboard.create.socialContent.generatedSuccess', 'Đã tạo nội dung social media thành công'),
         });
       } else {
         toast({
@@ -334,15 +334,15 @@ export default function CreateSocialContent() {
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>')
           .replace(/^[\*\-\+] (.*?)(?=<br>|$)/gm, '<li>$1</li>')
-          .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+          .replace(/(<li>.*?<\/li>)/g, '<ul>$1</ul>')
           .replace(/<br>(<ul>)/g, '$1')
           .replace(/(<\/ul>)<br>/g, '$1');
         
         setExtractedContent(htmlContent);
         setCurrentStep(2);
         toast({
-          title: "Thành công",
-          description: `Đã trích xuất nội dung (${content.length} ký tự)`
+          title: t('common.success', 'Thành công'),
+          description: t('dashboard.create.socialContent.extractedContent', `Đã trích xuất nội dung (${content.length} ký tự)`)
         });
       } else {
         toast({
@@ -368,7 +368,7 @@ export default function CreateSocialContent() {
         title: `Social Media Image - ${new Date().toLocaleDateString('vi-VN')}`,
         prompt,
         sourceText: extractedContent || '',
-        articleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : null
+        articleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : undefined
       });
       return await response.json();
     },
@@ -384,8 +384,8 @@ export default function CreateSocialContent() {
           type: 'generated'
         });
         toast({
-          title: "Thành công",
-          description: "Đã tạo ảnh mới thành công"
+          title: t('common.success', 'Thành công'),
+          description: t('dashboard.create.socialContent.imageGeneratedSuccess', 'Đã tạo ảnh mới thành công')
         });
         // Refresh image library to show new image
         queryClient.invalidateQueries({ queryKey: ['/api/dashboard/images'] });
@@ -423,8 +423,8 @@ export default function CreateSocialContent() {
           type: 'uploaded'
         });
         toast({
-          title: "Thành công",
-          description: "Đã upload ảnh thành công"
+          title: t('common.success', 'Thành công'),
+          description: t('dashboard.create.socialContent.uploadSuccess', 'Đã upload ảnh thành công')
         });
       }
     },
@@ -466,8 +466,8 @@ export default function CreateSocialContent() {
       setGeneratedContent(content);
       setCurrentStep(3);
       toast({
-        title: "Thành công",
-        description: "Đã tạo nội dung cho tất cả nền tảng"
+        title: t('common.success', 'Thành công'),
+        description: t('dashboard.create.socialContent.allPlatformsSuccess', 'Đã tạo nội dung cho tất cả nền tảng')
       });
     },
     onError: (error: any) => {
@@ -500,7 +500,7 @@ export default function CreateSocialContent() {
         } : null,
         // Include extracted content and reference info
         extractedContent: extractedContent,
-        sourceArticleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : null,
+        sourceArticleId: formData.selectedArticleId ? parseInt(formData.selectedArticleId) : undefined,
         referenceLink: formData.referenceLink
       };
       
@@ -1448,7 +1448,7 @@ export default function CreateSocialContent() {
                   {extractMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Đang trích xuất...
+                      {t('dashboard.create.socialContent.extracting', 'Đang trích xuất...')}
                     </>
                   ) : generateSocialContentMutation.isPending ? (
                     <>
@@ -1503,7 +1503,7 @@ export default function CreateSocialContent() {
                   {(extractMutation.isPending || generateSocialContentMutation.isPending) ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-xs">Đang trích xuất...</span>
+                      <span className="text-xs">{t('dashboard.create.socialContent.extracting', 'Đang trích xuất...')}</span>
                     </>
                   ) : (
                     <>

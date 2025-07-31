@@ -107,6 +107,34 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Lưu vào thư viện',
         en: 'Save to library'
       },
+      'dashboard.create.socialContent.extracting': {
+        vi: 'Đang trích xuất...',
+        en: 'Extracting...'
+      },
+      'dashboard.create.socialContent.extractedContent': {
+        vi: 'Đã trích xuất nội dung ({{count}} ký tự)',
+        en: 'Extracted content ({{count}} characters)'
+      },
+      'dashboard.create.socialContent.generatedSuccess': {
+        vi: 'Đã tạo nội dung social media thành công',
+        en: 'Social media content generated successfully'
+      },
+      'dashboard.create.socialContent.imageGeneratedSuccess': {
+        vi: 'Đã tạo ảnh mới thành công',
+        en: 'Image generated successfully'
+      },
+      'dashboard.create.socialContent.uploadSuccess': {
+        vi: 'Đã upload ảnh thành công',
+        en: 'Image uploaded successfully'
+      },
+      'dashboard.create.socialContent.allPlatformsSuccess': {
+        vi: 'Đã tạo nội dung cho tất cả nền tảng',
+        en: 'Content generated for all platforms'
+      },
+      'common.success': {
+        vi: 'Thành công',
+        en: 'Success'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'
