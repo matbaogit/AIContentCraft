@@ -79,6 +79,34 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Tạo nội dung cho tất cả nền tảng',
         en: 'Generate content for all platforms'
       },
+      'dashboard.create.socialContent.step3Title': {
+        vi: 'Bước 3: Hình ảnh & Xem trước',
+        en: 'Step 3: Images & Preview'
+      },
+      'dashboard.create.socialContent.attachImages': {
+        vi: 'Đăng kèm hình ảnh',
+        en: 'Attach images'
+      },
+      'dashboard.create.socialContent.selectImageSource': {
+        vi: 'Chọn nguồn hình ảnh',
+        en: 'Select image source'
+      },
+      'dashboard.create.socialContent.library': {
+        vi: 'Thư viện',
+        en: 'Library'
+      },
+      'dashboard.create.socialContent.createNew': {
+        vi: 'Tạo mới',
+        en: 'Create New'
+      },
+      'dashboard.create.socialContent.previewContent': {
+        vi: 'Xem trước nội dung',
+        en: 'Preview content'
+      },
+      'dashboard.create.socialContent.saveToLibrary': {
+        vi: 'Lưu vào thư viện',
+        en: 'Save to library'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

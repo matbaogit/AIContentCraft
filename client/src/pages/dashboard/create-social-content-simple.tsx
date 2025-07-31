@@ -1589,7 +1589,7 @@ export default function CreateSocialContent() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <ImageIcon className="w-5 h-5" />
-                <span>Bước 3: Hình ảnh & Xem trước</span>
+                <span>{t('dashboard.create.socialContent.step3Title', 'Bước 3: Hình ảnh & Xem trước')}</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1601,13 +1601,13 @@ export default function CreateSocialContent() {
                     checked={includeImage}
                     onCheckedChange={(checked) => setIncludeImage(checked === true)}
                   />
-                  <Label htmlFor="include-image">Đăng kèm hình ảnh</Label>
+                  <Label htmlFor="include-image">{t('dashboard.create.socialContent.attachImages', 'Đăng kèm hình ảnh')}</Label>
                 </div>
 
                 {/* Image Source Selection */}
                 {includeImage && (
                   <div className="space-y-4 border rounded-lg p-4">
-                    <Label>Chọn nguồn hình ảnh</Label>
+                    <Label>{t('dashboard.create.socialContent.selectImageSource', 'Chọn nguồn hình ảnh')}</Label>
                     <div className="grid grid-cols-3 gap-4">
                       <Button
                         variant={imageSource === 'library' ? 'default' : 'outline'}
@@ -1615,7 +1615,7 @@ export default function CreateSocialContent() {
                         className="flex flex-col items-center space-y-2 h-20"
                       >
                         <Library className="w-6 h-6" />
-                        <span className="text-sm">Thư viện</span>
+                        <span className="text-sm">{t('dashboard.create.socialContent.library', 'Thư viện')}</span>
                       </Button>
                       <Button
                         variant={imageSource === 'create' ? 'default' : 'outline'}
@@ -1623,7 +1623,7 @@ export default function CreateSocialContent() {
                         className="flex flex-col items-center space-y-2 h-20"
                       >
                         <Plus className="w-6 h-6" />
-                        <span className="text-sm">Tạo mới</span>
+                        <span className="text-sm">{t('dashboard.create.socialContent.createNew', 'Tạo mới')}</span>
                       </Button>
                       <Button
                         variant={imageSource === 'upload' ? 'default' : 'outline'}
@@ -1779,7 +1779,7 @@ export default function CreateSocialContent() {
               {/* Content Preview with Platform-specific UI */}
               {generatedContent && Array.isArray(generatedContent) && generatedContent.length > 0 ? (
                 <div className="space-y-6">
-                  <Label>Xem trước nội dung</Label>
+                  <Label>{t('dashboard.create.socialContent.previewContent', 'Xem trước nội dung')}</Label>
                   {generatedContent.map((item: any, index: number) => {
                     const platform = item.output?.['Nền tảng đăng']?.toLowerCase() || 'unknown';
                     const content = item.output?.['Nội dung bài viết'] || 'No content';
@@ -2041,7 +2041,7 @@ export default function CreateSocialContent() {
                     className="flex-none"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Quay lại
+                    {t('dashboard.create.socialContent.goBack', 'Quay lại')}
                   </Button>
                 )}
                 <Button
@@ -2057,7 +2057,7 @@ export default function CreateSocialContent() {
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Lưu vào thư viện
+                      {t('dashboard.create.socialContent.saveToLibrary', 'Lưu vào thư viện')}
                     </>
                   )}
                 </Button>
