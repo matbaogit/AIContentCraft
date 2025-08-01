@@ -364,6 +364,51 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Cập nhật',
         en: 'Update'
       },
+      // Facebook Connection Wizard
+      'facebookWizard.title': {
+        vi: 'Kết nối Facebook Pages',
+        en: 'Connect Facebook Pages'
+      },
+      'facebookWizard.connectAccount': {
+        vi: 'Kết nối tài khoản Facebook',
+        en: 'Connect Facebook Account'
+      },
+      'facebookWizard.loginDescription': {
+        vi: 'Đăng nhập vào Facebook để lấy danh sách Pages bạn quản lý',
+        en: 'Login to Facebook to get the list of Pages you manage'
+      },
+      'facebookWizard.sdkReady': {
+        vi: 'Facebook SDK sẵn sàng',
+        en: 'Facebook SDK Ready'
+      },
+      'facebookWizard.sdkLoading': {
+        vi: 'Đang tải Facebook SDK...',
+        en: 'Loading Facebook SDK...'
+      },
+      'facebookWizard.loginWithFacebook': {
+        vi: 'Đăng nhập với Facebook',
+        en: 'Login with Facebook'
+      },
+      'facebookWizard.selectPages': {
+        vi: 'Chọn Pages muốn kết nối',
+        en: 'Select Pages to Connect'
+      },
+      'facebookWizard.selectPagesDescription': {
+        vi: 'Chọn các Facebook Pages bạn muốn kết nối để đăng bài',
+        en: 'Select the Facebook Pages you want to connect for posting'
+      },
+      'facebookWizard.goBack': {
+        vi: 'Quay lại',
+        en: 'Go Back'
+      },
+      'facebookWizard.nextStep': {
+        vi: 'Tiếp theo',
+        en: 'Next'
+      },
+      'facebookWizard.nextStepSelected': {
+        vi: 'Tiếp theo ({count} được chọn)',
+        en: 'Next ({count} selected)'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

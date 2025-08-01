@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2, Facebook, Users, Shield, CheckCircle } from 'lucide-react';
+import { useDbTranslations } from '@/hooks/use-db-translations';
 
 interface FacebookPage {
   id: string;
@@ -49,6 +50,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
   const [sdkReady, setSdkReady] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useDbTranslations();
 
   // Reset state when modal opens
   useEffect(() => {
@@ -249,14 +251,14 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Kết nối tài khoản Facebook</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('facebookWizard.connectAccount', 'Kết nối tài khoản Facebook')}</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-2">
-                Đăng nhập vào Facebook để lấy danh sách Pages bạn quản lý
+                {t('facebookWizard.loginDescription', 'Đăng nhập vào Facebook để lấy danh sách Pages bạn quản lý')}
               </p>
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <div className={`w-2 h-2 rounded-full ${sdkReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                 <span className={`text-sm ${sdkReady ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {sdkReady ? 'Facebook SDK sẵn sàng' : 'Đang tải Facebook SDK...'}
+                  {sdkReady ? t('facebookWizard.sdkReady', 'Facebook SDK sẵn sàng') : t('facebookWizard.sdkLoading', 'Đang tải Facebook SDK...')}
                 </span>
               </div>
             </div>
@@ -273,7 +275,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               ) : (
                 <>
                   <Facebook className="w-4 h-4 mr-2" />
-                  Đăng nhập với Facebook
+                  {t('facebookWizard.loginWithFacebook', 'Đăng nhập với Facebook')}
                 </>
               )}
             </Button>
@@ -289,9 +291,9 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                   <Users className="w-8 h-8 text-green-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Chọn Pages muốn kết nối</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('facebookWizard.selectPages', 'Chọn Pages muốn kết nối')}</h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Chọn các Facebook Pages bạn muốn kết nối để đăng bài
+                {t('facebookWizard.selectPagesDescription', 'Chọn các Facebook Pages bạn muốn kết nối để đăng bài')}
               </p>
             </div>
 
@@ -342,13 +344,13 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
 
             <div className="flex justify-between pt-4 border-t">
               <Button variant="outline" onClick={() => setCurrentStep('login')}>
-                Quay lại
+                {t('facebookWizard.goBack', 'Quay lại')}
               </Button>
               <Button 
                 onClick={() => setCurrentStep('confirm')}
                 disabled={selectedPages.length === 0}
               >
-                Tiếp theo ({selectedPages.length} được chọn)
+                {t('facebookWizard.nextStepSelected', 'Tiếp theo ({count} được chọn)').replace('{count}', selectedPages.length.toString())}
               </Button>
             </div>
           </div>
@@ -414,7 +416,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
 
             <div className="flex justify-between pt-4 border-t">
               <Button variant="outline" onClick={() => setCurrentStep('selectPages')}>
-                Quay lại
+                {t('facebookWizard.goBack', 'Quay lại')}
               </Button>
               <Button 
                 onClick={handleSaveConnections}
@@ -466,7 +468,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Kết nối Facebook Pages</DialogTitle>
+          <DialogTitle>{t('facebookWizard.title', 'Kết nối Facebook Pages')}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           {renderStepContent()}
