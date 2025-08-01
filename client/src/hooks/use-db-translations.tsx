@@ -409,6 +409,62 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Tiếp theo ({count} được chọn)',
         en: 'Next ({count} selected)'
       },
+      'facebookWizard.confirmConnection': {
+        vi: 'Xác nhận kết nối',
+        en: 'Confirm Connection'
+      },
+      'facebookWizard.confirmDescription': {
+        vi: 'Xác nhận các Pages sẽ được kết nối với quyền đăng bài',
+        en: 'Confirm the Pages will be connected with posting permissions'
+      },
+      'facebookWizard.hasPostPermission': {
+        vi: 'Có quyền đăng bài',
+        en: 'Has posting permission'
+      },
+      'facebookWizard.permissionsGranted': {
+        vi: 'Quyền được cấp:',
+        en: 'Permissions granted:'
+      },
+      'facebookWizard.postToPages': {
+        vi: '• Đăng bài lên Pages được chọn',
+        en: '• Post to selected Pages'
+      },
+      'facebookWizard.readEngagement': {
+        vi: '• Đọc engagement metrics',
+        en: '• Read engagement metrics'
+      },
+      'facebookWizard.managePosts': {
+        vi: '• Quản lý nội dung Posts',
+        en: '• Manage Posts content'
+      },
+      'facebookWizard.completeConnection': {
+        vi: 'Hoàn tất kết nối',
+        en: 'Complete Connection'
+      },
+      'facebookWizard.saving': {
+        vi: 'Đang lưu...',
+        en: 'Saving...'
+      },
+      'facebookWizard.connectionSuccess': {
+        vi: 'Kết nối thành công!',
+        en: 'Connection Successful!'
+      },
+      'facebookWizard.successMessage': {
+        vi: 'Đã kết nối {count} Facebook Page(s). Bạn có thể sử dụng chúng để đăng bài tự động.',
+        en: 'Connected {count} Facebook Page(s). You can use them for automatic posting.'
+      },
+      'facebookWizard.finish': {
+        vi: 'Hoàn tất',
+        en: 'Finish'
+      },
+      'facebookWizard.loggingIn': {
+        vi: 'Đăng nhập...',
+        en: 'Logging in...'
+      },
+      'facebookWizard.noPagesFound': {
+        vi: 'Không tìm thấy Pages nào. Bạn cần là admin của ít nhất một Facebook Page.',
+        en: 'No Pages found. You need to be an admin of at least one Facebook Page.'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

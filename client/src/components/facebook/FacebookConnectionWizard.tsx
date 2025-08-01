@@ -270,7 +270,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Đang đăng nhập...
+                  {t('facebookWizard.loggingIn', 'Đang đăng nhập...')}
                 </>
               ) : (
                 <>
@@ -305,7 +305,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {availablePages.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    Không tìm thấy Pages nào. Bạn cần là admin của ít nhất một Facebook Page.
+                    {t('facebookWizard.noPagesFound', 'Không tìm thấy Pages nào. Bạn cần là admin của ít nhất một Facebook Page.')}
                   </div>
                 ) : (
                   availablePages.map((page) => (
@@ -369,9 +369,9 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                   <Shield className="w-8 h-8 text-orange-600" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Xác nhận kết nối</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('facebookWizard.confirmConnection', 'Xác nhận kết nối')}</h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Xác nhận các Pages sẽ được kết nối với quyền đăng bài
+                {t('facebookWizard.confirmDescription', 'Xác nhận các Pages sẽ được kết nối với quyền đăng bài')}
               </p>
             </div>
 
@@ -392,7 +392,7 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                         <p className="text-sm text-gray-600 dark:text-gray-400">{page.category}</p>
                       </div>
                       <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-600 dark:border-green-400">
-                        Có quyền đăng bài
+                        {t('facebookWizard.hasPostPermission', 'Có quyền đăng bài')}
                       </Badge>
                     </div>
                   </CardContent>
@@ -404,11 +404,11 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               <div className="flex items-start space-x-3">
                 <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-blue-900 dark:text-blue-100">Quyền được cấp:</p>
+                  <p className="font-medium text-blue-900 dark:text-blue-100">{t('facebookWizard.permissionsGranted', 'Quyền được cấp:')}</p>
                   <ul className="mt-1 text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Đăng bài lên Pages được chọn</li>
-                    <li>• Đọc engagement metrics</li>
-                    <li>• Quản lý nội dung Posts</li>
+                    <li>{t('facebookWizard.postToPages', '• Đăng bài lên Pages được chọn')}</li>
+                    <li>{t('facebookWizard.readEngagement', '• Đọc engagement metrics')}</li>
+                    <li>{t('facebookWizard.managePosts', '• Quản lý nội dung Posts')}</li>
                   </ul>
                 </div>
               </div>
@@ -426,12 +426,12 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang lưu...
+                    {t('facebookWizard.saving', 'Đang lưu...')}
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Hoàn tất kết nối
+                    {t('facebookWizard.completeConnection', 'Hoàn tất kết nối')}
                   </>
                 )}
               </Button>
@@ -448,13 +448,13 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">Kết nối thành công!</h3>
-              <p className="text-gray-600">
-                Đã kết nối {selectedPages.length} Facebook Page(s). Bạn có thể sử dụng chúng để đăng bài tự động.
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">{t('facebookWizard.connectionSuccess', 'Kết nối thành công!')}</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {t('facebookWizard.successMessage', 'Đã kết nối {count} Facebook Page(s). Bạn có thể sử dụng chúng để đăng bài tự động.').replace('{count}', selectedPages.length.toString())}
               </p>
             </div>
             <Button onClick={handleClose} className="bg-green-600 hover:bg-green-700">
-              Hoàn tất
+              {t('facebookWizard.finish', 'Hoàn tất')}
             </Button>
           </div>
         );
