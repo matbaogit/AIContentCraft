@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { DashboardLayout } from "@/components/dashboard/Layout";
 import { FacebookConnectionWizard } from "@/components/facebook/FacebookConnectionWizard";
+import { useDbTranslations } from "@/hooks/use-db-translations";
 
 interface Connection {
   id: number;
@@ -71,6 +72,7 @@ interface ConnectionForm {
 
 export default function SocialConnections() {
   const { toast } = useToast();
+  const { t } = useDbTranslations();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFacebookWizard, setShowFacebookWizard] = useState(false);
@@ -278,9 +280,9 @@ export default function SocialConnections() {
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Kết nối mạng xã hội</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('socialConnections.title', 'Kết nối mạng xã hội')}</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Quản lý kết nối với các nền tảng mạng xã hội và WordPress
+              {t('socialConnections.description', 'Quản lý kết nối với các nền tảng mạng xã hội và WordPress')}
             </p>
           </div>
           
@@ -288,7 +290,7 @@ export default function SocialConnections() {
             <DialogTrigger asChild>
               <Button onClick={() => { resetForm(); setShowCreateDialog(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
-                Thêm kết nối
+                {t('socialConnections.addConnection', 'Thêm kết nối')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -385,7 +387,7 @@ export default function SocialConnections() {
                 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
-                    Hủy
+                    {t('common.cancel', 'Hủy')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending}>
                     {createMutation.isPending ? 'Đang tạo...' : 'Tạo kết nối'}
@@ -400,9 +402,9 @@ export default function SocialConnections() {
         {availablePlatforms.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Kết nối nhanh</CardTitle>
+              <CardTitle>{t('socialConnections.quickConnect', 'Kết nối nhanh')}</CardTitle>
               <CardDescription>
-                Kết nối với các nền tảng phổ biến chỉ trong vài click
+                {t('socialConnections.quickConnectDesc', 'Kết nối với các nền tảng phổ biến chỉ trong vài click')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -440,9 +442,9 @@ export default function SocialConnections() {
         {/* Connected Accounts */}
         <Card>
           <CardHeader>
-            <CardTitle>Tài khoản đã kết nối</CardTitle>
+            <CardTitle>{t('socialConnections.connectedAccounts', 'Tài khoản đã kết nối')}</CardTitle>
             <CardDescription>
-              Quản lý các kết nối hiện tại của bạn
+              {t('socialConnections.manageConnections', 'Quản lý các kết nối hiện tại của bạn')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -485,7 +487,7 @@ export default function SocialConnections() {
                             {config?.name || connection.platform}
                           </p>
                           <p className="text-xs text-gray-400 dark:text-gray-500">
-                            Kết nối: {format(new Date(connection.createdAt), 'dd/MM/yyyy', { locale: vi })}
+                            {t('socialConnections.connections', 'Kết nối:')} {format(new Date(connection.createdAt), 'dd/MM/yyyy', { locale: vi })}
                           </p>
                         </div>
                       </div>
@@ -497,7 +499,7 @@ export default function SocialConnections() {
                             onCheckedChange={() => handleToggleActive(connection)}
                           />
                           <span className="text-sm text-gray-600 dark:text-gray-300">
-                            {connection.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                            {connection.isActive ? t('socialConnections.active', 'Hoạt động') : 'Tạm dừng'}
                           </span>
                         </div>
                         
@@ -531,15 +533,15 @@ export default function SocialConnections() {
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Chỉnh sửa kết nối</DialogTitle>
+              <DialogTitle>{t('socialConnections.editConnection', 'Chỉnh sửa kết nối')}</DialogTitle>
               <DialogDescription>
-                Cập nhật thông tin kết nối của bạn
+                {t('socialConnections.editConnectionDesc', 'Cập nhật thông tin kết nối của bạn')}
               </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="edit-name">Tên kết nối</Label>
+                <Label htmlFor="edit-name">{t('socialConnections.connectionName', 'Tên kết nối')}</Label>
                 <Input
                   id="edit-name"
                   value={form.name}
@@ -579,10 +581,10 @@ export default function SocialConnections() {
               
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
-                  Hủy
+                  {t('common.cancel', 'Hủy')}
                 </Button>
                 <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? 'Đang cập nhật...' : 'Cập nhật'}
+                  {updateMutation.isPending ? 'Đang cập nhật...' : t('common.update', 'Cập nhật')}
                 </Button>
               </div>
             </form>

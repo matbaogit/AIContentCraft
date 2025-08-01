@@ -307,6 +307,63 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Chưa kết nối',
         en: 'Not Connected'
       },
+      // Social Connections Page
+      'socialConnections.title': {
+        vi: 'Kết nối mạng xã hội',
+        en: 'Social Media Connections'
+      },
+      'socialConnections.description': {
+        vi: 'Quản lý kết nối với các nền tảng mạng xã hội và WordPress',
+        en: 'Manage connections with social media platforms and WordPress'
+      },
+      'socialConnections.quickConnect': {
+        vi: 'Kết nối nhanh',
+        en: 'Quick Connect'
+      },
+      'socialConnections.quickConnectDesc': {
+        vi: 'Kết nối với các nền tảng phổ biến chỉ trong vài click',
+        en: 'Connect with popular platforms in just a few clicks'
+      },
+      'socialConnections.connectedAccounts': {
+        vi: 'Tài khoản đã kết nối',
+        en: 'Connected Accounts'
+      },
+      'socialConnections.manageConnections': {
+        vi: 'Quản lý các kết nối hiện tại của bạn',
+        en: 'Manage your current connections'
+      },
+      'socialConnections.connections': {
+        vi: 'Kết nối:',
+        en: 'Connections:'
+      },
+      'socialConnections.addConnection': {
+        vi: 'Thêm kết nối',
+        en: 'Add Connection'
+      },
+      'socialConnections.active': {
+        vi: 'Hoạt động',
+        en: 'Active'
+      },
+      'socialConnections.editConnection': {
+        vi: 'Chỉnh sửa kết nối',
+        en: 'Edit Connection'
+      },
+      'socialConnections.editConnectionDesc': {
+        vi: 'Cập nhật thông tin kết nối của bạn',
+        en: 'Update your connection information'
+      },
+      'socialConnections.connectionName': {
+        vi: 'Tên kết nối',
+        en: 'Connection Name'
+      },
+      'common.cancel': {
+        vi: 'Huỷ',
+        en: 'Cancel'
+      },
+      'common.update': {
+        vi: 'Cập nhật',
+        en: 'Update'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'
