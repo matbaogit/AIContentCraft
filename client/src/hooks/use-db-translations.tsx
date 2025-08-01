@@ -465,6 +465,58 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Không tìm thấy Pages nào. Bạn cần là admin của ít nhất một Facebook Page.',
         en: 'No Pages found. You need to be an admin of at least one Facebook Page.'
       },
+      'socialConnections.addNewConnection': {
+        vi: 'Thêm kết nối mới',
+        en: 'Add New Connection'
+      },
+      'socialConnections.addConnectionDesc': {
+        vi: 'Kết nối với nền tảng mạng xã hội hoặc WordPress để tự động đăng bài viết',
+        en: 'Connect with social media platforms or WordPress to automatically post articles'
+      },
+      'socialConnections.platform': {
+        vi: 'Nền tảng *',
+        en: 'Platform *'
+      },
+      'socialConnections.selectPlatform': {
+        vi: 'Chọn nền tảng',
+        en: 'Select platform'
+      },
+      'socialConnections.connectionNameLabel': {
+        vi: 'Tên kết nối*',
+        en: 'Connection Name*'
+      },
+      'socialConnections.connectionNamePlaceholder': {
+        vi: 'VD: Trang Facebook chính',
+        en: 'Example: Main Facebook Page'
+      },
+      'socialConnections.createConnection': {
+        vi: 'Tạo kết nối',
+        en: 'Create Connection'
+      },
+      'socialConnections.connectFacebook': {
+        vi: 'Kết nối Facebook',
+        en: 'Connect Facebook'
+      },
+      'socialConnections.facebookConnectDesc': {
+        vi: 'Chọn phương thức kết nối Facebook phù hợp với bạn.',
+        en: 'Choose the Facebook connection method that suits you.'
+      },
+      'socialConnections.connectionSuccessful': {
+        vi: 'Kết nối thành công',
+        en: 'Connection Successful'
+      },
+      'socialConnections.connectedPageCount': {
+        vi: 'Đã kết nối {count} Facebook Page(s)',
+        en: 'Connected {count} Facebook Page(s)'
+      },
+      'common.creating': {
+        vi: 'Đang tạo...',
+        en: 'Creating...'
+      },
+      'socialConnections.connectionSuccessDescription': {
+        vi: 'Tài khoản Facebook của bạn đã được kết nối thành công.',
+        en: 'Your Facebook account has been connected successfully.'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

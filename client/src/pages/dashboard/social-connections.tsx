@@ -91,8 +91,8 @@ export default function SocialConnections() {
     
     if (success === 'facebook_connected') {
       toast({
-        title: "Facebook kết nối thành công!",
-        description: "Tài khoản Facebook của bạn đã được kết nối thành công.",
+        title: t('socialConnections.connectionSuccessful', 'Kết nối thành công'),
+        description: t('socialConnections.connectionSuccessDescription', 'Tài khoản Facebook của bạn đã được kết nối thành công.'),
       });
       window.history.replaceState({}, '', window.location.pathname);
     } else if (error) {
@@ -295,18 +295,18 @@ export default function SocialConnections() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Thêm kết nối mới</DialogTitle>
+                <DialogTitle>{t('socialConnections.addNewConnection', 'Thêm kết nối mới')}</DialogTitle>
                 <DialogDescription>
-                  Kết nối với nền tảng mạng xã hội hoặc WordPress để tự động đăng bài viết
+                  {t('socialConnections.addConnectionDesc', 'Kết nối với nền tảng mạng xã hội hoặc WordPress để tự động đăng bài viết')}
                 </DialogDescription>
               </DialogHeader>
               
               <form onSubmit={handleCreateSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="platform">Nền tảng *</Label>
+                  <Label htmlFor="platform">{t('socialConnections.platform', 'Nền tảng *')}</Label>
                   <Select value={form.platform} onValueChange={(value) => setForm({...form, platform: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn nền tảng" />
+                      <SelectValue placeholder={t('socialConnections.selectPlatform', 'Chọn nền tảng')} />
                     </SelectTrigger>
                     <SelectContent>
                       {availablePlatforms.map((platform) => {
@@ -326,20 +326,20 @@ export default function SocialConnections() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="name">Tên kết nối *</Label>
+                  <Label htmlFor="name">{t('socialConnections.connectionNameLabel', 'Tên kết nối*')}</Label>
                   <Input
                     id="name"
                     value={form.name}
                     onChange={(e) => setForm({...form, name: e.target.value})}
-                    placeholder="VD: Trang Facebook chính"
+                    placeholder={t('socialConnections.connectionNamePlaceholder', 'VD: Trang Facebook chính')}
                   />
                 </div>
                 
                 {form.platform === 'facebook' && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Kết nối Facebook</h4>
+                    <h4 className="font-medium mb-2">{t('socialConnections.connectFacebook', 'Kết nối Facebook')}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                      Chọn phương thức kết nối Facebook phù hợp với bạn.
+                      {t('socialConnections.facebookConnectDesc', 'Chọn phương thức kết nối Facebook phù hợp với bạn.')}
                     </p>
                     <Button 
                       type="button" 
@@ -347,7 +347,7 @@ export default function SocialConnections() {
                       className="w-full"
                     >
                       <Facebook className="w-4 h-4 mr-2" />
-                      Kết nối Facebook Pages
+                      {t('facebookWizard.title', 'Kết nối Facebook Pages')}
                     </Button>
                   </div>
                 )}
@@ -390,7 +390,7 @@ export default function SocialConnections() {
                     {t('common.cancel', 'Hủy')}
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? 'Đang tạo...' : 'Tạo kết nối'}
+                    {createMutation.isPending ? t('common.creating', 'Đang tạo...') : t('socialConnections.createConnection', 'Tạo kết nối')}
                   </Button>
                 </div>
               </form>
