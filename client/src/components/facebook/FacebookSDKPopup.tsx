@@ -59,8 +59,10 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
           version: 'v21.0'
         });
         
-        // Override the getLoginStatus to prevent CORS errors
+        // Override Facebook SDK methods to prevent errors when modal is closed
         const originalGetLoginStatus = window.FB.getLoginStatus;
+        const originalLogin = window.FB.login;
+        
         window.FB.getLoginStatus = function(callback: any, forceRefresh?: boolean) {
           try {
             originalGetLoginStatus.call(this, function(response: any) {
@@ -70,6 +72,21 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
             }, forceRefresh);
           } catch (error) {
             // Silently handle SDK errors (common when dialog is closed)
+            if (callback && typeof callback === 'function') {
+              callback({ status: 'unknown', authResponse: null });
+            }
+          }
+        };
+
+        window.FB.login = function(callback: any, options?: any) {
+          try {
+            originalLogin.call(this, function(response: any) {
+              if (callback && typeof callback === 'function') {
+                callback(response);
+              }
+            }, options);
+          } catch (error) {
+            // Silently handle login errors
             if (callback && typeof callback === 'function') {
               callback({ status: 'unknown', authResponse: null });
             }

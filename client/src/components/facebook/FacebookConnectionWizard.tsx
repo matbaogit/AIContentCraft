@@ -123,39 +123,61 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
 
     const FB = (window as any).FB;
 
-    FB.login((response: any) => {
-      if (response.authResponse) {
-        const accessToken = response.authResponse.accessToken;
-        setUserAccessToken(accessToken);
-        
-        // Get user info
-        FB.api('/me', { fields: 'id,name,picture' }, (userResponse: any) => {
-          if (!isMounted) return; // Don't update state if component is unmounted
-          
-          if (userResponse && !userResponse.error) {
-            setUserInfo(userResponse);
-            setCurrentStep('selectPages');
-            fetchUserPages(accessToken);
-          } else {
-            toast({
-              title: "Lỗi lấy thông tin user",
-              description: "Không thể lấy thông tin tài khoản Facebook.",
-              variant: "destructive",
-            });
-          }
+    try {
+      FB.login((response: any) => {
+        if (!isMounted) {
           setIsLoading(false);
-        });
-      } else {
-        toast({
-          title: "Đăng nhập thất bại",
-          description: "Bạn đã hủy đăng nhập hoặc có lỗi xảy ra.",
-          variant: "destructive",
-        });
+          return;
+        }
+
+        if (response && response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          setUserAccessToken(accessToken);
+          
+          // Get user info
+          try {
+            FB.api('/me', { fields: 'id,name,picture' }, (userResponse: any) => {
+              if (!isMounted) return; // Don't update state if component is unmounted
+              
+              if (userResponse && !userResponse.error) {
+                setUserInfo(userResponse);
+                setCurrentStep('selectPages');
+                fetchUserPages(accessToken);
+              } else {
+                toast({
+                  title: "Lỗi lấy thông tin user",
+                  description: "Không thể lấy thông tin tài khoản Facebook.",
+                  variant: "destructive",
+                });
+                setIsLoading(false);
+              }
+            });
+          } catch (apiError) {
+            if (isMounted) {
+              setIsLoading(false);
+            }
+          }
+        } else {
+          if (isMounted) {
+            // Only show error if user didn't just cancel
+            if (response && response.status !== 'unknown') {
+              toast({
+                title: "Đăng nhập thất bại",
+                description: "Bạn đã hủy đăng nhập hoặc có lỗi xảy ra.",
+                variant: "destructive",
+              });
+            }
+            setIsLoading(false);
+          }
+        }
+      }, { 
+        scope: 'public_profile,email,pages_manage_posts,pages_read_engagement,pages_show_list'
+      });
+    } catch (loginError) {
+      if (isMounted) {
         setIsLoading(false);
       }
-    }, { 
-      scope: 'public_profile,email,pages_manage_posts,pages_read_engagement,pages_show_list'
-    });
+    }
   };
 
   // Step 2: Fetch user's pages
@@ -169,20 +191,26 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
 
     const FB = (window as any).FB;
     
-    FB.api('/me/accounts', { access_token: accessToken }, (response: any) => {
-      if (!isMounted) return; // Don't update state if component is unmounted
-      
-      if (response && response.data && !response.error) {
-        setAvailablePages(response.data);
-      } else {
-        toast({
-          title: "Lỗi lấy danh sách Pages",
-          description: "Không thể lấy danh sách Pages của bạn.",
-          variant: "destructive",
-        });
+    try {
+      FB.api('/me/accounts', { access_token: accessToken }, (response: any) => {
+        if (!isMounted) return; // Don't update state if component is unmounted
+        
+        if (response && response.data && !response.error) {
+          setAvailablePages(response.data);
+        } else {
+          toast({
+            title: "Lỗi lấy danh sách Pages",
+            description: "Không thể lấy danh sách Pages của bạn.",
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (apiError) {
+      if (isMounted) {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    }
   };
 
   // Step 3: Handle page selection
