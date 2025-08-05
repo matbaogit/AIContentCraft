@@ -111,7 +111,7 @@ export default function SocialConnections() {
     retry: false,
   });
   
-  const connections = connectionsResponse && connectionsResponse.data ? connectionsResponse.data : [];
+  const connections = (connectionsResponse as any)?.data || [];
 
   // Create connection mutation
   const createMutation = useMutation({
@@ -127,8 +127,8 @@ export default function SocialConnections() {
       setShowCreateDialog(false);
       resetForm();
       toast({
-        title: "Thành công",
-        description: "Kết nối đã được tạo thành công.",
+        title: t('common.success', 'Thành công'),
+        description: t('socialConnections.connectionCreatedSuccess', 'Kết nối đã được tạo thành công.'),
       });
     },
     onError: (error: any) => {
@@ -150,8 +150,8 @@ export default function SocialConnections() {
       setShowEditDialog(false);
       setSelectedConnection(null);
       toast({
-        title: "Thành công",
-        description: "Kết nối đã được cập nhật thành công.",
+        title: t('common.success', 'Thành công'),
+        description: t('socialConnections.connectionUpdatedSuccess', 'Kết nối đã được cập nhật thành công.'),
       });
     },
     onError: (error: any) => {
@@ -171,8 +171,8 @@ export default function SocialConnections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
       toast({
-        title: "Thành công",
-        description: "Kết nối đã được xóa thành công.",
+        title: t('common.success', 'Thành công'),
+        description: t('socialConnections.connectionDeletedSuccess', 'Kết nối đã được xóa thành công.'),
       });
     },
     onError: (error: any) => {
@@ -199,8 +199,8 @@ export default function SocialConnections() {
   const handleFacebookConnectionSaved = (connection: any) => {
     queryClient.invalidateQueries({ queryKey: ['/api/social-connections'] });
     toast({
-      title: "Thành công",
-      description: "Kết nối Facebook đã được tạo thành công.",
+      title: t('common.success', 'Thành công'),
+      description: t('socialConnections.facebookConnectionSuccess', 'Kết nối Facebook đã được tạo thành công.'),
     });
   };
 

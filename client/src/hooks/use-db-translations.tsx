@@ -525,6 +525,22 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Đã kết nối {count} Facebook Page(s).',
         en: 'Connected {count} Facebook Page(s).'
       },
+      'socialConnections.connectionCreatedSuccess': {
+        vi: 'Kết nối đã được tạo thành công.',
+        en: 'Connection created successfully.'
+      },
+      'socialConnections.connectionUpdatedSuccess': {
+        vi: 'Kết nối đã được cập nhật thành công.',
+        en: 'Connection updated successfully.'
+      },
+      'socialConnections.connectionDeletedSuccess': {
+        vi: 'Kết nối đã được xóa thành công.',
+        en: 'Connection deleted successfully.'
+      },
+      'socialConnections.facebookConnectionSuccess': {
+        vi: 'Kết nối Facebook đã được tạo thành công.',
+        en: 'Facebook connection created successfully.'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'
