@@ -64,12 +64,15 @@ export function FacebookSDKPopup({ onSuccess, onError, loading }: FacebookSDKPop
         window.FB.getLoginStatus = function(callback: any, forceRefresh?: boolean) {
           try {
             originalGetLoginStatus.call(this, function(response: any) {
-              callback(response);
+              if (callback && typeof callback === 'function') {
+                callback(response);
+              }
             }, forceRefresh);
           } catch (error) {
-            console.log('Error retrieving login status, fetch cancelled.');
-            // Return a default "unknown" status to prevent errors
-            callback({ status: 'unknown', authResponse: null });
+            // Silently handle SDK errors (common when dialog is closed)
+            if (callback && typeof callback === 'function') {
+              callback({ status: 'unknown', authResponse: null });
+            }
           }
         };
         

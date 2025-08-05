@@ -48,9 +48,24 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
   const [selectedPages, setSelectedPages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useDbTranslations();
+
+  // Cleanup when component unmounts or modal closes
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsMounted(false);
+    }
+  }, [isOpen]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -73,9 +88,14 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
       const interval = setInterval(checkSDK, 1000);
       
       // Cleanup interval when component unmounts or isOpen changes
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         clearInterval(interval);
       }, 10000); // Stop checking after 10 seconds
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
     }
   }, [isOpen]);
 
@@ -110,6 +130,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
         
         // Get user info
         FB.api('/me', { fields: 'id,name,picture' }, (userResponse: any) => {
+          if (!isMounted) return; // Don't update state if component is unmounted
+          
           if (userResponse && !userResponse.error) {
             setUserInfo(userResponse);
             setCurrentStep('selectPages');
@@ -148,6 +170,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
     const FB = (window as any).FB;
     
     FB.api('/me/accounts', { access_token: accessToken }, (response: any) => {
+      if (!isMounted) return; // Don't update state if component is unmounted
+      
       if (response && response.data && !response.error) {
         setAvailablePages(response.data);
       } else {
@@ -236,8 +260,25 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
   };
 
   const handleClose = () => {
+    // Mark component as unmounted to prevent state updates
+    setIsMounted(false);
+    
+    // Reset all states
     setCurrentStep('login');
+    setUserAccessToken('');
+    setUserInfo(null);
+    setAvailablePages([]);
+    setSelectedPages([]);
+    setIsLoading(false);
+    setSdkReady(false);
+    
+    // Close modal
     onClose();
+    
+    // Re-enable mount state for next open
+    setTimeout(() => {
+      setIsMounted(true);
+    }, 100);
   };
 
   const renderStepContent = () => {
