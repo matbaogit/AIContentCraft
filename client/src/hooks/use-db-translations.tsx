@@ -517,6 +517,14 @@ export function useDbTranslations(): UseDbTranslationsResult {
         vi: 'Tài khoản Facebook của bạn đã được kết nối thành công.',
         en: 'Your Facebook account has been connected successfully.'
       },
+      'facebookWizard.connectionSuccessful': {
+        vi: 'Kết nối thành công',
+        en: 'Connection Successful!'
+      },
+      'facebookWizard.connectedPagesCount': {
+        vi: 'Đã kết nối {count} Facebook Page(s).',
+        en: 'Connected {count} Facebook Page(s).'
+      },
       'dashboard.create.socialContent.step1.title': {
         vi: 'Bước 1: Trích xuất nội dung',
         en: 'Step 1: Content Extraction'

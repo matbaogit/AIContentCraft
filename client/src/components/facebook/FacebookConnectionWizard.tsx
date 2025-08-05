@@ -219,8 +219,8 @@ export function FacebookConnectionWizard({ isOpen, onClose }: FacebookConnection
       setCurrentStep('success');
       
       toast({
-        title: "Kết nối thành công",
-        description: `Đã kết nối ${selectedPages.length} Facebook Page(s).`,
+        title: t('facebookWizard.connectionSuccessful', 'Kết nối thành công'),
+        description: t('facebookWizard.connectedPagesCount', `Đã kết nối ${selectedPages.length} Facebook Page(s).`).replace('{count}', selectedPages.length.toString()),
       });
 
     } catch (error) {
