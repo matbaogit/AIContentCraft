@@ -836,18 +836,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('=== GENERATE CONTENT API CALLED ===');
       
-      // Ưu tiên lấy webhook URL từ file .env
-      let webhookUrl = process.env.WEBHOOK_URL;
+      // Ưu tiên lấy webhook URL từ database (admin settings)
+      let webhookUrl = undefined;
+      const webhookSettingRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'notificationWebhookUrl')
+      });
+      webhookUrl = webhookSettingRes?.value || undefined;
+      console.log('Webhook URL from database:', webhookUrl);
       
-      // Nếu không có trong .env, lấy từ database
+      // Nếu không có trong database, lấy từ file .env làm fallback
       if (!webhookUrl) {
-        const webhookSettingRes = await db.query.systemSettings.findFirst({
-          where: eq(systemSettings.key, 'notificationWebhookUrl')
-        });
-        webhookUrl = webhookSettingRes?.value || undefined;
-        console.log('Webhook URL from database:', webhookUrl);
-      } else {
-        console.log('Webhook URL from .env:', webhookUrl);
+        webhookUrl = process.env.WEBHOOK_URL;
+        console.log('Webhook URL from .env (fallback):', webhookUrl);
       }
       
       // Xóa chế độ offline mode theo yêu cầu
@@ -910,18 +910,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(directContent);
       }
       
-      // Ưu tiên lấy webhook secret từ file .env
-      let webhookSecret = process.env.WEBHOOK_SECRET;
+      // Ưu tiên lấy webhook secret từ database (admin settings)
+      let webhookSecret = undefined;
+      const webhookSecretRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'webhookSecret')
+      });
+      webhookSecret = webhookSecretRes?.value;
+      console.log('Webhook Secret from database:', webhookSecret ? '(exists)' : '(missing)');
       
-      // Nếu không có trong .env, lấy từ database
+      // Nếu không có trong database, lấy từ file .env làm fallback
       if (!webhookSecret) {
-        const webhookSecretRes = await db.query.systemSettings.findFirst({
-          where: eq(systemSettings.key, 'webhook_secret')
-        });
-        webhookSecret = webhookSecretRes?.value;
-        console.log('Webhook Secret from database:', webhookSecret ? '(exists)' : '(missing)');
-      } else {
-        console.log('Webhook Secret from .env:', '(exists)');
+        webhookSecret = process.env.WEBHOOK_SECRET;
+        console.log('Webhook Secret from .env (fallback):', webhookSecret ? '(exists)' : '(missing)');
       }
       
       // Gửi request đến webhook
