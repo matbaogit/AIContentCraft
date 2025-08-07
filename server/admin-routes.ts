@@ -1488,4 +1488,203 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // ========== Appearance Management ==========
+  
+  // Get appearance settings
+  app.get("/api/admin/appearance/settings", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { type, language = 'vi' } = req.query;
+      const settings = await storage.getAppearanceSettings(
+        type as string, 
+        language as string
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: settings
+      });
+    } catch (error) {
+      console.error("Error getting appearance settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get appearance settings"
+      });
+    }
+  });
+
+  // Update appearance setting
+  app.patch("/api/admin/appearance/settings", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { type, key, value, language = 'vi' } = req.body;
+      
+      if (!type || !key || value === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: "Type, key, and value are required"
+        });
+      }
+
+      const setting = await storage.updateAppearanceSetting(
+        type, 
+        key, 
+        value, 
+        req.user.id, 
+        language
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: setting,
+        message: "Setting updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating appearance setting:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update appearance setting"
+      });
+    }
+  });
+
+  // Get appearance history
+  app.get("/api/admin/appearance/history", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { settingId, limit = 50 } = req.query;
+      const history = await storage.getAppearanceHistory(
+        settingId ? parseInt(settingId as string) : undefined,
+        parseInt(limit as string)
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: history
+      });
+    } catch (error) {
+      console.error("Error getting appearance history:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get appearance history"
+      });
+    }
+  });
+
+  // Restore appearance setting from history
+  app.post("/api/admin/appearance/restore/:historyId", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const historyId = parseInt(req.params.historyId);
+      
+      if (isNaN(historyId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid history ID"
+        });
+      }
+
+      const success = await storage.restoreAppearanceSetting(historyId, req.user.id);
+
+      if (!success) {
+        return res.status(404).json({
+          success: false,
+          error: "History record not found or restore failed"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Setting restored successfully"
+      });
+    } catch (error) {
+      console.error("Error restoring appearance setting:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to restore appearance setting"
+      });
+    }
+  });
+
+  // Upload asset (logo, images, etc.)
+  app.post("/api/admin/appearance/upload", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const assetData = schema.insertUploadedAssetSchema.parse({
+        ...req.body,
+        uploadedBy: req.user.id
+      });
+
+      const asset = await storage.uploadAsset(assetData);
+
+      return res.status(201).json({
+        success: true,
+        data: asset,
+        message: "Asset uploaded successfully"
+      });
+    } catch (error) {
+      console.error("Error uploading asset:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to upload asset"
+      });
+    }
+  });
+
+  // Get uploaded assets
+  app.get("/api/admin/appearance/assets", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { usageType } = req.query;
+      const assets = await storage.getUploadedAssets(usageType as string);
+
+      return res.status(200).json({
+        success: true,
+        data: assets
+      });
+    } catch (error) {
+      console.error("Error getting uploaded assets:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get uploaded assets"
+      });
+    }
+  });
 }

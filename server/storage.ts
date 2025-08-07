@@ -146,6 +146,15 @@ export interface IStorage {
   getReferralTransactions(userId: number, page: number, limit: number): Promise<{ transactions: any[], total: number }>;
   getReferralSettings(): Promise<{ referrerReward: number; referredReward: number; enabled: boolean }>;
 
+  // Appearance management
+  getAppearanceSettings(type?: string, language?: string): Promise<schema.AppearanceSetting[]>;
+  getAppearanceSetting(type: string, key: string, language?: string): Promise<schema.AppearanceSetting | null>;
+  updateAppearanceSetting(type: string, key: string, value: string, changedBy: number, language?: string): Promise<schema.AppearanceSetting>;
+  getAppearanceHistory(settingId?: number, limit?: number): Promise<schema.AppearanceHistory[]>;
+  uploadAsset(asset: schema.InsertUploadedAsset): Promise<schema.UploadedAsset>;
+  getUploadedAssets(usageType?: string): Promise<schema.UploadedAsset[]>;
+  restoreAppearanceSetting(historyId: number, changedBy: number): Promise<boolean>;
+
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -1946,6 +1955,215 @@ class DatabaseStorage implements IStorage {
         totalArticles: 0,
         totalImages: 0
       };
+    }
+  }
+
+  // Appearance management methods
+  async getAppearanceSettings(type?: string, language?: string): Promise<schema.AppearanceSetting[]> {
+    try {
+      const conditions = [];
+      if (type) conditions.push(eq(schema.appearanceSettings.type, type as any));
+      if (language) conditions.push(eq(schema.appearanceSettings.language, language));
+      
+      const settings = await db.query.appearanceSettings.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        orderBy: [asc(schema.appearanceSettings.type), asc(schema.appearanceSettings.key)]
+      });
+      
+      return settings;
+    } catch (error) {
+      console.error('Error getting appearance settings:', error);
+      return [];
+    }
+  }
+
+  async getAppearanceSetting(type: string, key: string, language = 'vi'): Promise<schema.AppearanceSetting | null> {
+    try {
+      const setting = await db.query.appearanceSettings.findFirst({
+        where: and(
+          eq(schema.appearanceSettings.type, type as any),
+          eq(schema.appearanceSettings.key, key),
+          eq(schema.appearanceSettings.language, language)
+        )
+      });
+      
+      return setting || null;
+    } catch (error) {
+      console.error('Error getting appearance setting:', error);
+      return null;
+    }
+  }
+
+  async updateAppearanceSetting(
+    type: string, 
+    key: string, 
+    value: string, 
+    changedBy: number, 
+    language = 'vi'
+  ): Promise<schema.AppearanceSetting> {
+    try {
+      // Get current setting to record history
+      const currentSetting = await this.getAppearanceSetting(type, key, language);
+      
+      let setting: schema.AppearanceSetting;
+      
+      if (currentSetting) {
+        // Update existing setting
+        const [updatedSetting] = await db
+          .update(schema.appearanceSettings)
+          .set({ 
+            value, 
+            updatedAt: new Date() 
+          })
+          .where(
+            and(
+              eq(schema.appearanceSettings.type, type as any),
+              eq(schema.appearanceSettings.key, key),
+              eq(schema.appearanceSettings.language, language)
+            )
+          )
+          .returning();
+        
+        setting = updatedSetting;
+        
+        // Record history
+        await db.insert(schema.appearanceHistory).values({
+          settingId: currentSetting.id,
+          oldValue: currentSetting.value,
+          newValue: value,
+          changedBy,
+          changeDescription: `Updated ${type}.${key}`
+        });
+      } else {
+        // Create new setting
+        const [newSetting] = await db
+          .insert(schema.appearanceSettings)
+          .values({
+            type: type as any,
+            key,
+            value,
+            language
+          })
+          .returning();
+        
+        setting = newSetting;
+        
+        // Record history for new setting
+        await db.insert(schema.appearanceHistory).values({
+          settingId: newSetting.id,
+          oldValue: null,
+          newValue: value,
+          changedBy,
+          changeDescription: `Created ${type}.${key}`
+        });
+      }
+      
+      return setting;
+    } catch (error) {
+      console.error('Error updating appearance setting:', error);
+      throw error;
+    }
+  }
+
+  async getAppearanceHistory(settingId?: number, limit = 50): Promise<schema.AppearanceHistory[]> {
+    try {
+      const history = await db.query.appearanceHistory.findMany({
+        where: settingId ? eq(schema.appearanceHistory.settingId, settingId) : undefined,
+        orderBy: [desc(schema.appearanceHistory.createdAt)],
+        limit,
+        with: {
+          setting: true,
+          changedByUser: {
+            columns: {
+              id: true,
+              username: true,
+              email: true
+            }
+          }
+        }
+      });
+      
+      return history;
+    } catch (error) {
+      console.error('Error getting appearance history:', error);
+      return [];
+    }
+  }
+
+  async uploadAsset(asset: schema.InsertUploadedAsset): Promise<schema.UploadedAsset> {
+    try {
+      const [uploadedAsset] = await db
+        .insert(schema.uploadedAssets)
+        .values(asset)
+        .returning();
+      
+      return uploadedAsset;
+    } catch (error) {
+      console.error('Error uploading asset:', error);
+      throw error;
+    }
+  }
+
+  async getUploadedAssets(usageType?: string): Promise<schema.UploadedAsset[]> {
+    try {
+      const assets = await db.query.uploadedAssets.findMany({
+        where: usageType ? eq(schema.uploadedAssets.usageType, usageType) : undefined,
+        orderBy: [desc(schema.uploadedAssets.createdAt)],
+        with: {
+          uploader: {
+            columns: {
+              id: true,
+              username: true,
+              email: true
+            }
+          }
+        }
+      });
+      
+      return assets;
+    } catch (error) {
+      console.error('Error getting uploaded assets:', error);
+      return [];
+    }
+  }
+
+  async restoreAppearanceSetting(historyId: number, changedBy: number): Promise<boolean> {
+    try {
+      // Get the history record
+      const historyRecord = await db.query.appearanceHistory.findFirst({
+        where: eq(schema.appearanceHistory.id, historyId),
+        with: {
+          setting: true
+        }
+      });
+      
+      if (!historyRecord) {
+        throw new Error('History record not found');
+      }
+      
+      // Restore the old value
+      const [updatedSetting] = await db
+        .update(schema.appearanceSettings)
+        .set({ 
+          value: historyRecord.oldValue,
+          updatedAt: new Date() 
+        })
+        .where(eq(schema.appearanceSettings.id, historyRecord.settingId))
+        .returning();
+      
+      // Record the restore action
+      await db.insert(schema.appearanceHistory).values({
+        settingId: historyRecord.settingId,
+        oldValue: historyRecord.newValue,
+        newValue: historyRecord.oldValue,
+        changedBy,
+        changeDescription: `Restored from history ID ${historyId}`
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error restoring appearance setting:', error);
+      return false;
     }
   }
 }

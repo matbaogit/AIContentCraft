@@ -774,6 +774,91 @@ export type InsertPostingAnalytics = z.infer<typeof insertPostingAnalyticsSchema
 export type PublishingLog = z.infer<typeof selectPublishingLogsSchema>;
 export type InsertPublishingLog = z.infer<typeof insertPublishingLogsSchema>;
 
+// Appearance Settings and History Management
+
+// Enum for appearance setting types
+export const appearanceTypeEnum = pgEnum('appearance_type', ['seo_meta', 'header', 'footer', 'login_page']);
+
+// Appearance Settings table
+export const appearanceSettings = pgTable('appearance_settings', {
+  id: serial('id').primaryKey(),
+  type: appearanceTypeEnum('type').notNull(), // seo_meta, header, footer, login_page
+  key: text('key').notNull(), // e.g., 'site_title', 'logo_url', 'footer_copyright'
+  value: text('value'), // The actual setting value
+  language: text('language').default('vi'), // For multilingual support
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Appearance History table for tracking changes and restore functionality
+export const appearanceHistory = pgTable('appearance_history', {
+  id: serial('id').primaryKey(),
+  settingId: integer('setting_id').references(() => appearanceSettings.id).notNull(),
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  changedBy: integer('changed_by').references(() => users.id).notNull(),
+  changeDescription: text('change_description'), // Optional description of the change
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Uploaded Assets table for managing logos and images
+export const uploadedAssets = pgTable('uploaded_assets', {
+  id: serial('id').primaryKey(),
+  filename: text('filename').notNull(),
+  originalName: text('original_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  size: integer('size').notNull(), // File size in bytes
+  path: text('path').notNull(), // Storage path
+  url: text('url').notNull(), // Public URL
+  uploadedBy: integer('uploaded_by').references(() => users.id).notNull(),
+  usageType: text('usage_type'), // 'logo', 'header_image', 'login_background', etc.
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Appearance Settings Relations
+export const appearanceSettingsRelations = relations(appearanceSettings, ({ many }) => ({
+  history: many(appearanceHistory),
+}));
+
+export const appearanceHistoryRelations = relations(appearanceHistory, ({ one }) => ({
+  setting: one(appearanceSettings, { fields: [appearanceHistory.settingId], references: [appearanceSettings.id] }),
+  changedByUser: one(users, { fields: [appearanceHistory.changedBy], references: [users.id] }),
+}));
+
+export const uploadedAssetsRelations = relations(uploadedAssets, ({ one }) => ({
+  uploader: one(users, { fields: [uploadedAssets.uploadedBy], references: [users.id] }),
+}));
+
+// Appearance Schemas
+export const selectAppearanceSettingSchema = createSelectSchema(appearanceSettings);
+export const insertAppearanceSettingSchema = createInsertSchema(appearanceSettings, {
+  key: (schema) => schema.min(1, "Setting key is required").max(100, "Key too long"),
+  value: (schema) => schema.max(5000, "Value too long"),
+});
+
+export const selectAppearanceHistorySchema = createSelectSchema(appearanceHistory);
+export const insertAppearanceHistorySchema = createInsertSchema(appearanceHistory);
+
+export const selectUploadedAssetSchema = createSelectSchema(uploadedAssets);
+export const insertUploadedAssetSchema = createInsertSchema(uploadedAssets, {
+  filename: (schema) => schema.min(1, "Filename is required"),
+  originalName: (schema) => schema.min(1, "Original name is required"),
+  mimeType: (schema) => schema.min(1, "MIME type is required"),
+  size: (schema) => schema.min(1, "File size must be positive"),
+  path: (schema) => schema.min(1, "File path is required"),
+  url: (schema) => schema.min(1, "File URL is required"),
+});
+
+// Appearance Types
+export type AppearanceSetting = z.infer<typeof selectAppearanceSettingSchema>;
+export type InsertAppearanceSetting = z.infer<typeof insertAppearanceSettingSchema>;
+export type AppearanceHistory = z.infer<typeof selectAppearanceHistorySchema>;
+export type InsertAppearanceHistory = z.infer<typeof insertAppearanceHistorySchema>;
+export type UploadedAsset = z.infer<typeof selectUploadedAssetSchema>;
+export type InsertUploadedAsset = z.infer<typeof insertUploadedAssetSchema>;
+
 // Legal Pages table
 export const legalPages = pgTable('legal_pages', {
   id: text('id').primaryKey(), // 'privacy-policy', 'data-deletion', 'terms-of-service'
