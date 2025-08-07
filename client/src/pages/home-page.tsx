@@ -7,14 +7,25 @@ import { Faq } from "@/components/landing/Faq";
 import { FeedbackForm } from "@/components/landing/FeedbackForm";
 import { Footer } from "@/components/landing/Footer";
 import Head from "@/components/head";
+import { useQuery } from "@tanstack/react-query";
 
 export default function HomePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Fetch appearance settings for dynamic site title
+  const { data: appearanceSettings } = useQuery({
+    queryKey: ['/api/appearance/settings', 'header', language],
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Get dynamic site name
+  const siteName = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value || t("common.appName");
 
   return (
     <>
       <Head>
-        <title>{t("common.appName")} - {t("landing.hero.title")}</title>
+        <title>{siteName} - {t("landing.hero.title")}</title>
         <meta name="description" content={t("landing.hero.subtitle")} />
       </Head>
       

@@ -69,7 +69,7 @@ export function Navbar() {
                     <img
                       src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
                       alt={t("common.appName")}
-                      className="h-9 w-auto transition-all duration-300"
+                      className="h-8 w-auto max-w-[120px] transition-all duration-300"
                       onError={(e) => {
                         // Fallback to SVG if image fails to load
                         const target = e.target as HTMLImageElement;
