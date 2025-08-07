@@ -109,6 +109,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin routes
   registerAdminRoutes(app);
 
+  // ========== Public Appearance Settings API ==========
+  // Public endpoint for appearance settings (không cần authentication)
+  app.get("/api/appearance/settings", async (req, res) => {
+    try {
+      const { type, language = 'vi' } = req.query;
+      const settings = await storage.getAppearanceSettings(
+        type as string, 
+        language as string
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: settings
+      });
+    } catch (error) {
+      console.error("Error getting public appearance settings:", error);
+      return res.status(200).json({
+        success: true,
+        data: [] // Return empty array on error for frontend fallback
+      });
+    }
+  });
+
   // ========== Legal Pages API ==========
   // Get all legal pages
   app.get('/api/admin/legal-pages', isAuthenticated, async (req, res) => {

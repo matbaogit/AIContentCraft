@@ -18,9 +18,9 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Fetch appearance settings for logo
+  // Fetch appearance settings for logo (public endpoint)
   const { data: appearanceSettings } = useQuery({
-    queryKey: ['/api/admin/appearance/settings', 'header'],
+    queryKey: ['/api/appearance/settings', 'header', language],
     retry: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
