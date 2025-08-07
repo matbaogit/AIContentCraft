@@ -62,26 +62,19 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center">
-              {footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language) ? (
-                <div className="flex items-center">
-                  <img
-                    src={footerSettings.data.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language)?.value}
-                    alt={footerSiteName || t("common.appName")}
-                    style={footerLogoStyle}
-                    className="transition-all duration-300"
-                    onError={(e) => {
-                      // Fallback to SVG if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const fallback = target.nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = 'block';
-                    }}
-                  />
-                  <ScrollIcon className="h-8 w-auto text-white hidden" />
-                  <span className="ml-2 text-xl font-bold text-white font-heading">
-                    {footerSiteName || t("common.appName")}
-                  </span>
-                </div>
+              {footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language)?.value ? (
+                <img
+                  src={footerSettings.data.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language)?.value}
+                  alt={footerSiteName || t("common.appName")}
+                  style={footerLogoStyle}
+                  className="transition-all duration-300"
+                  onError={(e) => {
+                    // Fallback to text if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    const textFallback = e.currentTarget.parentElement?.querySelector('.logo-text-fallback') as HTMLElement;
+                    if (textFallback) textFallback.style.display = 'flex';
+                  }}
+                />
               ) : (
                 <div className="flex items-center">
                   <ScrollIcon className="h-8 w-auto text-white" />
@@ -90,6 +83,14 @@ export function Footer() {
                   </span>
                 </div>
               )}
+              
+              {/* Hidden fallback for when logo fails to load */}
+              <div className="logo-text-fallback flex items-center" style={{ display: 'none' }}>
+                <ScrollIcon className="h-8 w-auto text-white" />
+                <span className="ml-2 text-xl font-bold text-white font-heading">
+                  {footerSiteName || t("common.appName")}
+                </span>
+              </div>
             </div>
             <p className="mt-4 text-slate-200">
               {footerDescription || t("landing.footer.description")}
