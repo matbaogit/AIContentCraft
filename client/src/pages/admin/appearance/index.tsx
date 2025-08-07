@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, Globe, Layout, LogIn, FileText, History } from "lucide-react";
 import SEOMetaSettings from "./components/SEOMetaSettings";
 import HeaderSettings from "./components/HeaderSettings";
-import LoginPageSettings from "./components/LoginPageSettings";
 import FooterSettings from "./components/FooterSettings";
+import LoginPageSettings from "./components/LoginPageSettings";
 import ChangeHistory from "./components/ChangeHistory";
 
 export default function AppearancePage() {

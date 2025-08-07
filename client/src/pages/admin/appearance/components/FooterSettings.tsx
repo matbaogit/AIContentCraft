@@ -219,12 +219,13 @@ export default function FooterSettings() {
                     <Input
                       id="footer_logo_url"
                       {...form.register('footer_logo_url')}
-                      placeholder="https://example.com/footer-logo.png"
+                      placeholder="https://ftp.toolbox.vn/img/logo-toolboxvn-white.png"
                       className="mt-1"
                       onChange={(e) => handleLogoUrlChange(e.target.value)}
                     />
                     <p className="text-sm text-muted-foreground mt-1">
-                      Nhập URL logo riêng cho footer. Kích thước khuyến nghị: 160x40px
+                      Nhập URL logo riêng cho footer. Kích thước khuyến nghị: 160x40px. 
+                      <br />Ví dụ: https://ftp.toolbox.vn/img/logo-toolboxvn-white.png
                     </p>
                   </div>
 
