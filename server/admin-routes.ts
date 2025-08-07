@@ -1355,4 +1355,137 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // Analytics routes
+  app.get("/api/admin/analytics/overview", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { period = '1m' } = req.query;
+      let startDate: Date;
+      let endDate = new Date();
+
+      switch (period) {
+        case '1d':
+          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          break;
+        case '7d':
+          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '1m':
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '12m':
+          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      }
+
+      const overview = await storage.getAnalyticsOverview(startDate, endDate);
+      return res.status(200).json({
+        success: true,
+        data: overview
+      });
+    } catch (error) {
+      console.error("Error getting analytics overview:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get analytics overview"
+      });
+    }
+  });
+
+  app.get("/api/admin/analytics/registered-accounts", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { period = '1m' } = req.query;
+      let startDate: Date;
+      let endDate = new Date();
+
+      switch (period) {
+        case '1d':
+          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          break;
+        case '7d':
+          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '1m':
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '12m':
+          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      }
+
+      const stats = await storage.getRegisteredAccountsStats(period as string, startDate, endDate);
+      return res.status(200).json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.error("Error getting registered accounts stats:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get registered accounts stats"
+      });
+    }
+  });
+
+  app.get("/api/admin/analytics/active-users", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { period = '1m' } = req.query;
+      let startDate: Date;
+      let endDate = new Date();
+
+      switch (period) {
+        case '1d':
+          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          break;
+        case '7d':
+          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '1m':
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '12m':
+          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      }
+
+      const stats = await storage.getActiveUsersStats(period as string, startDate, endDate);
+      return res.status(200).json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.error("Error getting active users stats:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get active users stats"
+      });
+    }
+  });
 }

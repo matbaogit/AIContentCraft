@@ -71,6 +71,7 @@ import DataDeletion from "@/pages/DataDeletion";
 import TermsOfService from "@/pages/TermsOfService";
 import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
+import AdminAnalytics from "@/pages/admin/analytics";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -152,6 +153,7 @@ function Router() {
       <ProtectedRoute path="/admin/credit-usage-history" component={CreditUsageHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/legal-pages" component={LegalPagesManagement} adminOnly={true} />
       <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
+      <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />

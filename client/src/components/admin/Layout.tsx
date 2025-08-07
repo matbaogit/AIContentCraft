@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Languages,
   Gift,
+  TrendingUp,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -92,6 +93,11 @@ function Layout({ children, title }: AdminLayoutProps) {
       href: "/admin/sidebar-menu",
       label: "Quản lý Sidebar",
       icon: <Menu className="h-5 w-5" />,
+    },
+    {
+      href: "/admin/analytics",
+      label: t("admin.analytics"),
+      icon: <TrendingUp className="h-5 w-5" />,
     },
     {
       href: "/admin/credit-usage-history",

@@ -30,6 +30,22 @@ export interface IStorage {
     recentUsers: schema.User[];
   }>;
   
+  // Analytics methods
+  getRegisteredAccountsStats(period: string, startDate: Date, endDate: Date): Promise<{
+    total: number;
+    data: { date: string; count: number }[];
+  }>;
+  getActiveUsersStats(period: string, startDate: Date, endDate: Date): Promise<{
+    total: number;
+    data: { date: string; count: number }[];
+  }>;
+  getAnalyticsOverview(startDate: Date, endDate: Date): Promise<{
+    registeredAccounts: number;
+    activeUsers: number;
+    totalArticles: number;
+    totalImages: number;
+  }>;
+  
   // Article management
   getArticle(id: number): Promise<schema.Article | null>;
   getArticleById(id: number): Promise<schema.Article | null>;
@@ -1715,6 +1731,220 @@ class DatabaseStorage implements IStorage {
         totalImages: 0,
         totalCreditsUsed: 0,
         recentUsers: []
+      };
+    }
+  }
+
+  // Analytics methods implementation
+  async getRegisteredAccountsStats(period: string, startDate: Date, endDate: Date): Promise<{
+    total: number;
+    data: { date: string; count: number }[];
+  }> {
+    try {
+      let dateFormat: string;
+      let truncFormat: string;
+
+      switch (period) {
+        case '1d':
+          dateFormat = 'YYYY-MM-DD HH24:00:00';
+          truncFormat = 'hour';
+          break;
+        case '7d':
+        case '1m':
+          dateFormat = 'YYYY-MM-DD';
+          truncFormat = 'day';
+          break;
+        case '12m':
+          dateFormat = 'YYYY-MM';
+          truncFormat = 'month';
+          break;
+        default:
+          dateFormat = 'YYYY-MM-DD';
+          truncFormat = 'day';
+      }
+
+      // Get registered accounts (verified users) grouped by time period
+      const query = `
+        SELECT 
+          TO_CHAR(DATE_TRUNC('${truncFormat}', created_at), '${dateFormat}') as date,
+          COUNT(*) as count
+        FROM users 
+        WHERE is_verified = true 
+          AND created_at >= $1 
+          AND created_at <= $2
+        GROUP BY DATE_TRUNC('${truncFormat}', created_at)
+        ORDER BY DATE_TRUNC('${truncFormat}', created_at)
+      `;
+
+      const result = await pool.query(query, [startDate, endDate]);
+      
+      // Get total count
+      const totalQuery = `
+        SELECT COUNT(*) as total
+        FROM users 
+        WHERE is_verified = true 
+          AND created_at >= $1 
+          AND created_at <= $2
+      `;
+      
+      const totalResult = await pool.query(totalQuery, [startDate, endDate]);
+
+      return {
+        total: parseInt(totalResult.rows[0]?.total || '0'),
+        data: result.rows.map(row => ({
+          date: row.date,
+          count: parseInt(row.count)
+        }))
+      };
+    } catch (error) {
+      console.error('Error getting registered accounts stats:', error);
+      return { total: 0, data: [] };
+    }
+  }
+
+  async getActiveUsersStats(period: string, startDate: Date, endDate: Date): Promise<{
+    total: number;
+    data: { date: string; count: number }[];
+  }> {
+    try {
+      let dateFormat: string;
+      let truncFormat: string;
+
+      switch (period) {
+        case '1d':
+          dateFormat = 'YYYY-MM-DD HH24:00:00';
+          truncFormat = 'hour';
+          break;
+        case '7d':
+        case '1m':
+          dateFormat = 'YYYY-MM-DD';
+          truncFormat = 'day';
+          break;
+        case '12m':
+          dateFormat = 'YYYY-MM';
+          truncFormat = 'month';
+          break;
+        default:
+          dateFormat = 'YYYY-MM-DD';
+          truncFormat = 'day';
+      }
+
+      // Get active users (users who performed core actions)
+      const query = `
+        WITH active_users AS (
+          SELECT DISTINCT 
+            user_id,
+            DATE_TRUNC('${truncFormat}', activity_date) as period
+          FROM (
+            SELECT user_id, created_at as activity_date FROM articles
+            WHERE created_at >= $1 AND created_at <= $2
+            UNION ALL
+            SELECT user_id, created_at as activity_date FROM images
+            WHERE created_at >= $1 AND created_at <= $2
+            UNION ALL
+            SELECT user_id, created_at as activity_date FROM scheduled_posts
+            WHERE created_at >= $1 AND created_at <= $2
+          ) activities
+        )
+        SELECT 
+          TO_CHAR(period, '${dateFormat}') as date,
+          COUNT(DISTINCT user_id) as count
+        FROM active_users
+        GROUP BY period
+        ORDER BY period
+      `;
+
+      const result = await pool.query(query, [startDate, endDate]);
+
+      // Get total unique active users
+      const totalQuery = `
+        SELECT COUNT(DISTINCT user_id) as total
+        FROM (
+          SELECT user_id FROM articles WHERE created_at >= $1 AND created_at <= $2
+          UNION ALL
+          SELECT user_id FROM images WHERE created_at >= $1 AND created_at <= $2
+          UNION ALL
+          SELECT user_id FROM scheduled_posts WHERE created_at >= $1 AND created_at <= $2
+        ) activities
+      `;
+
+      const totalResult = await pool.query(totalQuery, [startDate, endDate]);
+
+      return {
+        total: parseInt(totalResult.rows[0]?.total || '0'),
+        data: result.rows.map(row => ({
+          date: row.date,
+          count: parseInt(row.count)
+        }))
+      };
+    } catch (error) {
+      console.error('Error getting active users stats:', error);
+      return { total: 0, data: [] };
+    }
+  }
+
+  async getAnalyticsOverview(startDate: Date, endDate: Date): Promise<{
+    registeredAccounts: number;
+    activeUsers: number;
+    totalArticles: number;
+    totalImages: number;
+  }> {
+    try {
+      // Registered accounts in period
+      const registeredQuery = `
+        SELECT COUNT(*) as total
+        FROM users 
+        WHERE is_verified = true 
+          AND created_at >= $1 
+          AND created_at <= $2
+      `;
+      
+      // Active users in period
+      const activeQuery = `
+        SELECT COUNT(DISTINCT user_id) as total
+        FROM (
+          SELECT user_id FROM articles WHERE created_at >= $1 AND created_at <= $2
+          UNION ALL
+          SELECT user_id FROM images WHERE created_at >= $1 AND created_at <= $2
+          UNION ALL
+          SELECT user_id FROM scheduled_posts WHERE created_at >= $1 AND created_at <= $2
+        ) activities
+      `;
+
+      // Articles created in period
+      const articlesQuery = `
+        SELECT COUNT(*) as total
+        FROM articles 
+        WHERE created_at >= $1 AND created_at <= $2
+      `;
+
+      // Images created in period
+      const imagesQuery = `
+        SELECT COUNT(*) as total
+        FROM images 
+        WHERE created_at >= $1 AND created_at <= $2
+      `;
+
+      const [registeredResult, activeResult, articlesResult, imagesResult] = await Promise.all([
+        pool.query(registeredQuery, [startDate, endDate]),
+        pool.query(activeQuery, [startDate, endDate]),
+        pool.query(articlesQuery, [startDate, endDate]),
+        pool.query(imagesQuery, [startDate, endDate])
+      ]);
+
+      return {
+        registeredAccounts: parseInt(registeredResult.rows[0]?.total || '0'),
+        activeUsers: parseInt(activeResult.rows[0]?.total || '0'),
+        totalArticles: parseInt(articlesResult.rows[0]?.total || '0'),
+        totalImages: parseInt(imagesResult.rows[0]?.total || '0')
+      };
+    } catch (error) {
+      console.error('Error getting analytics overview:', error);
+      return {
+        registeredAccounts: 0,
+        activeUsers: 0,
+        totalArticles: 0,
+        totalImages: 0
       };
     }
   }

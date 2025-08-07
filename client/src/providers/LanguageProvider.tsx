@@ -100,6 +100,7 @@ const translations: TranslationsType = {
       performance: "Hiệu suất",
       integrations: "Tích hợp",
       history: "Lịch sử",
+      analytics: "Thống kê",
       settings: "Cài đặt",
       
       settingsPage: {
@@ -971,6 +972,7 @@ const translations: TranslationsType = {
       payments: "Payments",
       performance: "Performance",
       integrations: "Integrations",
+      analytics: "Analytics",
       
       usersManagement: {
         title: "Users Management",
