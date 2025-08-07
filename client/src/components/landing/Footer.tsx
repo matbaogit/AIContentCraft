@@ -12,23 +12,28 @@ import {
 export function Footer() {
   const { t, language } = useLanguage();
   
-  // Fetch appearance settings for logo (public endpoint)
-  const { data: appearanceSettings } = useQuery({
-    queryKey: ['/api/appearance/settings', 'header', language],
+  // Fetch appearance settings for footer (public endpoint)
+  const { data: footerSettings } = useQuery({
+    queryKey: ['/api/appearance/settings', 'footer', language],
     retry: false,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Get logo dimensions from settings
-  const logoHeight = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_height' && s.language === language)?.value || '32';
-  const logoWidth = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_width' && s.language === language)?.value || 'auto';
+  // Get footer logo dimensions from settings
+  const footerLogoHeight = footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_height' && s.language === language)?.value || '32';
+  const footerLogoWidth = footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_width' && s.language === language)?.value || 'auto';
   
-  // Create dynamic style for logo (footer size)
-  const logoStyle = {
-    height: `${Math.min(parseInt(logoHeight), 40)}px`, // Max 40px for footer
-    width: logoWidth === 'auto' ? 'auto' : `${logoWidth}px`,
+  // Create dynamic style for footer logo
+  const footerLogoStyle = {
+    height: `${footerLogoHeight}px`,
+    width: footerLogoWidth === 'auto' ? 'auto' : `${footerLogoWidth}px`,
     maxWidth: '160px'
   };
+
+  // Get footer content from settings
+  const footerSiteName = footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_site_name' && s.language === language)?.value;
+  const footerDescription = footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_description' && s.language === language)?.value;
+  const footerCopyright = footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_copyright' && s.language === language)?.value;
   
   const productLinks = [
     { label: t("landing.footer.links.createSeoContent"), href: "#" },
@@ -57,12 +62,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center">
-              {appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language) ? (
+              {footerSettings?.data?.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language) ? (
                 <div className="flex items-center">
                   <img
-                    src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
-                    alt={t("common.appName")}
-                    style={logoStyle}
+                    src={footerSettings.data.find((s: any) => s.type === 'footer' && s.key === 'footer_logo_url' && s.language === language)?.value}
+                    alt={footerSiteName || t("common.appName")}
+                    style={footerLogoStyle}
                     className="transition-all duration-300"
                     onError={(e) => {
                       // Fallback to SVG if image fails to load
@@ -74,20 +79,20 @@ export function Footer() {
                   />
                   <ScrollIcon className="h-8 w-auto text-white hidden" />
                   <span className="ml-2 text-xl font-bold text-white font-heading">
-                    {appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value || t("common.appName")}
+                    {footerSiteName || t("common.appName")}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center">
                   <ScrollIcon className="h-8 w-auto text-white" />
                   <span className="ml-2 text-xl font-bold text-white font-heading">
-                    {t("common.appName")}
+                    {footerSiteName || t("common.appName")}
                   </span>
                 </div>
               )}
             </div>
             <p className="mt-4 text-slate-200">
-              {t("landing.footer.description")}
+              {footerDescription || t("landing.footer.description")}
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="#" className="text-slate-300 hover:text-white transition-colors">
@@ -159,7 +164,7 @@ export function Footer() {
         </div>
         
         <div className="mt-12 pt-8 border-t border-secondary-700 text-center text-slate-300">
-          <p>{t("landing.footer.copyright")}</p>
+          <p>{footerCopyright || t("landing.footer.copyright")}</p>
         </div>
       </div>
     </footer>
