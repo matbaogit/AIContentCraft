@@ -1,68 +1,58 @@
--- Create appearance_type enum if not exists
-DO $$ BEGIN
-    CREATE TYPE appearance_type AS ENUM ('seo_meta', 'header', 'footer', 'login_page');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
 -- Create appearance_settings table
 CREATE TABLE IF NOT EXISTS appearance_settings (
-  id SERIAL PRIMARY KEY,
-  type appearance_type NOT NULL,
-  key TEXT NOT NULL,
-  value TEXT,
-  language TEXT DEFAULT 'vi',
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    key VARCHAR(100) NOT NULL,
+    value TEXT,
+    language VARCHAR(10) DEFAULT 'vi',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(type, key, language)
 );
 
 -- Create appearance_history table
 CREATE TABLE IF NOT EXISTS appearance_history (
-  id SERIAL PRIMARY KEY,
-  setting_id INTEGER REFERENCES appearance_settings(id) NOT NULL,
-  old_value TEXT,
-  new_value TEXT,
-  changed_by INTEGER REFERENCES users(id) NOT NULL,
-  change_description TEXT,
-  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    id SERIAL PRIMARY KEY,
+    setting_id INTEGER REFERENCES appearance_settings(id),
+    old_value TEXT,
+    new_value TEXT,
+    changed_by INTEGER,
+    changed_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Create uploaded_assets table
 CREATE TABLE IF NOT EXISTS uploaded_assets (
-  id SERIAL PRIMARY KEY,
-  filename TEXT NOT NULL,
-  original_name TEXT NOT NULL,
-  mime_type TEXT NOT NULL,
-  size INTEGER NOT NULL,
-  path TEXT NOT NULL,
-  url TEXT NOT NULL,
-  uploaded_by INTEGER REFERENCES users(id) NOT NULL,
-  usage_type TEXT,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    id SERIAL PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255),
+    mime_type VARCHAR(100),
+    size INTEGER,
+    url TEXT,
+    uploaded_by INTEGER,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Insert some default appearance settings
+-- Insert default SEO settings if not exist
 INSERT INTO appearance_settings (type, key, value, language) VALUES
-('seo_meta', 'site_title', 'SEO AI Writer', 'vi'),
-('seo_meta', 'site_description', 'Công cụ tạo nội dung SEO bằng AI', 'vi'),
-('seo_meta', 'site_keywords', 'SEO, AI, content, writer', 'vi'),
-('header', 'logo_url', '/default-logo.png', 'vi'),
+('seo_meta', 'site_title', 'SEO AI Writer - Tạo nội dung SEO tự động', 'vi'),
+('seo_meta', 'site_description', 'Công cụ AI tạo nội dung SEO chất lượng cao, tối ưu hóa từ khóa và tăng thứ hạng tìm kiếm', 'vi'),
+('seo_meta', 'site_keywords', 'SEO, AI, nội dung, tạo bài viết, tối ưu hóa, từ khóa', 'vi'),
+('seo_meta', 'site_title', 'SEO AI Writer - Automated Content Generation', 'en'),
+('seo_meta', 'site_description', 'High-quality AI-powered SEO content generator, keyword optimization and search ranking improvement', 'en'),
+('seo_meta', 'site_keywords', 'SEO, AI, content, article generation, optimization, keywords', 'en'),
 ('header', 'site_name', 'SEO AI Writer', 'vi'),
-('login_page', 'title', 'Đăng nhập', 'vi'),
-('login_page', 'welcome_text', 'Chào mừng bạn đến với SEO AI Writer', 'vi'),
-('footer', 'copyright', '© 2025 SEO AI Writer. All rights reserved.', 'vi')
-ON CONFLICT DO NOTHING;
-
--- English versions
-INSERT INTO appearance_settings (type, key, value, language) VALUES
-('seo_meta', 'site_title', 'SEO AI Writer', 'en'),
-('seo_meta', 'site_description', 'AI-powered SEO content creation tool', 'en'),
-('seo_meta', 'site_keywords', 'SEO, AI, content, writer', 'en'),
-('header', 'logo_url', '/default-logo.png', 'en'),
 ('header', 'site_name', 'SEO AI Writer', 'en'),
-('login_page', 'title', 'Sign In', 'en'),
-('login_page', 'welcome_text', 'Welcome to SEO AI Writer', 'en'),
+('login_page', 'title', 'Chào mừng trở lại!', 'vi'),
+('login_page', 'welcome_text', 'Đăng nhập để tiếp tục sử dụng công cụ tạo nội dung SEO', 'vi'),
+('login_page', 'title', 'Welcome Back!', 'en'),
+('login_page', 'welcome_text', 'Login to continue using our SEO content generation tool', 'en'),
+('footer', 'copyright', '© 2025 SEO AI Writer. Tất cả quyền được bảo lưu.', 'vi'),
 ('footer', 'copyright', '© 2025 SEO AI Writer. All rights reserved.', 'en')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (type, key, language) DO NOTHING;
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_appearance_settings_type ON appearance_settings(type);
+CREATE INDEX IF NOT EXISTS idx_appearance_settings_language ON appearance_settings(language);
+CREATE INDEX IF NOT EXISTS idx_appearance_history_setting_id ON appearance_history(setting_id);
+CREATE INDEX IF NOT EXISTS idx_uploaded_assets_uploaded_by ON uploaded_assets(uploaded_by);
