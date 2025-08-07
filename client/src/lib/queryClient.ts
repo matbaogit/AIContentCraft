@@ -11,7 +11,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
   try {
     // Sử dụng tương đối URL cho API
     const fullUrl = url;
@@ -39,7 +39,7 @@ export async function apiRequest(
       }
     }
     
-    return res;
+    return await res.json();
   } catch (error) {
     console.error('API Request failed:', error);
     throw error;

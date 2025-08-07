@@ -40,7 +40,7 @@ export default function LoginPageSettings() {
   // Fetch login page settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ['/api/admin/appearance/settings', { type: 'login_page' }],
-    queryFn: () => apiRequest('/api/admin/appearance/settings?type=login_page'),
+    queryFn: () => apiRequest('GET', '/api/admin/appearance/settings?type=login_page'),
   });
 
   // Form setup
@@ -74,10 +74,7 @@ export default function LoginPageSettings() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { type: string; key: string; value: string; language: string }) => {
-      return apiRequest('/api/admin/appearance/settings', {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('PATCH', '/api/admin/appearance/settings', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance/settings'] });

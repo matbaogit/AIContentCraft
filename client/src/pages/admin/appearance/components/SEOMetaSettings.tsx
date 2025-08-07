@@ -39,7 +39,7 @@ export default function SEOMetaSettings() {
   // Fetch SEO settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ['/api/admin/appearance/settings', { type: 'seo_meta' }],
-    queryFn: () => apiRequest('/api/admin/appearance/settings?type=seo_meta'),
+    queryFn: () => apiRequest('GET', '/api/admin/appearance/settings?type=seo_meta'),
   });
 
   // Form setup
@@ -72,10 +72,7 @@ export default function SEOMetaSettings() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { type: string; key: string; value: string; language: string }) => {
-      return apiRequest('/api/admin/appearance/settings', {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('PATCH', '/api/admin/appearance/settings', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance/settings'] });

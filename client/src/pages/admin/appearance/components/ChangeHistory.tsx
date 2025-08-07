@@ -37,14 +37,14 @@ export default function ChangeHistory() {
     queryKey: ['/api/admin/appearance/history', selectedSetting],
     queryFn: () => {
       const params = selectedSetting !== "all" ? `?settingId=${selectedSetting}` : '';
-      return apiRequest(`/api/admin/appearance/history${params}`);
+      return apiRequest('GET', `/api/admin/appearance/history${params}`);
     },
   });
 
   // Restore mutation
   const restoreMutation = useMutation({
     mutationFn: async (historyId: number) => {
-      return apiRequest(`/api/admin/appearance/restore/${historyId}`, 'POST');
+      return apiRequest('POST', `/api/admin/appearance/restore/${historyId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance'] });

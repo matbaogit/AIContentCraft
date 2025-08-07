@@ -36,7 +36,7 @@ export default function FooterSettings() {
   // Fetch footer settings
   const { data: settings, isLoading } = useQuery({
     queryKey: ['/api/admin/appearance/settings', { type: 'footer' }],
-    queryFn: () => apiRequest('/api/admin/appearance/settings?type=footer'),
+    queryFn: () => apiRequest('GET', '/api/admin/appearance/settings?type=footer'),
   });
 
   // Form setup
@@ -65,10 +65,7 @@ export default function FooterSettings() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: { type: string; key: string; value: string; language: string }) => {
-      return apiRequest('/api/admin/appearance/settings', {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('PATCH', '/api/admin/appearance/settings', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance/settings'] });
