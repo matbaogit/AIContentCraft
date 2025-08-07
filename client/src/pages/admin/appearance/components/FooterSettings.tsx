@@ -1,318 +1,378 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, FileText, Globe } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Loader2, Save, Plus, Trash2 } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
-const footerFormSchema = z.object({
-  copyright: z.string().min(1, "Copyright text is required").max(500, "Copyright text too long"),
+const footerSchema = z.object({
+  copyright_text: z.string().optional(),
+  company_name: z.string().optional(),
+  company_address: z.string().optional(),
+  company_phone: z.string().optional(),
+  company_email: z.string().optional(),
+  links: z.array(z.object({
+    title: z.string(),
+    url: z.string(),
+  })).optional(),
+  social_links: z.array(z.object({
+    platform: z.string(),
+    url: z.string(),
+  })).optional(),
+  additional_content: z.string().optional(),
+  language: z.enum(["vi", "en"]),
 });
 
-type FooterFormData = z.infer<typeof footerFormSchema>;
-
-interface AppearanceSetting {
-  id: number;
-  type: string;
-  key: string;
-  value: string;
-  language: string;
-  isActive: boolean;
-}
+type FooterData = z.infer<typeof footerSchema>;
 
 export default function FooterSettings() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeLanguage, setActiveLanguage] = useState<'vi' | 'en'>('vi');
+  const [currentLanguage, setCurrentLanguage] = useState<"vi" | "en">("vi");
 
-  // Fetch footer settings
   const { data: settings, isLoading } = useQuery({
-    queryKey: ['/api/admin/appearance/settings', { type: 'footer' }],
-    queryFn: () => apiRequest('GET', '/api/admin/appearance/settings?type=footer'),
+    queryKey: ["/api/admin/appearance/settings", "footer", currentLanguage],
+    retry: false,
   });
 
-  // Form setup
-  const form = useForm<FooterFormData>({
-    resolver: zodResolver(footerFormSchema),
+  const form = useForm<FooterData>({
+    resolver: zodResolver(footerSchema),
     defaultValues: {
-      copyright: '',
+      copyright_text: "",
+      company_name: "",
+      company_address: "",
+      company_phone: "",
+      company_email: "",
+      links: [{ title: "", url: "" }],
+      social_links: [{ platform: "facebook", url: "" }],
+      additional_content: "",
+      language: currentLanguage,
     },
   });
 
-  // Update form when settings change
-  useEffect(() => {
-    if (settings?.data) {
-      const languageSettings = settings.data.filter(
-        (setting: AppearanceSetting) => setting.language === activeLanguage
-      );
-      
-      const formData: FooterFormData = {
-        copyright: languageSettings.find((s: AppearanceSetting) => s.key === 'copyright')?.value || '',
-      };
-      
-      form.reset(formData);
+  // Update form when data changes
+  React.useEffect(() => {
+    if (settings && Array.isArray(settings.data) && settings.data.length > 0) {
+      const footerData = settings.data.find((s: any) => s.type === "footer" && s.language === currentLanguage);
+      if (footerData?.content) {
+        form.reset({
+          ...footerData.content,
+          language: currentLanguage,
+        });
+      }
     }
-  }, [settings, activeLanguage, form]);
+  }, [settings, currentLanguage, form]);
 
-  // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async (data: { type: string; key: string; value: string; language: string }) => {
-      return apiRequest('PATCH', '/api/admin/appearance/settings', data);
+    mutationFn: async (data: FooterData) => {
+      return apiRequest("PATCH", `/api/admin/appearance/settings`, {
+        type: "footer",
+        language: currentLanguage,
+        content: data,
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance/settings'] });
       toast({
-        title: "Cập nhật thành công",
-        description: "Cài đặt footer đã được lưu",
+        title: "Thành công",
+        description: "Cài đặt footer đã được cập nhật",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/admin/appearance/settings"],
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Có lỗi xảy ra",
+        title: "Lỗi",
         description: error.message || "Không thể cập nhật cài đặt",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = async (data: FooterFormData) => {
-    try {
-      // Update each setting
-      for (const [key, value] of Object.entries(data)) {
-        if (value !== undefined) {
-          await updateMutation.mutateAsync({
-            type: 'footer',
-            key,
-            value: value as string,
-            language: activeLanguage,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error updating footer settings:', error);
-    }
+  const onSubmit = (data: FooterData) => {
+    updateMutation.mutate(data);
+  };
+
+  const addLink = () => {
+    const currentLinks = form.getValues("links") || [];
+    form.setValue("links", [...currentLinks, { title: "", url: "" }]);
+  };
+
+  const removeLink = (index: number) => {
+    const currentLinks = form.getValues("links") || [];
+    form.setValue("links", currentLinks.filter((_, i) => i !== index));
+  };
+
+  const addSocialLink = () => {
+    const currentSocial = form.getValues("social_links") || [];
+    form.setValue("social_links", [...currentSocial, { platform: "facebook", url: "" }]);
+  };
+
+  const removeSocialLink = (index: number) => {
+    const currentSocial = form.getValues("social_links") || [];
+    form.setValue("social_links", currentSocial.filter((_, i) => i !== index));
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Đang tải cài đặt...</span>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  const currentYear = new Date().getFullYear();
-
   return (
     <div className="space-y-6">
-      <Tabs value={activeLanguage} onValueChange={(value) => setActiveLanguage(value as 'vi' | 'en')}>
-        <div className="flex items-center justify-between mb-4">
-          <TabsList>
-            <TabsTrigger value="vi" className="flex items-center gap-2">
-              🇻🇳 Tiếng Việt
-            </TabsTrigger>
-            <TabsTrigger value="en" className="flex items-center gap-2">
-              🇺🇸 English
-            </TabsTrigger>
-          </TabsList>
-          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-            <Globe className="h-3 w-3 mr-1" />
-            {activeLanguage === 'vi' ? 'Tiếng Việt' : 'English'}
-          </Badge>
-        </div>
+      <Tabs value={currentLanguage} onValueChange={(value) => setCurrentLanguage(value as "vi" | "en")}>
+        <TabsList>
+          <TabsTrigger value="vi">Tiếng Việt</TabsTrigger>
+          <TabsTrigger value="en">English</TabsTrigger>
+        </TabsList>
 
-        {/* Vietnamese Settings */}
-        <TabsContent value="vi" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Footer Content - Tiếng Việt</CardTitle>
-              <CardDescription>
-                Cấu hình nội dung footer, copyright và thông tin bản quyền
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Copyright Text */}
-                <div>
-                  <Label htmlFor="copyright">Thông tin bản quyền</Label>
-                  <Textarea
-                    id="copyright"
-                    {...form.register('copyright')}
-                    placeholder={`VD: © ${currentYear} SEO AI Writer. Tất cả quyền được bảo lưu. Phát triển bởi [Tên công ty].`}
-                    className="mt-1"
-                    rows={4}
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                    {form.formState.errors.copyright && (
-                      <span className="text-red-500">{form.formState.errors.copyright.message}</span>
-                    )}
-                    <span className="ml-auto">
-                      {form.watch('copyright')?.length || 0}/500 ký tự
-                    </span>
+        <TabsContent value={currentLanguage} className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Thông tin công ty */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Thông tin công ty</CardTitle>
+                    <CardDescription>Thông tin cơ bản về công ty</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="company_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tên công ty</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="SEO AI Writer Co., Ltd" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="company_address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Địa chỉ</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="123 Nguyễn Văn A, Quận 1, TP.HCM" rows={2} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="company_phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Số điện thoại</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="(+84) 123 456 789" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="company_email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="contact@example.com" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Copyright */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Copyright & Legal</CardTitle>
+                    <CardDescription>Text bản quyền và nội dung bổ sung</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="copyright_text"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Text bản quyền</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="© 2024 SEO AI Writer. All rights reserved." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="additional_content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nội dung bổ sung</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Thông tin bổ sung khác..." rows={4} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Navigation Links */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    Navigation Links
+                    <Button type="button" onClick={addLink} size="sm" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Thêm link
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>Các liên kết navigation trong footer</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {form.watch("links")?.map((_, index) => (
+                      <div key={index} className="flex gap-4 items-end">
+                        <FormField
+                          control={form.control}
+                          name={`links.${index}.title`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>Tiêu đề</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Về chúng tôi" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`links.${index}.url`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>URL</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="/about" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => removeLink(index)}
+                          size="sm"
+                          variant="destructive"
+                          disabled={form.watch("links")?.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Có thể sử dụng HTML đơn giản như &lt;br&gt;, &lt;a&gt;, &lt;strong&gt;
-                  </p>
-                </div>
+                </CardContent>
+              </Card>
 
-                <Button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  className="w-full"
-                >
-                  {updateMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Đang lưu...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Lưu cài đặt
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* English Settings */}
-        <TabsContent value="en" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Footer Content - English</CardTitle>
-              <CardDescription>
-                Configure footer content, copyright and legal information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Copyright Text */}
-                <div>
-                  <Label htmlFor="copyright_en">Copyright information</Label>
-                  <Textarea
-                    id="copyright_en"
-                    {...form.register('copyright')}
-                    placeholder={`e.g: © ${currentYear} SEO AI Writer. All rights reserved. Developed by [Company Name].`}
-                    className="mt-1"
-                    rows={4}
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                    {form.formState.errors.copyright && (
-                      <span className="text-red-500">{form.formState.errors.copyright.message}</span>
-                    )}
-                    <span className="ml-auto">
-                      {form.watch('copyright')?.length || 0}/500 characters
-                    </span>
+              {/* Social Media Links */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    Social Media Links
+                    <Button type="button" onClick={addSocialLink} size="sm" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Thêm social
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>Các liên kết mạng xã hội</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {form.watch("social_links")?.map((_, index) => (
+                      <div key={index} className="flex gap-4 items-end">
+                        <FormField
+                          control={form.control}
+                          name={`social_links.${index}.platform`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>Platform</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="facebook" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`social_links.${index}.url`}
+                          render={({ field }) => (
+                            <FormItem className="flex-2">
+                              <FormLabel>URL</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="https://facebook.com/yourpage" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => removeSocialLink(index)}
+                          size="sm"
+                          variant="destructive"
+                          disabled={form.watch("social_links")?.length === 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    You can use simple HTML like &lt;br&gt;, &lt;a&gt;, &lt;strong&gt;
-                  </p>
-                </div>
+                </CardContent>
+              </Card>
 
-                <Button
-                  type="submit"
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
                   disabled={updateMutation.isPending}
-                  className="w-full"
+                  className="min-w-[140px]"
                 >
-                  {updateMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Settings
-                    </>
-                  )}
+                  {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <Save className="h-4 w-4 mr-2" />
+                  Lưu cài đặt
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
+              </div>
+            </form>
+          </Form>
         </TabsContent>
       </Tabs>
-
-      {/* Preview Card */}
-      <Card className="bg-slate-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Footer Preview
-          </CardTitle>
-          <CardDescription>
-            Xem trước footer sẽ hiển thị như thế nào
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-800 text-white p-6 rounded-lg">
-            <div className="text-center">
-              <div 
-                className="text-sm text-gray-300"
-                dangerouslySetInnerHTML={{ 
-                  __html: form.watch('copyright') || `© ${currentYear} SEO AI Writer. Tất cả quyền được bảo lưu.`
-                }}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Templates */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Mẫu nhanh</CardTitle>
-          <CardDescription>
-            Click để sử dụng các mẫu copyright có sẵn
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => form.setValue('copyright', `© ${currentYear} SEO AI Writer. Tất cả quyền được bảo lưu.`)}
-            >
-              Mẫu cơ bản (VI)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => form.setValue('copyright', `© ${currentYear} SEO AI Writer. All rights reserved.`)}
-            >
-              Basic template (EN)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => form.setValue('copyright', `© ${currentYear} SEO AI Writer. Tất cả quyền được bảo lưu.<br>Phát triển bởi <a href="#" class="text-blue-400 hover:underline">[Tên công ty]</a>`)}
-            >
-              Mẫu có link (VI)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => form.setValue('copyright', `© ${currentYear} SEO AI Writer. All rights reserved.<br>Developed by <a href="#" class="text-blue-400 hover:underline">[Company Name]</a>`)}
-            >
-              Template with link (EN)
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

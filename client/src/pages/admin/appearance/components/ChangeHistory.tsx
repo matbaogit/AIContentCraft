@@ -1,253 +1,207 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RotateCcw, Clock, User, Settings, Filter } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { format } from "date-fns";
+import { Loader2, Clock, User, RotateCcw, Eye } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
-interface AppearanceHistory {
+interface HistoryEntry {
   id: number;
-  settingId: number;
-  oldValue: string;
-  newValue: string;
+  type: string;
+  language: string;
+  previousContent?: any;
+  newContent: any;
   changedBy: string;
   changedAt: string;
-  setting: {
-    type: string;
-    key: string;
-    language: string;
-  };
-  user: {
-    username: string;
-    email: string;
-  };
+  changeType: 'create' | 'update' | 'delete';
 }
 
 export default function ChangeHistory() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedSetting, setSelectedSetting] = useState<string>("all");
 
-  // Fetch history
   const { data: history, isLoading } = useQuery({
-    queryKey: ['/api/admin/appearance/history', selectedSetting],
-    queryFn: () => {
-      const params = selectedSetting !== "all" ? `?settingId=${selectedSetting}` : '';
-      return apiRequest('GET', `/api/admin/appearance/history${params}`);
-    },
+    queryKey: ["/api/admin/appearance/history"],
+    retry: false,
   });
 
-  // Restore mutation
   const restoreMutation = useMutation({
     mutationFn: async (historyId: number) => {
-      return apiRequest('POST', `/api/admin/appearance/restore/${historyId}`);
+      return apiRequest("POST", `/api/admin/appearance/history/${historyId}/restore`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance'] });
       toast({
-        title: "Khôi phục thành công",
-        description: "Cài đặt đã được khôi phục về phiên bản trước",
+        title: "Thành công",
+        description: "Đã khôi phục cài đặt từ lịch sử",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/admin/appearance"],
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Có lỗi xảy ra",
+        title: "Lỗi",
         description: error.message || "Không thể khôi phục cài đặt",
         variant: "destructive",
       });
     },
   });
 
-  const handleRestore = async (historyId: number, settingKey: string) => {
-    if (window.confirm(`Bạn có chắc muốn khôi phục cài đặt "${settingKey}" về phiên bản này?`)) {
-      await restoreMutation.mutateAsync(historyId);
-    }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
-  const getSettingTypeLabel = (type: string) => {
-    switch (type) {
-      case 'seo_meta': return 'SEO Meta';
-      case 'header': return 'Header';
-      case 'login_page': return 'Login Page';
-      case 'footer': return 'Footer';
-      default: return type;
-    }
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      seo_meta: 'SEO & Meta Tags',
+      header: 'Header & Branding', 
+      login_page: 'Trang đăng nhập',
+      footer: 'Footer Content',
+    };
+    return labels[type] || type;
   };
 
-  const getSettingKeyLabel = (key: string) => {
-    switch (key) {
-      case 'site_title': return 'Tiêu đề trang';
-      case 'site_description': return 'Mô tả trang';
-      case 'site_keywords': return 'Từ khóa SEO';
-      case 'logo_url': return 'URL Logo';
-      case 'site_name': return 'Tên trang';
-      case 'login_logo_url': return 'Logo đăng nhập';
-      case 'title': return 'Tiêu đề';
-      case 'welcome_text': return 'Văn bản chào mừng';
-      case 'copyright': return 'Bản quyền';
-      default: return key;
-    }
+  const getChangeTypeColor = (changeType: string) => {
+    const colors: Record<string, string> = {
+      create: 'bg-green-100 text-green-800',
+      update: 'bg-blue-100 text-blue-800',
+      delete: 'bg-red-100 text-red-800',
+    };
+    return colors[changeType] || 'bg-gray-100 text-gray-800';
   };
 
-  const truncateText = (text: string, maxLength: number = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+  const getChangeTypeLabel = (changeType: string) => {
+    const labels: Record<string, string> = {
+      create: 'Tạo mới',
+      update: 'Cập nhật',
+      delete: 'Xóa',
+    };
+    return labels[changeType] || changeType;
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <span className="ml-2">Đang tải lịch sử...</span>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Bộ lọc
-          </CardTitle>
-          <CardDescription>
-            Lọc lịch sử thay đổi theo loại cài đặt
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Select value={selectedSetting} onValueChange={setSelectedSetting}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Chọn loại cài đặt" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả cài đặt</SelectItem>
-                <SelectItem value="seo_meta">SEO Meta Tags</SelectItem>
-                <SelectItem value="header">Header & Branding</SelectItem>
-                <SelectItem value="login_page">Trang đăng nhập</SelectItem>
-                <SelectItem value="footer">Footer Content</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {selectedSetting !== "all" && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Đang lọc: {getSettingTypeLabel(selectedSetting)}
-              </Badge>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">Lịch sử thay đổi</h3>
+          <p className="text-sm text-muted-foreground">
+            Xem và khôi phục các thay đổi trước đây
+          </p>
+        </div>
+      </div>
 
-      {/* History List */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Lịch sử thay đổi
-          </CardTitle>
-          <CardDescription>
-            Danh sách các thay đổi gần đây, click "Khôi phục" để quay về phiên bản trước
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!history || !Array.isArray(history) || history.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+        <CardContent className="p-0">
+          {!history || !Array.isArray(history.data) || !history.data.length ? (
+            <div className="p-8 text-center text-muted-foreground">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Chưa có lịch sử thay đổi nào</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {history.map((entry: AppearanceHistory) => (
-                <div
-                  key={entry.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
+            <div className="divide-y">
+              {history.data.map((entry: HistoryEntry) => (
+                <div key={entry.id} className="p-6 hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                          {getSettingTypeLabel(entry.setting.type)}
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className={getChangeTypeColor(entry.changeType)}>
+                          {getChangeTypeLabel(entry.changeType)}
                         </Badge>
-                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                          {getSettingKeyLabel(entry.setting.key)}
-                        </Badge>
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                          {entry.setting.language === 'vi' ? '🇻🇳' : '🇺🇸'} {entry.setting.language}
+                        <span className="font-medium">{getTypeLabel(entry.type)}</span>
+                        <Badge variant="secondary">
+                          {entry.language === 'vi' ? 'Tiếng Việt' : 'English'}
                         </Badge>
                       </div>
-
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-medium text-red-600">Cũ:</span>
-                          <span className="ml-2 text-gray-600">
-                            {entry.oldValue ? truncateText(entry.oldValue) : '(trống)'}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-green-600">Mới:</span>
-                          <span className="ml-2 text-gray-900">
-                            {entry.newValue ? truncateText(entry.newValue) : '(trống)'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                      
+                      <div className="text-sm text-muted-foreground flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          {entry.user?.username || 'Unknown'}
+                          <span>{entry.changedBy}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {format(new Date(entry.changedAt), 'dd/MM/yyyy HH:mm')}
+                          <span>{formatDate(entry.changedAt)}</span>
+                        </div>
+                      </div>
+
+                      {/* Preview of changes */}
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          Nội dung thay đổi:
+                        </div>
+                        <div className="text-sm">
+                          {entry.changeType === 'delete' ? (
+                            <span className="text-red-600">Đã xóa cài đặt</span>
+                          ) : (
+                            <div className="space-y-1">
+                              {Object.keys(entry.newContent || {}).slice(0, 3).map((key) => (
+                                <div key={key} className="flex items-center gap-2">
+                                  <span className="font-medium text-xs">{key}:</span>
+                                  <span className="text-xs truncate">
+                                    {typeof entry.newContent[key] === 'object' 
+                                      ? JSON.stringify(entry.newContent[key]).substring(0, 50) + '...'
+                                      : String(entry.newContent[key]).substring(0, 50)}
+                                  </span>
+                                </div>
+                              ))}
+                              {Object.keys(entry.newContent || {}).length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  ... và {Object.keys(entry.newContent || {}).length - 3} thay đổi khác
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRestore(entry.id, entry.setting.key)}
-                      disabled={restoreMutation.isPending}
-                      className="ml-4"
-                    >
-                      {restoreMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <>
-                          <RotateCcw className="h-3 w-3 mr-1" />
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Preview change details
+                          console.log('History entry:', entry);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Xem
+                      </Button>
+                      
+                      {entry.changeType !== 'delete' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => restoreMutation.mutate(entry.id)}
+                          disabled={restoreMutation.isPending}
+                        >
+                          {restoreMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                          <RotateCcw className="h-4 w-4 mr-1" />
                           Khôi phục
-                        </>
+                        </Button>
                       )}
-                    </Button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Info */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
-            <Settings className="h-4 w-4" />
-            Lưu ý
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-blue-700">
-          <ul className="space-y-1 text-sm">
-            <li>• Lịch sử thay đổi được lưu tự động khi bạn cập nhật bất kỳ cài đặt nào</li>
-            <li>• Bạn có thể khôi phục về bất kỳ phiên bản nào trong lịch sử</li>
-            <li>• Việc khôi phục sẽ tạo ra một mục lịch sử mới</li>
-            <li>• Lịch sử cũ sẽ được tự động xóa sau 90 ngày để tiết kiệm dung lượng</li>
-          </ul>
         </CardContent>
       </Card>
     </div>
