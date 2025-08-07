@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
@@ -16,6 +17,13 @@ export function Navbar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Fetch appearance settings for logo
+  const { data: appearanceSettings } = useQuery({
+    queryKey: ['/api/admin/appearance/settings', 'header'],
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   // Thêm hiệu ứng scroll
   useEffect(() => {
@@ -56,41 +64,90 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center group">
               <div className="flex-shrink-0 flex items-center mr-4">
-                <svg
-                  className={`h-9 w-auto transition-all duration-300 ${
-                    scrolled ? "text-primary" : "text-primary"
-                  }`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 2L2 7L12 12L22 7L12 2Z"
-                    fill="currentColor"
-                    className="group-hover:fill-accent transition-colors duration-300"
-                  />
-                  <path
-                    d="M2 17L12 22L22 17"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="group-hover:stroke-accent transition-colors duration-300"
-                  />
-                  <path
-                    d="M2 12L12 17L22 12"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="group-hover:stroke-accent transition-colors duration-300"
-                  />
-                </svg>
-                <span className={`ml-2 text-xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent group-hover:from-accent group-hover:to-primary transition-all duration-500 ${
-                  scrolled ? "" : ""
-                }`}>
-                  {t("common.appName")}
-                </span>
+                {appearanceSettings?.data?.find((s: any) => s.content?.logo_url && s.language === language)?.content?.logo_url ? (
+                  <div className="flex items-center">
+                    <img
+                      src={appearanceSettings.data.find((s: any) => s.content?.logo_url && s.language === language)?.content?.logo_url}
+                      alt={t("common.appName")}
+                      className="h-9 w-auto transition-all duration-300"
+                      onError={(e) => {
+                        // Fallback to SVG if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'block';
+                      }}
+                    />
+                    <svg
+                      className={`h-9 w-auto transition-all duration-300 hidden ${
+                        scrolled ? "text-primary" : "text-primary"
+                      }`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 2L2 7L12 12L22 7L12 2Z"
+                        fill="currentColor"
+                        className="group-hover:fill-accent transition-colors duration-300"
+                      />
+                      <path
+                        d="M2 17L12 22L22 17"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:stroke-accent transition-colors duration-300"
+                      />
+                      <path
+                        d="M2 12L12 17L22 12"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:stroke-accent transition-colors duration-300"
+                      />
+                    </svg>
+                  </div>
+                ) : (
+                  <>
+                    <svg
+                      className={`h-9 w-auto transition-all duration-300 ${
+                        scrolled ? "text-primary" : "text-primary"
+                      }`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 2L2 7L12 12L22 7L12 2Z"
+                        fill="currentColor"
+                        className="group-hover:fill-accent transition-colors duration-300"
+                      />
+                      <path
+                        d="M2 17L12 22L22 17"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:stroke-accent transition-colors duration-300"
+                      />
+                      <path
+                        d="M2 12L12 17L22 12"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:stroke-accent transition-colors duration-300"
+                      />
+                    </svg>
+                    <span className={`ml-2 text-xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent group-hover:from-accent group-hover:to-primary transition-all duration-500 ${
+                      scrolled ? "" : ""
+                    }`}>
+                      {t("common.appName")}
+                    </span>
+                  </>
+                )}
               </div>
             </Link>
             
