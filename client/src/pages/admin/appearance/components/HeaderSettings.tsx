@@ -15,6 +15,8 @@ import { apiRequest } from "@/lib/queryClient";
 
 const headerFormSchema = z.object({
   logo_url: z.string().optional(),
+  logo_height: z.string().optional().default("32"),
+  logo_width: z.string().optional().default("auto"),
   site_name: z.string().min(1, "Tên trang là bắt buộc").max(50, "Tên quá dài"),
 });
 
@@ -46,6 +48,8 @@ export default function HeaderSettings() {
     resolver: zodResolver(headerFormSchema),
     defaultValues: {
       logo_url: '',
+      logo_height: '32',
+      logo_width: 'auto',
       site_name: '',
     },
   });
@@ -59,6 +63,8 @@ export default function HeaderSettings() {
       
       const formData: HeaderFormData = {
         logo_url: languageSettings.find((s: AppearanceSetting) => s.key === 'logo_url')?.value || '',
+        logo_height: languageSettings.find((s: AppearanceSetting) => s.key === 'logo_height')?.value || '32',
+        logo_width: languageSettings.find((s: AppearanceSetting) => s.key === 'logo_width')?.value || 'auto',
         site_name: languageSettings.find((s: AppearanceSetting) => s.key === 'site_name')?.value || '',
       };
       
@@ -90,19 +96,34 @@ export default function HeaderSettings() {
 
   const onSubmit = async (data: HeaderFormData) => {
     try {
-      // Update each setting
-      for (const [key, value] of Object.entries(data)) {
-        if (value !== undefined) {
-          await updateMutation.mutateAsync({
-            type: 'header',
-            key,
-            value: value as string,
-            language: activeLanguage,
-          });
-        }
+      // Array of setting updates to be performed (including logo dimensions)
+      const updates = [
+        { type: 'header', key: 'logo_url', value: data.logo_url || '', language: activeLanguage },
+        { type: 'header', key: 'logo_height', value: data.logo_height || '32', language: activeLanguage },
+        { type: 'header', key: 'logo_width', value: data.logo_width || 'auto', language: activeLanguage },
+        { type: 'header', key: 'site_name', value: data.site_name, language: activeLanguage },
+      ];
+
+      // Execute all updates
+      for (const update of updates) {
+        await updateMutation.mutateAsync(update);
       }
+
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật cài đặt header và kích thước logo",
+      });
+
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/appearance/settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/appearance/settings'] });
     } catch (error) {
       console.error('Error updating header settings:', error);
+      toast({
+        title: "Lỗi", 
+        description: "Không thể cập nhật cài đặt header",
+        variant: "destructive",
+      });
     }
   };
 
@@ -196,6 +217,33 @@ export default function HeaderSettings() {
                     <p className="text-sm text-muted-foreground mt-1">
                       Nhập URL đầy đủ hoặc đường dẫn tương đối. Kích thước khuyến nghị: 200x60px
                     </p>
+                  </div>
+
+                  {/* Logo Size Settings */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="logo_height">Chiều cao (px)</Label>
+                      <Input
+                        id="logo_height"
+                        {...form.register('logo_height')}
+                        placeholder="32"
+                        className="mt-1"
+                        type="number"
+                        min="16"
+                        max="200"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">16-200px</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="logo_width">Chiều rộng</Label>
+                      <Input
+                        id="logo_width"
+                        {...form.register('logo_width')}
+                        placeholder="auto"
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">auto hoặc số px</p>
+                    </div>
                   </div>
 
                   {/* Upload Button (placeholder for future file upload) */}

@@ -25,6 +25,17 @@ export function Navbar() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Get logo dimensions from settings
+  const logoHeight = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_height' && s.language === language)?.value || '32';
+  const logoWidth = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_width' && s.language === language)?.value || 'auto';
+  
+  // Create dynamic style for logo
+  const logoStyle = {
+    height: `${logoHeight}px`,
+    width: logoWidth === 'auto' ? 'auto' : `${logoWidth}px`,
+    maxWidth: '200px'
+  };
+
   // Thêm hiệu ứng scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -69,7 +80,8 @@ export function Navbar() {
                     <img
                       src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
                       alt={t("common.appName")}
-                      className="h-8 w-auto max-w-[120px] transition-all duration-300"
+                      style={logoStyle}
+                      className="transition-all duration-300"
                       onError={(e) => {
                         // Fallback to SVG if image fails to load
                         const target = e.target as HTMLImageElement;

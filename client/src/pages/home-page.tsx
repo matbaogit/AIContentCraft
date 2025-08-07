@@ -19,13 +19,15 @@ export default function HomePage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Get dynamic site name
-  const siteName = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value || t("common.appName");
+  // Get dynamic site name from SEO meta settings first, then header settings
+  const seoSiteTitle = appearanceSettings?.data?.find((s: any) => s.type === 'seo_meta' && s.key === 'site_title' && s.language === language)?.value;
+  const headerSiteName = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value;
+  const siteName = seoSiteTitle || headerSiteName || t("common.appName");
 
   return (
     <>
       <Head>
-        <title>{siteName} - {t("landing.hero.title")}</title>
+        <title>{siteName}</title>
         <meta name="description" content={t("landing.hero.subtitle")} />
       </Head>
       
