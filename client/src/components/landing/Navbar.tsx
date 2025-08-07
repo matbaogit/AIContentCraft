@@ -64,10 +64,10 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center group">
               <div className="flex-shrink-0 flex items-center mr-4">
-                {appearanceSettings?.data?.find((s: any) => s.content?.logo_url && s.language === language)?.content?.logo_url ? (
+                {appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language) ? (
                   <div className="flex items-center">
                     <img
-                      src={appearanceSettings.data.find((s: any) => s.content?.logo_url && s.language === language)?.content?.logo_url}
+                      src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
                       alt={t("common.appName")}
                       className="h-9 w-auto transition-all duration-300"
                       onError={(e) => {
