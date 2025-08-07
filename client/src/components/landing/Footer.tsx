@@ -1,5 +1,6 @@
 import { useLanguage } from "@/hooks/use-language";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   FacebookIcon, 
   TwitterIcon, 
@@ -9,7 +10,25 @@ import {
 } from "lucide-react";
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  
+  // Fetch appearance settings for logo (public endpoint)
+  const { data: appearanceSettings } = useQuery({
+    queryKey: ['/api/appearance/settings', 'header', language],
+    retry: false,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Get logo dimensions from settings
+  const logoHeight = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_height' && s.language === language)?.value || '32';
+  const logoWidth = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_width' && s.language === language)?.value || 'auto';
+  
+  // Create dynamic style for logo (footer size)
+  const logoStyle = {
+    height: `${Math.min(parseInt(logoHeight), 40)}px`, // Max 40px for footer
+    width: logoWidth === 'auto' ? 'auto' : `${logoWidth}px`,
+    maxWidth: '160px'
+  };
   
   const productLinks = [
     { label: t("landing.footer.links.createSeoContent"), href: "#" },
@@ -38,10 +57,34 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center">
-              <ScrollIcon className="h-8 w-auto text-white" />
-              <span className="ml-2 text-xl font-bold text-white font-heading">
-                {t("common.appName")}
-              </span>
+              {appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language) ? (
+                <div className="flex items-center">
+                  <img
+                    src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
+                    alt={t("common.appName")}
+                    style={logoStyle}
+                    className="transition-all duration-300"
+                    onError={(e) => {
+                      // Fallback to SVG if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'block';
+                    }}
+                  />
+                  <ScrollIcon className="h-8 w-auto text-white hidden" />
+                  <span className="ml-2 text-xl font-bold text-white font-heading">
+                    {appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value || t("common.appName")}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <ScrollIcon className="h-8 w-auto text-white" />
+                  <span className="ml-2 text-xl font-bold text-white font-heading">
+                    {t("common.appName")}
+                  </span>
+                </div>
+              )}
             </div>
             <p className="mt-4 text-slate-200">
               {t("landing.footer.description")}
