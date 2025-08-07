@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminLayout } from "@/components/admin/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,22 +47,23 @@ export default function AppearancePage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý giao diện</h1>
-          <p className="text-muted-foreground">
-            Tùy chỉnh giao diện và branding cho ứng dụng
-          </p>
+    <AdminLayout title="Quản lý giao diện">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Quản lý giao diện</h1>
+            <p className="text-muted-foreground">
+              Tùy chỉnh giao diện và branding cho ứng dụng
+            </p>
+          </div>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Settings className="h-3 w-3 mr-1" />
+            Admin Panel
+          </Badge>
         </div>
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-          <Settings className="h-3 w-3 mr-1" />
-          Admin Panel
-        </Badge>
-      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
           {tabs.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
               {tab.icon}
@@ -159,7 +161,8 @@ export default function AppearancePage() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </AdminLayout>
   );
 }
