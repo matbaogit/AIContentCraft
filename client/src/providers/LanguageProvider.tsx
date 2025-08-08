@@ -203,6 +203,18 @@ const translations: TranslationsType = {
         privacy: "Chính sách bảo mật",
         submit: "Đăng ký",
         switchToLogin: "Đã có tài khoản? Đăng nhập"
+      },
+      verify: {
+        title: "Xác thực Email",
+        verifying: "Đang xác thực tài khoản của bạn...",
+        success: "Xác thực thành công! Tài khoản của bạn đã được kích hoạt.",
+        failure: "Xác thực thất bại",
+        noToken: "Không tìm thấy mã xác thực",
+        unknownError: "Có lỗi không xác định xảy ra",
+        serverError: "Có lỗi server xảy ra",
+        loginButton: "Đăng nhập ngay",
+        backToLogin: "Quay lại đăng nhập",
+        autoRedirect: "Bạn sẽ được chuyển hướng đến trang đăng nhập sau 3 giây..."
       }
     },
     
@@ -1243,6 +1255,18 @@ const translations: TranslationsType = {
         privacy: "Privacy Policy",
         submit: "Register",
         switchToLogin: "Already have an account? Login"
+      },
+      verify: {
+        title: "Email Verification",
+        verifying: "Verifying your account...",
+        success: "Verification successful! Your account has been activated.",
+        failure: "Verification failed",
+        noToken: "No verification token found",
+        unknownError: "An unknown error occurred",
+        serverError: "A server error occurred",
+        loginButton: "Login Now",
+        backToLogin: "Back to Login",
+        autoRedirect: "You will be redirected to the login page in 3 seconds..."
       }
     },
     

@@ -34,11 +34,14 @@ export default function VerifyEmailPage() {
     
     const verifyEmail = async () => {
       try {
-        const response = await apiRequest("GET", `/api/verify-email?token=${token}`);
-        const data = await response.json();
+        const data = await apiRequest("GET", `/api/verify-email?token=${token}`);
         
         if (data.success) {
           setStatus("success");
+          // Auto redirect to login after 3 seconds
+          setTimeout(() => {
+            navigate("/auth");
+          }, 3000);
         } else {
           setStatus("error");
           setErrorMessage(data.error || t("auth.verify.unknownError"));
@@ -75,7 +78,12 @@ export default function VerifyEmailPage() {
               {status === "success" && (
                 <div className="flex flex-col items-center">
                   <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                  <p className="text-slate-300 mb-6">{t("auth.verify.success")}</p>
+                  <p className="text-slate-300 mb-4">{t("auth.verify.success")}</p>
+                  <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-6">
+                    <p className="text-green-400 text-sm text-center">
+                      {t("auth.verify.autoRedirect")}
+                    </p>
+                  </div>
                   <Link href="/auth">
                     <Button className="w-full bg-primary hover:bg-primary/90">
                       {t("auth.verify.loginButton")}

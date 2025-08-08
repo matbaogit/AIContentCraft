@@ -221,8 +221,11 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Chuyển hướng đến trang đăng nhập với thông báo xác thực thành công
-      return res.redirect('/auth?verified=true');
+      // Trả về JSON thay vì redirect để cho frontend xử lý
+      return res.json({
+        success: true,
+        message: "Email đã được xác thực thành công"
+      });
     } catch (error) {
       console.error("Email verification error:", error);
       return res.status(500).json({
