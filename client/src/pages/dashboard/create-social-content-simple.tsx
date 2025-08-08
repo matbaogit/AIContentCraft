@@ -156,7 +156,7 @@ export default function CreateSocialContent() {
         connectionId: connectionForPlatform.id,
         articleId: savedArticleId // Include articleId for image lookup
       });
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any, variables) => {
       setPublishingStatus(prev => ({ ...prev, [variables.platform]: 'published' }));
@@ -205,7 +205,7 @@ export default function CreateSocialContent() {
         scheduledTime,
         imageUrls: imageUrls || []
       });
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any, variables) => {
       setPublishingStatus(prev => ({ ...prev, [variables.platform]: 'scheduled' }));
@@ -258,7 +258,7 @@ export default function CreateSocialContent() {
       }
       
       const response = await apiRequest('POST', '/api/social/generate-content', payload);
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any) => {
       console.log('Generate social success data:', data);
@@ -308,7 +308,7 @@ export default function CreateSocialContent() {
   const extractMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('POST', '/api/social/extract-content', formData);
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any) => {
       console.log('Extract success data:', data);
@@ -370,7 +370,7 @@ export default function CreateSocialContent() {
         sourceText: extractedContent || '',
         articleId: formData.selectedArticleId ? formData.selectedArticleId : undefined
       });
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any) => {
       console.log('Image generation response:', data);
@@ -412,7 +412,7 @@ export default function CreateSocialContent() {
         method: 'POST',
         body: formData
       });
-      return await response.json();
+      return response;
     },
     onSuccess: (data: any) => {
       if (data?.success && data?.data?.url) {
@@ -447,7 +447,7 @@ export default function CreateSocialContent() {
         selectedArticleId: formData.selectedArticleId,
         referenceLink: formData.referenceLink
       });
-      return await response.json();
+      return response;
     },
     onSuccess: (response: any) => {
       console.log('Generate mutation success response:', response);
