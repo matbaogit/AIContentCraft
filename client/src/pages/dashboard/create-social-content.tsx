@@ -100,7 +100,7 @@ export default function CreateSocialContentPage() {
   const generateContentMutation = useMutation({
     mutationFn: async (data: SocialContentForm) => {
       const response = await apiRequest('POST', '/api/social/generate-content', data);
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       setGeneratedContent(data.data);
@@ -135,7 +135,7 @@ export default function CreateSocialContentPage() {
       
       console.log('API Request: POST /api/social/create-final-content', payload);
       const response = await apiRequest('POST', '/api/social/create-final-content', payload);
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       console.log('Content approval successful:', data);
