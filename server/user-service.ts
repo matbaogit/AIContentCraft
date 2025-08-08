@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { storage } from "./storage";
 import { sendEmail, appConfig } from "./email-service";
+import { dynamicEmailTemplateService } from "./dynamic-email-service";
 import { getVerificationEmailTemplate, getResetPasswordEmailTemplate, getWelcomeEmailTemplate } from "./email-templates";
 import { InsertUser, User } from "@shared/schema";
 
@@ -81,10 +82,21 @@ export async function registerUser(userData: InsertUser): Promise<{
 
     // Gửi email xác thực
     const verificationUrl = `${appConfig.baseUrl}/api/verify-email?token=${verificationToken}`;
-    const emailTemplate = getVerificationEmailTemplate({
+    
+    // Thử sử dụng dynamic template trước, fallback về hardcoded template
+    let emailTemplate = await dynamicEmailTemplateService.getVerificationEmailTemplate({
       username: user.username,
       verificationUrl
     });
+    
+    // Fallback to hardcoded template if dynamic template not found
+    if (!emailTemplate) {
+      console.warn('Dynamic verification template not found, using fallback template');
+      emailTemplate = getVerificationEmailTemplate({
+        username: user.username,
+        verificationUrl
+      });
+    }
 
     await sendEmail({
       to: user.email,
@@ -156,10 +168,21 @@ export async function verifyEmail(token: string): Promise<{
 
     // Gửi email chào mừng
     const loginUrl = `${appConfig.baseUrl}/auth`;
-    const emailTemplate = getWelcomeEmailTemplate({
+    
+    // Thử sử dụng dynamic template trước, fallback về hardcoded template
+    let emailTemplate = await dynamicEmailTemplateService.getWelcomeEmailTemplate({
       username: updatedUser.username,
       loginUrl
     });
+    
+    // Fallback to hardcoded template if dynamic template not found
+    if (!emailTemplate) {
+      console.warn('Dynamic welcome template not found, using fallback template');
+      emailTemplate = getWelcomeEmailTemplate({
+        username: updatedUser.username,
+        loginUrl
+      });
+    }
 
     await sendEmail({
       to: updatedUser.email,
@@ -221,10 +244,21 @@ export async function requestPasswordReset(email: string): Promise<{
 
     // Gửi email đặt lại mật khẩu
     const resetUrl = `${appConfig.baseUrl}/reset-password?token=${resetToken}`;
-    const emailTemplate = getResetPasswordEmailTemplate({
+    
+    // Thử sử dụng dynamic template trước, fallback về hardcoded template
+    let emailTemplate = await dynamicEmailTemplateService.getResetPasswordEmailTemplate({
       username: user.username,
       resetUrl
     });
+    
+    // Fallback to hardcoded template if dynamic template not found
+    if (!emailTemplate) {
+      console.warn('Dynamic reset password template not found, using fallback template');
+      emailTemplate = getResetPasswordEmailTemplate({
+        username: user.username,
+        resetUrl
+      });
+    }
 
     console.log(`[requestPasswordReset] Sending password reset email to: ${user.email}`);
     console.log(`[requestPasswordReset] Reset URL: ${resetUrl}`);

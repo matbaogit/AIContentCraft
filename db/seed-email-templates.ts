@@ -1,5 +1,156 @@
 import { db } from "./index";
 import * as schema from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+// Sync existing email templates from current system with updated branding
+const currentEmailTemplates = [
+  {
+    type: "verification" as const,
+    name: "Email xác thực tài khoản (Từ hệ thống hiện tại)",
+    subject: "Xác nhận tài khoản ToolBox của bạn",
+    htmlContent: `
+  <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+    <div style="background-color: #1e3a8a; padding: 20px; text-align: center;">
+      <h1 style="color: white; margin: 0;">ToolBox</h1>
+    </div>
+    <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+      <h2 style="color: #1e3a8a;">Xác nhận địa chỉ email của bạn</h2>
+      <p>Chào {username},</p>
+      <p>Cảm ơn bạn đã đăng ký tài khoản ToolBox. Để hoàn tất quá trình đăng ký, vui lòng xác nhận địa chỉ email của bạn bằng cách nhấp vào nút bên dưới:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{verificationUrl}" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Xác nhận Email</a>
+      </div>
+      <p>Hoặc bạn có thể copy và dán đường dẫn này vào trình duyệt của bạn:</p>
+      <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">{verificationUrl}</p>
+      <p>Liên kết này sẽ hết hạn sau 24 giờ.</p>
+      <p>Nếu bạn không đăng ký tài khoản tại ToolBox, bạn có thể bỏ qua email này.</p>
+      <p>Trân trọng,<br>Đội ngũ ToolBox</p>
+    </div>
+    <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+      <p>© ${new Date().getFullYear()} ToolBox. Tất cả các quyền được bảo lưu.</p>
+    </div>
+  </div>
+    `,
+    textContent: `
+Xác nhận tài khoản ToolBox của bạn
+
+Chào {username},
+
+Cảm ơn bạn đã đăng ký tài khoản ToolBox. Để hoàn tất quá trình đăng ký, vui lòng truy cập vào liên kết sau để xác nhận địa chỉ email của bạn:
+
+{verificationUrl}
+
+Liên kết này sẽ hết hạn sau 24 giờ.
+
+Nếu bạn không đăng ký tài khoản tại ToolBox, bạn có thể bỏ qua email này.
+
+Trân trọng,
+Đội ngũ ToolBox
+    `,
+    variables: ["{username}", "{verificationUrl}"],
+    isActive: true
+  },
+  {
+    type: "reset_password" as const,
+    name: "Email đặt lại mật khẩu (Từ hệ thống hiện tại)",
+    subject: "Đặt lại mật khẩu ToolBox của bạn",
+    htmlContent: `
+  <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+    <div style="background-color: #1e3a8a; padding: 20px; text-align: center;">
+      <h1 style="color: white; margin: 0;">ToolBox</h1>
+    </div>
+    <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+      <h2 style="color: #1e3a8a;">Đặt lại mật khẩu của bạn</h2>
+      <p>Chào {username},</p>
+      <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản ToolBox của bạn. Nhấp vào nút bên dưới để đặt mật khẩu mới:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{resetUrl}" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Đặt lại mật khẩu</a>
+      </div>
+      <p>Hoặc bạn có thể copy và dán đường dẫn này vào trình duyệt của bạn:</p>
+      <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">{resetUrl}</p>
+      <p>Liên kết này sẽ hết hạn sau 1 giờ.</p>
+      <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ nếu bạn có bất kỳ câu hỏi nào.</p>
+      <p>Trân trọng,<br>Đội ngũ ToolBox</p>
+    </div>
+    <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+      <p>© ${new Date().getFullYear()} ToolBox. Tất cả các quyền được bảo lưu.</p>
+    </div>
+  </div>
+    `,
+    textContent: `
+Đặt lại mật khẩu ToolBox của bạn
+
+Chào {username},
+
+Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản ToolBox của bạn. Vui lòng truy cập vào liên kết sau để đặt mật khẩu mới:
+
+{resetUrl}
+
+Liên kết này sẽ hết hạn sau 1 giờ.
+
+Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ nếu bạn có bất kỳ câu hỏi nào.
+
+Trân trọng,
+Đội ngũ ToolBox
+    `,
+    variables: ["{username}", "{resetUrl}"],
+    isActive: true
+  },
+  {
+    type: "welcome" as const,
+    name: "Email chào mừng (Từ hệ thống hiện tại)",
+    subject: "Chào mừng bạn đến với ToolBox!",
+    htmlContent: `
+  <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+    <div style="background-color: #1e3a8a; padding: 20px; text-align: center;">
+      <h1 style="color: white; margin: 0;">ToolBox</h1>
+    </div>
+    <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+      <h2 style="color: #1e3a8a;">Chào mừng bạn đến với ToolBox!</h2>
+      <p>Chào {username},</p>
+      <p>Chúng tôi rất vui mừng khi bạn đã tham gia cùng chúng tôi! Tài khoản của bạn đã được kích hoạt thành công và bạn đã sẵn sàng bắt đầu tạo nội dung tuyệt vời được tối ưu hóa cho SEO.</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{loginUrl}" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">Đăng nhập ngay</a>
+      </div>
+      <h3 style="color: #1e3a8a;">Bắt đầu với ToolBox</h3>
+      <ul>
+        <li>Tạo bài viết được tối ưu hóa SEO dựa trên các từ khóa mục tiêu của bạn</li>
+        <li>Sử dụng AI để tạo nội dung đa ngôn ngữ</li>
+        <li>Xuất bản trực tiếp lên WordPress hoặc mạng xã hội</li>
+        <li>Theo dõi hiệu suất nội dung của bạn</li>
+      </ul>
+      <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với đội hỗ trợ của chúng tôi.</p>
+      <p>Trân trọng,<br>Đội ngũ ToolBox</p>
+    </div>
+    <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+      <p>© ${new Date().getFullYear()} ToolBox. Tất cả các quyền được bảo lưu.</p>
+    </div>
+  </div>
+    `,
+    textContent: `
+Chào mừng bạn đến với ToolBox!
+
+Chào {username},
+
+Chúng tôi rất vui mừng khi bạn đã tham gia cùng chúng tôi! Tài khoản của bạn đã được kích hoạt thành công và bạn đã sẵn sàng bắt đầu tạo nội dung tuyệt vời được tối ưu hóa cho SEO.
+
+Bạn có thể đăng nhập tại: {loginUrl}
+
+Bắt đầu với ToolBox:
+- Tạo bài viết được tối ưu hóa SEO dựa trên các từ khóa mục tiêu của bạn
+- Sử dụng AI để tạo nội dung đa ngôn ngữ
+- Xuất bản trực tiếp lên WordPress hoặc mạng xã hội
+- Theo dõi hiệu suất nội dung của bạn
+
+Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với đội hỗ trợ của chúng tôi.
+
+Trân trọng,
+Đội ngũ ToolBox
+    `,
+    variables: ["{username}", "{loginUrl}"],
+    isActive: true
+  }
+];
 
 const defaultEmailTemplates = [
   {
@@ -253,9 +404,11 @@ Trân trọng,
 
 export async function seedEmailTemplates() {
   try {
-    console.log("🌱 Seeding default email templates...");
+    console.log("🌱 Seeding email templates...");
     
-    for (const template of defaultEmailTemplates) {
+    // First, sync current system templates with updated branding
+    console.log("📧 Syncing current system templates...");
+    for (const template of currentEmailTemplates) {
       // Check if template already exists
       const existing = await db.query.emailTemplates.findFirst({
         where: eq(schema.emailTemplates.type, template.type)
@@ -263,9 +416,37 @@ export async function seedEmailTemplates() {
       
       if (!existing) {
         await db.insert(schema.emailTemplates).values(template);
-        console.log(`✅ Created email template: ${template.name}`);
+        console.log(`✅ Created current template: ${template.name}`);
       } else {
-        console.log(`⏭️  Email template already exists: ${template.name}`);
+        // Update existing template with current system content
+        await db.update(schema.emailTemplates)
+          .set({
+            name: template.name,
+            subject: template.subject,
+            htmlContent: template.htmlContent,
+            textContent: template.textContent,
+            variables: template.variables,
+            isActive: template.isActive,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.emailTemplates.type, template.type));
+        console.log(`🔄 Updated current template: ${template.name}`);
+      }
+    }
+    
+    // Then, seed default modern templates (if they don't exist)
+    console.log("🎨 Adding modern email templates...");
+    for (const template of defaultEmailTemplates) {
+      // Check if a modern template with this name already exists
+      const existing = await db.query.emailTemplates.findFirst({
+        where: eq(schema.emailTemplates.name, template.name)
+      });
+      
+      if (!existing) {
+        await db.insert(schema.emailTemplates).values(template);
+        console.log(`✅ Created modern template: ${template.name}`);
+      } else {
+        console.log(`⏭️  Modern template already exists: ${template.name}`);
       }
     }
     
@@ -277,7 +458,7 @@ export async function seedEmailTemplates() {
 }
 
 // Run seed if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   seedEmailTemplates()
     .then(() => process.exit(0))
     .catch((error) => {

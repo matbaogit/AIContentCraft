@@ -19,7 +19,7 @@ export async function updateAppBaseUrl(baseUrl: string): Promise<boolean> {
       await storage.setSetting('appBaseUrl', baseUrl, 'general');
       console.log('App base URL saved to database');
     } catch (dbError) {
-      console.warn('Could not save app base URL to database, using memory only:', dbError.message);
+      console.warn('Could not save app base URL to database, using memory only:', dbError instanceof Error ? dbError.message : String(dbError));
     }
     
     return true;
@@ -75,7 +75,7 @@ async function loadSmtpConfigFromDatabase() {
           user: dbConfig.smtpUsername,
           pass: dbConfig.smtpPassword
         },
-        from: `SEO AI Writer <${dbConfig.smtpUsername}>`
+        from: `ToolBox <${dbConfig.smtpUsername}>`
       };
       console.log('SMTP configuration loaded from database');
     } else {
@@ -110,7 +110,7 @@ export async function updateSmtpConfig(config: {
         user: config.smtpUsername,
         pass: config.smtpPassword
       },
-      from: `SEO AI Writer <${config.smtpUsername}>`
+      from: `ToolBox <${config.smtpUsername}>`
     };
 
     console.log('SMTP configuration updated in memory');
@@ -194,8 +194,8 @@ export async function testSmtpConnection(testEmail: string): Promise<{ success: 
     const result = await sendEmail({
       to: testEmail,
       subject: 'Kiểm tra kết nối SMTP',
-      text: 'Đây là email kiểm tra kết nối SMTP từ SEOAIWriter.',
-      html: '<p>Đây là email kiểm tra kết nối SMTP từ <strong>SEOAIWriter</strong>.</p>'
+      text: 'Đây là email kiểm tra kết nối SMTP từ ToolBox.',
+      html: '<p>Đây là email kiểm tra kết nối SMTP từ <strong>ToolBox</strong>.</p>'
     });
 
     return result;
