@@ -73,6 +73,7 @@ import ReferralPage from "@/pages/dashboard/referral";
 import AdminReferralSettings from "@/pages/admin/referral-settings";
 import AdminAnalytics from "@/pages/admin/analytics";
 import AppearancePage from "@/pages/admin/appearance";
+import AdminFaq from "@/pages/admin/faq";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -156,6 +157,7 @@ function Router() {
       <ProtectedRoute path="/admin/referral-settings" component={AdminReferralSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} adminOnly={true} />
       <ProtectedRoute path="/admin/appearance" component={AppearancePage} adminOnly={true} />
+      <ProtectedRoute path="/admin/faq" component={AdminFaq} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />

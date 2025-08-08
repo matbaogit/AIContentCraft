@@ -10,6 +10,7 @@ import {
   Cog, 
   Workflow,
   RefreshCcw,
+  HelpCircle,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -60,6 +61,11 @@ export default function AdminSidebar() {
       href: '/admin/history', 
       label: t('admin.sidebar.history'), 
       icon: <History className="w-5 h-5" /> 
+    },
+    { 
+      href: '/admin/faq', 
+      label: t('admin.sidebar.faq'), 
+      icon: <HelpCircle className="w-5 h-5" /> 
     },
     { 
       href: '/admin/settings', 

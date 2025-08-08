@@ -18,6 +18,19 @@ export type PlanType = 'credit' | 'storage';
 export type ReferralTransactionStatus = 'pending' | 'completed' | 'failed';
 
 // Users table
+// FAQ table
+export const faqs = pgTable('faqs', {
+  id: serial('id').primaryKey(),
+  questionVi: text('question_vi').notNull(),
+  answerVi: text('answer_vi').notNull(),
+  questionEn: text('question_en'),
+  answerEn: text('answer_en'),
+  order: integer('order').notNull().default(0),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   username: text('username').notNull().unique(),
@@ -33,7 +46,7 @@ export const users = pgTable('users', {
   resetPasswordToken: text('reset_password_token'),
   resetPasswordTokenExpiry: timestamp('reset_password_token_expiry'),
   referralCode: text('referral_code').unique(), // Mã giới thiệu của user này
-  referredBy: integer('referred_by').references(() => users.id), // ID người giới thiệu
+  referredBy: integer('referred_by'), // ID người giới thiệu
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -173,7 +186,7 @@ export const creditUsageHistoryRelations = relations(creditUsageHistory, ({ one 
 
 // Zod Schemas
 export const insertUserSchema = createInsertSchema(users, {
-  username: (schema) => schema.email("Must provide a valid email"),
+  username: (schema) => schema.min(3, "Username must be at least 3 characters"),
   email: (schema) => schema.email("Must provide a valid email"),
   password: (schema) => schema.min(8, "Password must be at least 8 characters")
 }).omit({ id: true, createdAt: true, updatedAt: true });
@@ -886,5 +899,17 @@ export const insertLegalPageSchema = createInsertSchema(legalPages, {
 // Legal Pages Types
 export type LegalPage = z.infer<typeof selectLegalPageSchema>;
 export type InsertLegalPage = z.infer<typeof insertLegalPageSchema>;
+
+// FAQ Schemas
+export const selectFaqSchema = createSelectSchema(faqs);
+export const insertFaqSchema = createInsertSchema(faqs, {
+  questionVi: (schema) => schema.min(1, "Vietnamese question is required"),
+  answerVi: (schema) => schema.min(1, "Vietnamese answer is required"),
+  order: (schema) => schema.min(0, "Order must be non-negative"),
+});
+
+// FAQ Types
+export type Faq = z.infer<typeof selectFaqSchema>;
+export type InsertFaq = z.infer<typeof insertFaqSchema>;
 
 

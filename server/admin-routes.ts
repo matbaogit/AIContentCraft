@@ -4,13 +4,159 @@ import { pool, db } from "../db";
 import { z } from "zod";
 import { format, subHours, subDays } from "date-fns";
 import * as schema from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import * as nodemailer from "nodemailer";
 
 /**
  * Registers admin routes for admin panel functionality
  */
 export function registerAdminRoutes(app: Express) {
+  // FAQ Management Routes
+  
+  // Get all FAQs
+  app.get("/api/admin/faqs", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const faqs = await db.select().from(schema.faqs).orderBy(schema.faqs.order, schema.faqs.id);
+      return res.status(200).json({
+        success: true,
+        data: faqs
+      });
+    } catch (error) {
+      console.error("Error fetching FAQs:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  });
+
+  // Create new FAQ
+  app.post("/api/admin/faqs", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const faqData = schema.insertFaqSchema.parse(req.body);
+      const [newFaq] = await db.insert(schema.faqs).values(faqData).returning();
+      return res.status(201).json({
+        success: true,
+        data: newFaq
+      });
+    } catch (error) {
+      console.error("Error creating FAQ:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: "Validation error",
+          details: error.errors
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  });
+
+  // Update FAQ
+  app.patch("/api/admin/faqs/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const faqId = parseInt(req.params.id);
+      if (isNaN(faqId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid FAQ ID"
+        });
+      }
+
+      const updateData = req.body;
+      const [updatedFaq] = await db
+        .update(schema.faqs)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(schema.faqs.id, faqId))
+        .returning();
+
+      if (!updatedFaq) {
+        return res.status(404).json({
+          success: false,
+          error: "FAQ not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: updatedFaq
+      });
+    } catch (error) {
+      console.error("Error updating FAQ:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  });
+
+  // Delete FAQ
+  app.delete("/api/admin/faqs/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const faqId = parseInt(req.params.id);
+      if (isNaN(faqId)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid FAQ ID"
+        });
+      }
+
+      const [deletedFaq] = await db
+        .delete(schema.faqs)
+        .where(eq(schema.faqs.id, faqId))
+        .returning();
+
+      if (!deletedFaq) {
+        return res.status(404).json({
+          success: false,
+          error: "FAQ not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "FAQ deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting FAQ:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  });
+
   // Lấy cấu hình gói dùng thử
   app.get("/api/admin/trial-plan", async (req: Request, res: Response) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
