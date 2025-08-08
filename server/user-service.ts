@@ -81,7 +81,7 @@ export async function registerUser(userData: InsertUser): Promise<{
     }
 
     // Gửi email xác thực
-    const verificationUrl = `${appConfig.baseUrl}/api/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${appConfig.baseUrl}/verify-email?token=${verificationToken}`;
     
     // Thử sử dụng dynamic template trước, fallback về hardcoded template
     let emailTemplate = await dynamicEmailTemplateService.getVerificationEmailTemplate({
