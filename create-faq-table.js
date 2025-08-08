@@ -29,10 +29,10 @@ async function createFaqTable() {
     // Insert sample FAQ data
     const sampleFaqs = [
       {
-        question_vi: "SEO AI Writer giúp tạo nội dung như thế nào?",
-        answer_vi: "SEO AI Writer sử dụng trí tuệ nhân tạo tiên tiến để tạo ra nội dung chất lượng cao, tối ưu SEO. Bạn chỉ cần nhập từ khóa, mô tả chủ đề, và hệ thống sẽ tự động tạo bài viết hoàn chỉnh với tiêu đề, meta description, và nội dung được tối ưu hóa cho công cụ tìm kiếm.",
-        question_en: "How does SEO AI Writer help create content?",
-        answer_en: "SEO AI Writer uses advanced artificial intelligence to create high-quality, SEO-optimized content. You simply input keywords, describe the topic, and the system automatically generates complete articles with titles, meta descriptions, and content optimized for search engines.",
+        question_vi: "ToolBox giúp tạo nội dung như thế nào?",
+        answer_vi: "ToolBox sử dụng trí tuệ nhân tạo tiên tiến để tạo ra nội dung chất lượng cao, tối ưu SEO. Bạn chỉ cần nhập từ khóa, mô tả chủ đề, và hệ thống sẽ tự động tạo bài viết hoàn chỉnh với tiêu đề, meta description, và nội dung được tối ưu hóa cho công cụ tìm kiếm.",
+        question_en: "How does ToolBox help create content?",
+        answer_en: "ToolBox uses advanced artificial intelligence to create high-quality, SEO-optimized content. You simply input keywords, describe the topic, and the system automatically generates complete articles with titles, meta descriptions, and content optimized for search engines.",
         order: 1
       },
       {
