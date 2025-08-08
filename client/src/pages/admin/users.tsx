@@ -196,8 +196,7 @@ export default function AdminUsers() {
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/admin/users/${id}`);
-      return res.json();
+      return await apiRequest("DELETE", `/api/admin/users/${id}`);
     },
     onSuccess: () => {
       toast({
