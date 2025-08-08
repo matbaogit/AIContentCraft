@@ -227,15 +227,15 @@ export default function CreateSocialContentPage() {
       setShowFinalResultDialog(false);
       // Reset form sau khi lưu thành công
       setForm({
-        contentSource: 'manual',
+        contentSource: '',
         briefDescription: '',
-        selectedArticleId: '',
+        selectedArticleId: undefined,
         referenceLink: '',
         platforms: [],
         includeImage: false,
-        imageSource: 'generate',
-        selectedImageId: '',
-        imagePrompt: ''
+        imageSource: 'ai-generated',
+        imagePrompt: '',
+        approveExtract: false
       });
       setExtractedData('');
       setFinalSocialContent(null);
@@ -521,9 +521,9 @@ export default function CreateSocialContentPage() {
                       {form.imageSource === 'from-library' && (
                         <div className="space-y-3">
                           <Label>Select Image from Library</Label>
-                          {imagesData?.images && imagesData.images.length > 0 ? (
+                          {imagesData?.data?.images && imagesData.data.images.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
-                              {imagesData.images.map((image: any) => (
+                              {imagesData.data.images.map((image: any) => (
                                 <div
                                   key={image.id}
                                   className={`relative aspect-square rounded-lg border-2 cursor-pointer transition-all ${
