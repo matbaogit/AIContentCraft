@@ -1833,4 +1833,157 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // Email Template Management Routes
+  
+  // Get all email templates
+  app.get("/api/admin/email-templates", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const templates = await storage.getEmailTemplates();
+      return res.status(200).json({
+        success: true,
+        data: templates
+      });
+    } catch (error) {
+      console.error("Error fetching email templates:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch email templates"
+      });
+    }
+  });
+
+  // Get specific email template
+  app.get("/api/admin/email-templates/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getEmailTemplate(id);
+      
+      if (!template) {
+        return res.status(404).json({
+          success: false,
+          error: "Email template not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: template
+      });
+    } catch (error) {
+      console.error("Error fetching email template:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch email template"
+      });
+    }
+  });
+
+  // Create new email template
+  app.post("/api/admin/email-templates", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const templateData = schema.insertEmailTemplateSchema.parse(req.body);
+      const newTemplate = await storage.createEmailTemplate(templateData);
+      
+      return res.status(201).json({
+        success: true,
+        data: newTemplate
+      });
+    } catch (error) {
+      console.error("Error creating email template:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create email template"
+      });
+    }
+  });
+
+  // Update email template
+  app.patch("/api/admin/email-templates/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedTemplate = await storage.updateEmailTemplate(id, updateData);
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({
+          success: false,
+          error: "Email template not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: updatedTemplate
+      });
+    } catch (error) {
+      console.error("Error updating email template:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update email template"
+      });
+    }
+  });
+
+  // Delete email template
+  app.delete("/api/admin/email-templates/:id", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Unauthorized. Only admin users can perform this action." 
+      });
+    }
+
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteEmailTemplate(id);
+      
+      if (!deleted) {
+        return res.status(404).json({
+          success: false,
+          error: "Email template not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Email template deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting email template:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to delete email template"
+      });
+    }
+  });
 }

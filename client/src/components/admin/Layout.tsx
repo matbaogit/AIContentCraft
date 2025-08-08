@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Palette,
   HelpCircle,
+  Mail,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -133,6 +134,11 @@ function Layout({ children, title }: AdminLayoutProps) {
       href: "/admin/faq",
       label: t("admin.sidebar.faq"),
       icon: <HelpCircle className="h-5 w-5" />,
+    },
+    {
+      href: "/admin/email-templates",
+      label: "Email Templates",
+      icon: <Mail className="h-5 w-5" />,
     },
     {
       href: "/admin/settings",

@@ -12,6 +12,7 @@ export const aiProviderEnum = pgEnum('ai_provider', ['openai', 'claude', 'gemini
 export const postStatusEnum = pgEnum('post_status', ['pending', 'processing', 'completed', 'failed', 'cancelled']);
 export const platformEnum = pgEnum('platform', ['wordpress', 'facebook', 'twitter', 'linkedin', 'instagram']);
 export const referralStatusEnum = pgEnum('referral_status', ['pending', 'completed', 'failed']);
+export const emailTemplateTypeEnum = pgEnum('email_template_type', ['verification', 'reset_password', 'welcome', 'notification']);
 
 // Enum types for TypeScript
 export type PlanType = 'credit' | 'storage';
@@ -911,5 +912,32 @@ export const insertFaqSchema = createInsertSchema(faqs, {
 // FAQ Types
 export type Faq = z.infer<typeof selectFaqSchema>;
 export type InsertFaq = z.infer<typeof insertFaqSchema>;
+
+// Email Templates table
+export const emailTemplates = pgTable('email_templates', {
+  id: serial('id').primaryKey(),
+  type: emailTemplateTypeEnum('type').notNull(),
+  name: text('name').notNull(),
+  subject: text('subject').notNull(),
+  htmlContent: text('html_content').notNull(),
+  textContent: text('text_content').notNull(),
+  variables: jsonb('variables').$type<string[]>().default([]),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Email Template Schemas
+export const selectEmailTemplateSchema = createSelectSchema(emailTemplates);
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates, {
+  name: (schema) => schema.min(1, "Template name is required"),
+  subject: (schema) => schema.min(1, "Subject is required"),
+  htmlContent: (schema) => schema.min(1, "HTML content is required"),
+  textContent: (schema) => schema.min(1, "Text content is required"),
+});
+
+// Email Template Types
+export type EmailTemplate = z.infer<typeof selectEmailTemplateSchema>;
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 
 

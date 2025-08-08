@@ -154,6 +154,14 @@ export interface IStorage {
   uploadAsset(asset: schema.InsertUploadedAsset): Promise<schema.UploadedAsset>;
   getUploadedAssets(usageType?: string): Promise<schema.UploadedAsset[]>;
   restoreAppearanceSetting(historyId: number, changedBy: number): Promise<boolean>;
+  
+  // Email template management
+  getEmailTemplates(): Promise<schema.EmailTemplate[]>;
+  getEmailTemplate(id: number): Promise<schema.EmailTemplate | null>;
+  getEmailTemplateByType(type: string): Promise<schema.EmailTemplate | null>;
+  createEmailTemplate(template: schema.InsertEmailTemplate): Promise<schema.EmailTemplate>;
+  updateEmailTemplate(id: number, data: Partial<schema.EmailTemplate>): Promise<schema.EmailTemplate | null>;
+  deleteEmailTemplate(id: number): Promise<boolean>;
 
   // Session store
   sessionStore: session.SessionStore;
@@ -2163,6 +2171,70 @@ class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error('Error restoring appearance setting:', error);
+      return false;
+    }
+  }
+
+  // Email template management
+  async getEmailTemplates(): Promise<schema.EmailTemplate[]> {
+    try {
+      return await db.select().from(schema.emailTemplates).orderBy(asc(schema.emailTemplates.type));
+    } catch (error) {
+      console.error('Error fetching email templates:', error);
+      return [];
+    }
+  }
+
+  async getEmailTemplate(id: number): Promise<schema.EmailTemplate | null> {
+    try {
+      const [template] = await db.select().from(schema.emailTemplates).where(eq(schema.emailTemplates.id, id));
+      return template || null;
+    } catch (error) {
+      console.error('Error fetching email template:', error);
+      return null;
+    }
+  }
+
+  async getEmailTemplateByType(type: string): Promise<schema.EmailTemplate | null> {
+    try {
+      const [template] = await db.select().from(schema.emailTemplates)
+        .where(and(eq(schema.emailTemplates.type, type as any), eq(schema.emailTemplates.isActive, true)));
+      return template || null;
+    } catch (error) {
+      console.error('Error fetching email template by type:', error);
+      return null;
+    }
+  }
+
+  async createEmailTemplate(template: schema.InsertEmailTemplate): Promise<schema.EmailTemplate> {
+    try {
+      const [newTemplate] = await db.insert(schema.emailTemplates).values(template).returning();
+      return newTemplate;
+    } catch (error) {
+      console.error('Error creating email template:', error);
+      throw error;
+    }
+  }
+
+  async updateEmailTemplate(id: number, data: Partial<schema.EmailTemplate>): Promise<schema.EmailTemplate | null> {
+    try {
+      const [updatedTemplate] = await db.update(schema.emailTemplates)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.emailTemplates.id, id))
+        .returning();
+      return updatedTemplate || null;
+    } catch (error) {
+      console.error('Error updating email template:', error);
+      return null;
+    }
+  }
+
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(schema.emailTemplates).where(eq(schema.emailTemplates.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting email template:', error);
       return false;
     }
   }
