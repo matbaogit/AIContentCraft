@@ -519,8 +519,8 @@ const translations: TranslationsType = {
         badge: "Câu hỏi thường gặp",
         questions: [
           {
-            question: "SEO AI Writer giúp tạo nội dung như thế nào?",
-            answer: "SEO AI Writer sử dụng công nghệ AI tiên tiến để phân tích từ khóa, nghiên cứu chủ đề và tạo ra nội dung chất lượng cao đã được tối ưu hóa cho SEO."
+            question: "ToolBox giúp tạo nội dung như thế nào?",
+            answer: "ToolBox sử dụng công nghệ AI tiên tiến để phân tích từ khóa, nghiên cứu chủ đề và tạo ra nội dung chất lượng cao đã được tối ưu hóa cho SEO."
           },
           {
             question: "Tôi có thể tạo bao nhiêu bài viết mỗi tháng?",
@@ -528,11 +528,11 @@ const translations: TranslationsType = {
           },
           {
             question: "Nội dung được tạo ra có phải là nội dung duy nhất không?",
-            answer: "Có, mọi nội dung được tạo bởi SEO AI Writer đều là duy nhất và được thiết kế để vượt qua các công cụ kiểm tra đạo văn. Hệ thống của chúng tôi liên tục học hỏi và cập nhật để tạo ra nội dung chất lượng cao nhất."
+            answer: "Có, mọi nội dung được tạo bởi ToolBox đều là duy nhất và được thiết kế để vượt qua các công cụ kiểm tra đạo văn. Hệ thống của chúng tôi liên tục học hỏi và cập nhật để tạo ra nội dung chất lượng cao nhất."
           },
           {
             question: "Tôi có thể tích hợp với WordPress của mình không?",
-            answer: "Có, SEO AI Writer cung cấp tích hợp liền mạch với WordPress, cho phép bạn xuất bản nội dung trực tiếp lên trang web của mình chỉ với một cú nhấp chuột."
+            answer: "Có, ToolBox cung cấp tích hợp liền mạch với WordPress, cho phép bạn xuất bản nội dung trực tiếp lên trang web của mình chỉ với một cú nhấp chuột."
           },
           {
             question: "Dịch vụ của bạn có hỗ trợ ngôn ngữ nào?",
@@ -553,7 +553,7 @@ const translations: TranslationsType = {
       },
       footer: {
         description: "Nền tảng tạo nội dung SEO tiên tiến được hỗ trợ bởi AI giúp bạn tạo bài viết chất lượng cao nhanh chóng.",
-        copyright: "© 2025 SEO AI Writer. Tất cả quyền được bảo lưu.",
+        copyright: "© 2025 ToolBox. Tất cả quyền được bảo lưu.",
         links: {
           product: "Sản phẩm",
           createSeoContent: "Tạo nội dung SEO",
@@ -1451,8 +1451,8 @@ const translations: TranslationsType = {
         badge: "Frequently Asked Questions",
         questions: [
           {
-            question: "How does SEO AI Writer help create content?",
-            answer: "SEO AI Writer uses advanced AI technology to analyze keywords, research topics, and generate high-quality content that is optimized for SEO."
+            question: "How does ToolBox help create content?",
+            answer: "ToolBox uses advanced AI technology to analyze keywords, research topics, and generate high-quality content that is optimized for SEO."
           },
           {
             question: "How many articles can I create per month?",
@@ -1460,11 +1460,11 @@ const translations: TranslationsType = {
           },
           {
             question: "Is the generated content unique?",
-            answer: "Yes, all content created by SEO AI Writer is unique and designed to pass plagiarism checkers. Our system continuously learns and updates to produce the highest quality content."
+            answer: "Yes, all content created by ToolBox is unique and designed to pass plagiarism checkers. Our system continuously learns and updates to produce the highest quality content."
           },
           {
             question: "Can I integrate with my WordPress?",
-            answer: "Yes, SEO AI Writer provides seamless integration with WordPress, allowing you to publish content directly to your website with just one click."
+            answer: "Yes, ToolBox provides seamless integration with WordPress, allowing you to publish content directly to your website with just one click."
           },
           {
             question: "What languages does your service support?",
@@ -1485,7 +1485,7 @@ const translations: TranslationsType = {
       },
       footer: {
         description: "Advanced AI-powered SEO content platform that helps you create high-quality articles quickly.",
-        copyright: "© 2025 SEO AI Writer. All rights reserved.",
+        copyright: "© 2025 ToolBox. All rights reserved.",
         links: {
           product: "Product",
           createSeoContent: "Create SEO Content",
