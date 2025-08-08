@@ -109,11 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation<any, Error, RegisterData>({
     mutationFn: async (userData: RegisterData) => {
       const res = await apiRequest("POST", "/api/register", userData);
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || "Đăng ký thất bại");
+      if (!res.success) {
+        throw new Error(res.error || "Đăng ký thất bại");
       }
-      return data;
+      return res;
     },
     onSuccess: (response) => {
       // Không cập nhật user vì cần xác thực email trước
