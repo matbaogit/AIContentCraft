@@ -20,6 +20,7 @@ import {
   Gift,
   TrendingUp,
   Palette,
+  HelpCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -127,6 +128,11 @@ function Layout({ children, title }: AdminLayoutProps) {
       href: "/admin/appearance",
       label: "Giao diện",
       icon: <Palette className="h-5 w-5" />,
+    },
+    {
+      href: "/admin/faq",
+      label: t("admin.sidebar.faq"),
+      icon: <HelpCircle className="h-5 w-5" />,
     },
     {
       href: "/admin/settings",
