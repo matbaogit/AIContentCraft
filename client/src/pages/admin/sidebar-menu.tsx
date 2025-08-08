@@ -111,8 +111,8 @@ export default function SidebarMenuManagement() {
         ? `/api/admin/sidebar-menu/${selectedItem.id}`
         : "/api/admin/sidebar-menu";
       const method = selectedItem ? "PATCH" : "POST";
-      const res = await apiRequest(method, endpoint, data);
-      return res.json();
+      const result = await apiRequest(method, endpoint, data);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -136,8 +136,8 @@ export default function SidebarMenuManagement() {
   // Delete mutation
   const deleteMenuItemMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/admin/sidebar-menu/${id}`);
-      return res.json();
+      const result = await apiRequest("DELETE", `/api/admin/sidebar-menu/${id}`);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -158,8 +158,8 @@ export default function SidebarMenuManagement() {
   // Toggle enabled state
   const toggleEnabledMutation = useMutation({
     mutationFn: async ({ id, isEnabled }: { id: number; isEnabled: boolean }) => {
-      const res = await apiRequest("PATCH", `/api/admin/sidebar-menu/${id}`, { isEnabled });
-      return res.json();
+      const result = await apiRequest("PATCH", `/api/admin/sidebar-menu/${id}`, { isEnabled });
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sidebar-menu"] });
@@ -176,8 +176,8 @@ export default function SidebarMenuManagement() {
   // Update sort order
   const updateSortOrderMutation = useMutation({
     mutationFn: async ({ id, sortOrder }: { id: number; sortOrder: number }) => {
-      const res = await apiRequest("PATCH", `/api/admin/sidebar-menu/${id}`, { sortOrder });
-      return res.json();
+      const result = await apiRequest("PATCH", `/api/admin/sidebar-menu/${id}`, { sortOrder });
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sidebar-menu"] });

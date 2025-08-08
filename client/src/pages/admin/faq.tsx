@@ -99,8 +99,8 @@ export default function FaqManagement() {
         ? `/api/admin/faqs/${selectedFaq.id}`
         : "/api/admin/faqs";
       const method = selectedFaq ? "PATCH" : "POST";
-      const res = await apiRequest(method, endpoint, data);
-      return res.json();
+      const result = await apiRequest(method, endpoint, data);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -124,8 +124,8 @@ export default function FaqManagement() {
   // Delete mutation
   const deleteFaqMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/admin/faqs/${id}`);
-      return res.json();
+      const result = await apiRequest("DELETE", `/api/admin/faqs/${id}`);
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -146,8 +146,8 @@ export default function FaqManagement() {
   // Toggle active state
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await apiRequest("PATCH", `/api/admin/faqs/${id}`, { isActive });
-      return res.json();
+      const result = await apiRequest("PATCH", `/api/admin/faqs/${id}`, { isActive });
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/faqs"] });
@@ -164,8 +164,8 @@ export default function FaqManagement() {
   // Update order
   const updateOrderMutation = useMutation({
     mutationFn: async ({ id, order }: { id: number; order: number }) => {
-      const res = await apiRequest("PATCH", `/api/admin/faqs/${id}`, { order });
-      return res.json();
+      const result = await apiRequest("PATCH", `/api/admin/faqs/${id}`, { order });
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/faqs"] });
