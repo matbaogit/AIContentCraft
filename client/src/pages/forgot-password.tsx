@@ -46,8 +46,7 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await apiRequest("POST", "/api/forgot-password", values);
-      const data = await response.json();
+      const data = await apiRequest("POST", "/api/forgot-password", values);
       
       if (data.success) {
         setIsSubmitted(true);
@@ -121,7 +120,7 @@ export default function ForgotPasswordPage() {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Đang gửi..." : "Gửi hướng dẫn"}
+                    {isSubmitting ? "Đang gửi..." : "Gửi email khôi phục"}
                   </Button>
                 </form>
               </Form>
