@@ -210,12 +210,14 @@ class DatabaseStorage implements IStorage {
   
   async getUserByVerificationToken(token: string): Promise<schema.User | null> {
     try {
+      console.log(`[storage.getUserByVerificationToken] Looking for token: ${token?.substring(0, 8)}...`);
       const user = await db.query.users.findFirst({
         where: eq(schema.users.verificationToken, token)
       });
+      console.log(`[storage.getUserByVerificationToken] Found user: ${user ? `${user.username} (ID: ${user.id})` : 'none'}`);
       return user || null;
     } catch (error) {
-      console.error("Error retrieving user by verification token:", error);
+      console.error("[storage.getUserByVerificationToken] Error retrieving user by verification token:", error);
       return null;
     }
   }

@@ -127,7 +127,10 @@ export async function verifyEmail(token: string): Promise<{
   error?: string;
 }> {
   try {
-    if (!token) {
+    console.log(`[verifyEmail] Starting verification with token: ${token?.substring(0, 8)}...`);
+    
+    if (!token || token.trim() === '') {
+      console.log('[verifyEmail] Token is empty or invalid');
       return {
         success: false,
         error: "Token xác thực không hợp lệ"
@@ -135,17 +138,46 @@ export async function verifyEmail(token: string): Promise<{
     }
 
     // Tìm người dùng bằng token
-    const user = await storage.getUserByVerificationToken(token);
+    console.log(`[verifyEmail] Looking up user by verification token...`);
+    const user = await storage.getUserByVerificationToken(token.trim());
     
     if (!user) {
+      console.log('[verifyEmail] No user found with this verification token');
       return {
         success: false,
         error: "Token xác thực không hợp lệ hoặc đã hết hạn"
       };
     }
 
+    console.log(`[verifyEmail] Found user: ${user.username} (ID: ${user.id})`);
+    console.log(`[verifyEmail] User verification status: ${user.isVerified}`);
+    console.log(`[verifyEmail] Token expiry: ${user.verificationTokenExpiry}`);
+
+    // Kiểm tra xem user đã được verify chưa
+    if (user.isVerified) {
+      console.log('[verifyEmail] User is already verified');
+      return {
+        success: false,
+        error: "Tài khoản đã được xác thực trước đó"
+      };
+    }
+
     // Kiểm tra token còn hiệu lực không
-    if (!user.verificationTokenExpiry || new Date() > new Date(user.verificationTokenExpiry)) {
+    if (!user.verificationTokenExpiry) {
+      console.log('[verifyEmail] No verification token expiry date found');
+      return {
+        success: false,
+        error: "Token xác thực không hợp lệ"
+      };
+    }
+    
+    const now = new Date();
+    const expiry = new Date(user.verificationTokenExpiry);
+    console.log(`[verifyEmail] Current time: ${now.toISOString()}`);
+    console.log(`[verifyEmail] Token expiry: ${expiry.toISOString()}`);
+    
+    if (now > expiry) {
+      console.log('[verifyEmail] Token has expired');
       return {
         success: false,
         error: "Token xác thực đã hết hạn"
@@ -153,6 +185,7 @@ export async function verifyEmail(token: string): Promise<{
     }
 
     // Cập nhật trạng thái xác thực của người dùng
+    console.log(`[verifyEmail] Updating user verification status...`);
     const updatedUser = await storage.updateUser(user.id, {
       isVerified: true,
       verificationToken: null,
@@ -160,11 +193,14 @@ export async function verifyEmail(token: string): Promise<{
     });
 
     if (!updatedUser) {
+      console.log('[verifyEmail] Failed to update user verification status');
       return {
         success: false,
         error: "Không thể cập nhật trạng thái xác thực"
       };
     }
+
+    console.log(`[verifyEmail] Successfully verified user: ${updatedUser.username}`);
 
     // Gửi email chào mừng
     const loginUrl = `${appConfig.baseUrl}/auth`;
@@ -191,12 +227,17 @@ export async function verifyEmail(token: string): Promise<{
       html: emailTemplate.html
     });
 
+    console.log(`[verifyEmail] Verification completed successfully for user: ${updatedUser.username}`);
     return {
       success: true,
       user: updatedUser
     };
   } catch (error) {
-    console.error('Error verifying email:', error);
+    console.error('[verifyEmail] Error verifying email:', error);
+    if (error instanceof Error) {
+      console.error('[verifyEmail] Error details:', error.message);
+      console.error('[verifyEmail] Error stack:', error.stack);
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Lỗi không xác định khi xác thực email'
