@@ -20,6 +20,13 @@ const loginPageSchema = z.object({
   site_title: z.string().min(1, "Tiêu đề trang không được để trống"),
   login_title: z.string().min(1, "Tiêu đề đăng nhập không được để trống"),
   login_subtitle: z.string().optional(),
+  username_label: z.string().min(1, "Label tên đăng nhập không được để trống"),
+  username_placeholder: z.string().optional(),
+  password_label: z.string().min(1, "Label mật khẩu không được để trống"),
+  password_placeholder: z.string().optional(),
+  remember_me_label: z.string().optional(),
+  forgot_password_text: z.string().optional(),
+  login_button_text: z.string().min(1, "Text nút đăng nhập không được để trống"),
   register_title: z.string().min(1, "Tiêu đề đăng ký không được để trống"),
   register_subtitle: z.string().optional(),
   footer_text: z.string().optional(),
@@ -47,6 +54,13 @@ export default function LoginPageSettings() {
       site_title: "",
       login_title: "",
       login_subtitle: "",
+      username_label: "Tên đăng nhập hoặc Email",
+      username_placeholder: "",
+      password_label: "Mật khẩu",
+      password_placeholder: "",
+      remember_me_label: "Ghi nhớ đăng nhập",
+      forgot_password_text: "Quên mật khẩu?",
+      login_button_text: "Đăng nhập",
       register_title: "",
       register_subtitle: "",
       footer_text: "",
@@ -59,7 +73,7 @@ export default function LoginPageSettings() {
 
   // Update form when data changes
   React.useEffect(() => {
-    if (settings && Array.isArray(settings.data) && settings.data.length > 0) {
+    if (settings && settings.success && Array.isArray(settings.data) && settings.data.length > 0) {
       const loginPageData = settings.data.find((s: any) => s.type === "login_page" && s.language === currentLanguage);
       if (loginPageData?.content) {
         form.reset({
@@ -186,6 +200,104 @@ export default function LoginPageSettings() {
                           <FormLabel>Mô tả đăng nhập</FormLabel>
                           <FormControl>
                             <Textarea {...field} placeholder="Nhập thông tin để truy cập hệ thống" rows={2} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="username_label"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label tên đăng nhập</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Tên đăng nhập hoặc Email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="username_placeholder"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Placeholder tên đăng nhập</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nhập tên đăng nhập..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password_label"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label mật khẩu</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Mật khẩu" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="password_placeholder"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Placeholder mật khẩu</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nhập mật khẩu..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="remember_me_label"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Text "Ghi nhớ đăng nhập"</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ghi nhớ đăng nhập" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="forgot_password_text"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Text "Quên mật khẩu"</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Quên mật khẩu?" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="login_button_text"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Text nút đăng nhập</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Đăng nhập" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
