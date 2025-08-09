@@ -341,7 +341,11 @@ export default function AuthPage() {
                 <img
                   src={loginPageSettings.logo_url}
                   alt={loginPageSettings.site_title}
-                  className="h-12 w-auto"
+                  style={{
+                    width: loginPageSettings.logo_width ? `${loginPageSettings.logo_width}px` : '48px',
+                    height: loginPageSettings.logo_height ? `${loginPageSettings.logo_height}px` : '48px',
+                  }}
+                  className="object-contain"
                 />
               ) : (
                 <svg

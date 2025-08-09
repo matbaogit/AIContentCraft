@@ -16,6 +16,8 @@ import { Loader2, Upload, Eye, Save } from "lucide-react";
 
 const loginPageSchema = z.object({
   logo_url: z.string().optional(),
+  logo_width: z.string().optional(),
+  logo_height: z.string().optional(),
   site_title: z.string().min(1, "Tiêu đề trang không được để trống"),
   login_title: z.string().min(1, "Tiêu đề đăng nhập không được để trống"),
   login_subtitle: z.string().optional(),
@@ -51,6 +53,8 @@ export default function LoginPageSettings() {
     resolver: zodResolver(loginPageSchema),
     defaultValues: {
       logo_url: "",
+      logo_width: "48",
+      logo_height: "48",
       site_title: "",
       login_title: "",
       login_subtitle: "",
@@ -190,6 +194,36 @@ export default function LoginPageSettings() {
                         </FormItem>
                       )}
                     />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="logo_width"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Chiều rộng logo (px)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="48" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="logo_height"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Chiều cao logo (px)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="48" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}
