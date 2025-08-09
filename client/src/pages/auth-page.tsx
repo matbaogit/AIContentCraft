@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, Link } from "wouter";
@@ -22,7 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import Head from "@/components/head";
 import { signInWithGoogle, signInWithFacebook } from "@/lib/firebase";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 // Login form schema
 const loginSchema = z.object({
@@ -67,7 +68,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, loginMutation, registerMutation } = useAuth();
   const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -77,6 +78,61 @@ export default function AuthPage() {
   const [registrationEmail, setRegistrationEmail] = useState("");
   const [referralCode, setReferralCode] = useState<string>("");
   const { toast } = useToast();
+  
+  // Fetch appearance settings for login page
+  const { data: appearanceSettings } = useQuery({
+    queryKey: ["/api/appearance/settings", "login_page", language],
+    queryFn: () => apiRequest("GET", `/api/appearance/settings?type=login_page&language=${language}`),
+    retry: false,
+  });
+  
+  // Parse appearance settings into usable object
+  const loginPageSettings = React.useMemo(() => {
+    if (!appearanceSettings?.success || !appearanceSettings?.data) {
+      return {
+        logo_url: "",
+        site_title: "SEO AI Writer",
+        login_title: "Đăng nhập",
+        login_subtitle: "Nhập thông tin để đăng nhập",
+        username_label: "Tên đăng nhập hoặc Email",
+        username_placeholder: "",
+        password_label: "Mật khẩu", 
+        password_placeholder: "",
+        remember_me_label: "Ghi nhớ đăng nhập",
+        forgot_password_text: "Quên mật khẩu?",
+        login_button_text: "Đăng nhập",
+        register_title: "Tạo tài khoản mới",
+        register_subtitle: "Điền thông tin để tạo tài khoản",
+        background_color: "#ffffff",
+        text_color: "#000000",
+        button_color: "#3b82f6",
+      };
+    }
+    
+    const settings: any = {};
+    appearanceSettings.data.forEach((setting: any) => {
+      settings[setting.key] = setting.value;
+    });
+    
+    return {
+      logo_url: settings.logo_url || "",
+      site_title: settings.site_title || "SEO AI Writer",
+      login_title: settings.login_title || "Đăng nhập",
+      login_subtitle: settings.login_subtitle || "Nhập thông tin để đăng nhập",
+      username_label: settings.username_label || "Tên đăng nhập hoặc Email",
+      username_placeholder: settings.username_placeholder || "",
+      password_label: settings.password_label || "Mật khẩu",
+      password_placeholder: settings.password_placeholder || "",
+      remember_me_label: settings.remember_me_label || "Ghi nhớ đăng nhập",
+      forgot_password_text: settings.forgot_password_text || "Quên mật khẩu?",
+      login_button_text: settings.login_button_text || "Đăng nhập",
+      register_title: settings.register_title || "Tạo tài khoản mới",
+      register_subtitle: settings.register_subtitle || "Điền thông tin để tạo tài khoản",
+      background_color: settings.background_color || "#ffffff",
+      text_color: settings.text_color || "#000000",
+      button_color: settings.button_color || "#3b82f6",
+    };
+  }, [appearanceSettings]);
   
   // Check URL params to set default tab and referral code
   useEffect(() => {
@@ -176,7 +232,9 @@ export default function AuthPage() {
       referralCode: data.referralCode,
     }, {
       onSuccess: (response) => {
-        if (response.requireVerification) {
+        // Check if response indicates email verification is required
+        if (response && typeof response === 'object' && 'message' in response && 
+            response.message?.includes('verification')) {
           setRegistrationSuccess(true);
           setRegistrationEmail(data.email);
           toast({
@@ -279,43 +337,45 @@ export default function AuthPage() {
         <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 xl:px-20 bg-slate-900">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div className="flex justify-center">
-              <svg
-                className="h-12 w-auto text-primary"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 2L2 7L12 12L22 7L12 2Z"
-                  fill="currentColor"
+              {loginPageSettings.logo_url ? (
+                <img
+                  src={loginPageSettings.logo_url}
+                  alt={loginPageSettings.site_title}
+                  className="h-12 w-auto"
                 />
-                <path
-                  d="M2 17L12 22L22 17"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M2 12L12 17L22 12"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              ) : (
+                <svg
+                  className="h-12 w-auto text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2L2 7L12 12L22 7L12 2Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M2 17L12 22L22 17"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M2 12L12 17L22 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-white font-heading bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              {activeTab === "login" ? t("auth.login.title") : t("auth.register.title")}
+              {activeTab === "login" ? loginPageSettings.login_title : loginPageSettings.register_title}
             </h2>
             <p className="mt-2 text-center text-sm text-slate-400">
-              {t("common.or")}{" "}
-              <span
-                onClick={() => setActiveTab(activeTab === "login" ? "register" : "login")}
-                className="font-medium text-white hover:text-primary cursor-pointer transition-colors"
-              >
-                {activeTab === "login" ? t("auth.login.switchToRegister") : t("auth.register.switchToLogin")}
-              </span>
+              {activeTab === "login" ? loginPageSettings.login_subtitle : loginPageSettings.register_subtitle}
             </p>
             
             <div className="mt-8">
@@ -367,9 +427,14 @@ export default function AuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-slate-200">{t("auth.login.username")}</FormLabel>
+                              <FormLabel className="text-slate-200">{loginPageSettings.username_label}</FormLabel>
                               <FormControl>
-                                <Input type="text" className="bg-slate-700/50 border-slate-600" {...field} />
+                                <Input 
+                                  type="text" 
+                                  placeholder={loginPageSettings.username_placeholder}
+                                  className="bg-slate-700/50 border-slate-600" 
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -381,9 +446,14 @@ export default function AuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-slate-200">{t("auth.login.password")}</FormLabel>
+                              <FormLabel className="text-slate-200">{loginPageSettings.password_label}</FormLabel>
                               <FormControl>
-                                <Input type="password" className="bg-slate-700/50 border-slate-600" {...field} />
+                                <Input 
+                                  type="password" 
+                                  placeholder={loginPageSettings.password_placeholder}
+                                  className="bg-slate-700/50 border-slate-600" 
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -404,7 +474,7 @@ export default function AuthPage() {
                                   />
                                 </FormControl>
                                 <FormLabel className="text-sm font-normal text-slate-300">
-                                  {t("auth.login.rememberMe")}
+                                  {loginPageSettings.remember_me_label}
                                 </FormLabel>
                               </FormItem>
                             )}
@@ -412,7 +482,7 @@ export default function AuthPage() {
 
                           <div className="text-sm">
                             <Link href="/forgot-password" className="font-medium text-primary hover:text-primary/80">
-                              {t("auth.login.forgotPassword")}
+                              {loginPageSettings.forgot_password_text}
                             </Link>
                           </div>
                         </div>
@@ -422,7 +492,7 @@ export default function AuthPage() {
                           className="w-full bg-primary hover:bg-primary/90 button-hover-effect"
                           disabled={loginMutation.isPending}
                         >
-                          {loginMutation.isPending ? t("common.loading") : t("auth.login.submit")}
+                          {loginMutation.isPending ? t("common.loading") : loginPageSettings.login_button_text}
                         </Button>
                       </form>
                     </Form>
