@@ -11,9 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Upload, Eye, Save } from "lucide-react";
-import { queryClient } from "@/lib/queryClient";
 
 const loginPageSchema = z.object({
   logo_url: z.string().optional(),
@@ -44,6 +43,7 @@ export default function LoginPageSettings() {
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["/api/admin/appearance/settings", "login_page", currentLanguage],
+    queryFn: () => apiRequest("GET", `/api/admin/appearance/settings?type=login_page&language=${currentLanguage}`),
     retry: false,
   });
 
@@ -74,11 +74,39 @@ export default function LoginPageSettings() {
   // Update form when data changes
   React.useEffect(() => {
     if (settings && settings.success && Array.isArray(settings.data) && settings.data.length > 0) {
-      const loginPageData = settings.data.find((s: any) => s.type === "login_page" && s.language === currentLanguage);
-      if (loginPageData?.content) {
+      const loginPageSettings = settings.data.filter((s: any) => s.type === "login_page" && s.language === currentLanguage);
+      
+      if (loginPageSettings.length > 0) {
+        // Convert array of settings back to object
+        const formData: any = { language: currentLanguage };
+        loginPageSettings.forEach((setting: any) => {
+          formData[setting.key] = setting.value;
+        });
+        
+        // Set default values for any missing fields
+        const defaultValues = {
+          logo_url: "",
+          site_title: "",
+          login_title: "",
+          login_subtitle: "",
+          username_label: "Tên đăng nhập hoặc Email",
+          username_placeholder: "",
+          password_label: "Mật khẩu",
+          password_placeholder: "",
+          remember_me_label: "Ghi nhớ đăng nhập",
+          forgot_password_text: "Quên mật khẩu?",
+          login_button_text: "Đăng nhập",
+          register_title: "",
+          register_subtitle: "",
+          footer_text: "",
+          background_color: "#ffffff",
+          text_color: "#000000",
+          button_color: "#3b82f6",
+        };
+        
         form.reset({
-          ...loginPageData.content,
-          language: currentLanguage,
+          ...defaultValues,
+          ...formData,
         });
       }
     }
@@ -86,11 +114,19 @@ export default function LoginPageSettings() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: LoginPageData) => {
-      return apiRequest("PATCH", `/api/admin/appearance/settings`, {
-        type: "login_page",
-        language: currentLanguage,
-        content: data,
+      // Update each setting individually as the API expects
+      const updates = Object.entries(data).map(([key, value]) => {
+        if (key === 'language') return Promise.resolve(); // Skip language field
+        return apiRequest("PATCH", `/api/admin/appearance/settings`, {
+          type: "login_page",
+          key: key,
+          value: value,
+          language: currentLanguage,
+        });
       });
+
+      // Wait for all updates to complete
+      return Promise.all(updates.filter(Boolean));
     },
     onSuccess: () => {
       toast({
