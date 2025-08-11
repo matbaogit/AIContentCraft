@@ -111,14 +111,7 @@ export default function AdminAnalytics() {
   const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
   const activeUsersChartData: ChartData = activeUsersData?.data || { total: 0, data: [] };
 
-  // Debug: kiểm tra dữ liệu API
-  if (registeredData && activeUsersData) {
-    console.log('Real API Data:', {
-      registered: registeredData.data,
-      activeUsers: activeUsersData.data,
-      overview: overviewData?.data
-    });
-  }
+
 
 
 
