@@ -111,13 +111,7 @@ export default function AdminAnalytics() {
   const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
   const activeUsersChartData: ChartData = activeUsersData?.data || { total: 0, data: [] };
 
-  // Debug logs for development
-  console.log('Analytics Debug:', {
-    registeredData,
-    activeUsersData,
-    registeredChartData,
-    activeUsersChartData
-  });
+
 
   // Export function
   const handleExport = async (format: 'csv' | 'pdf') => {
@@ -173,15 +167,20 @@ export default function AdminAnalytics() {
         return formatDate(parsedDate, 'HH:mm', { locale: dateLocale });
       } else if (selectedPeriod === '12m') {
         // Format: YYYY-MM
-        const [year, month] = date.split('-');
-        parsedDate = new Date(parseInt(year), parseInt(month) - 1);
-        return formatDate(parsedDate, 'MMM yyyy', { locale: dateLocale });
+        if (date.includes('-') && date.split('-').length === 2) {
+          const [year, month] = date.split('-');
+          parsedDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+          return formatDate(parsedDate, 'MMM yyyy', { locale: dateLocale });
+        } else {
+          return date;
+        }
       } else {
         // Format: YYYY-MM-DD
         parsedDate = new Date(date);
         return formatDate(parsedDate, 'dd/MM', { locale: dateLocale });
       }
     } catch (error) {
+      console.warn('Date formatting error:', error, 'for date:', date);
       return date;
     }
   };
@@ -336,9 +335,18 @@ export default function AdminAnalytics() {
                         {language === 'vi' ? 'Đang tải...' : 'Loading...'}
                       </div>
                     </div>
+                  ) : registeredChartData.data.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-muted-foreground">
+                        {language === 'vi' ? 'Không có dữ liệu' : 'No data available'}
+                      </div>
+                    </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={registeredChartData.data}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart 
+                        data={registeredChartData.data}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="date" 
@@ -353,7 +361,7 @@ export default function AdminAnalytics() {
                         <Line 
                           type="monotone" 
                           dataKey="count" 
-                          stroke="hsl(var(--primary))" 
+                          stroke="#8884d8" 
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -380,9 +388,18 @@ export default function AdminAnalytics() {
                         {language === 'vi' ? 'Đang tải...' : 'Loading...'}
                       </div>
                     </div>
+                  ) : activeUsersChartData.data.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-muted-foreground">
+                        {language === 'vi' ? 'Không có dữ liệu' : 'No data available'}
+                      </div>
+                    </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={activeUsersChartData.data}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart 
+                        data={activeUsersChartData.data}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
                           dataKey="date" 
@@ -396,7 +413,7 @@ export default function AdminAnalytics() {
                         />
                         <Bar 
                           dataKey="count" 
-                          fill="hsl(var(--primary))"
+                          fill="#82ca9d"
                           radius={[4, 4, 0, 0]}
                         />
                       </BarChart>
