@@ -32,96 +32,96 @@ export function MascotHelper({ page, className, onDismiss }: MascotHelperProps) 
       case "dashboard":
         return [
           {
-            title: t("common.mascot.dashboard.welcomeTitle") || "Xin chào!",
-            content: t("common.mascot.dashboard.welcomeTip") || "Chào mừng bạn đến với SEO AI Writer! Đây là nơi bạn có thể xem tổng quan về tài khoản của mình.",
+            title: t("landing.mascot.dashboard.welcomeTitle") || "Xin chào!",
+            content: t("landing.mascot.dashboard.welcomeTip") || "Chào mừng bạn đến với SEO AI Writer! Đây là nơi bạn có thể xem tổng quan về tài khoản của mình.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.dashboard.creditsTitle") || "Tín dụng",
-            content: t("common.mascot.dashboard.creditsTip") || "Số tín dụng hiển thị ở bảng điều khiển cho biết bạn có thể tạo bao nhiêu bài viết mới.",
+            title: t("landing.mascot.dashboard.creditsTitle") || "Tín dụng",
+            content: t("landing.mascot.dashboard.creditsTip") || "Số tín dụng hiển thị ở bảng điều khiển cho biết bạn có thể tạo bao nhiêu bài viết mới.",
             expression: "thinking" as const
           },
           {
-            title: t("common.mascot.dashboard.articlesTitle") || "Bài viết của bạn",
-            content: t("common.mascot.dashboard.articlesTip") || "Bạn có thể xem các bài viết gần đây của mình tại đây và nhấp vào để chỉnh sửa hoặc xuất bản.",
+            title: t("landing.mascot.dashboard.articlesTitle") || "Bài viết của bạn",
+            content: t("landing.mascot.dashboard.articlesTip") || "Bạn có thể xem các bài viết gần đây của mình tại đây và nhấp vào để chỉnh sửa hoặc xuất bản.",
             expression: "idle" as const
           }
         ];
       case "content-creation":
         return [
           {
-            title: t("common.mascot.contentCreation.welcomeTitle") || "Bắt đầu tạo nội dung!",
-            content: t("common.mascot.contentCreation.welcomeTip") || "Hãy điền đầy đủ thông tin để tạo bài viết SEO chất lượng cao.",
+            title: t("landing.mascot.contentCreation.welcomeTitle") || "Bắt đầu tạo nội dung!",
+            content: t("landing.mascot.contentCreation.welcomeTip") || "Hãy điền đầy đủ thông tin để tạo bài viết SEO chất lượng cao.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.contentCreation.tipsTitle") || "Mẹo tạo nội dung",
-            content: t("common.mascot.contentCreation.tipsList") || "Sử dụng từ khóa chính xác, chọn giọng điệu phù hợp với đối tượng, và cung cấp mô tả chi tiết để có kết quả tốt nhất.",
+            title: t("landing.mascot.contentCreation.tipsTitle") || "Mẹo tạo nội dung",
+            content: t("landing.mascot.contentCreation.tipsList") || "Sử dụng từ khóa chính xác, chọn giọng điệu phù hợp với đối tượng, và cung cấp mô tả chi tiết để có kết quả tốt nhất.",
             expression: "thinking" as const
           },
           {
-            title: t("common.mascot.contentCreation.creditsTitle") || "Sử dụng tín dụng",
-            content: t("common.mascot.contentCreation.creditsTip") || "Mỗi bài viết sẽ sử dụng từ 1-3 tín dụng tùy thuộc vào độ dài bạn chọn.",
+            title: t("landing.mascot.contentCreation.creditsTitle") || "Sử dụng tín dụng",
+            content: t("landing.mascot.contentCreation.creditsTip") || "Mỗi bài viết sẽ sử dụng từ 1-3 tín dụng tùy thuộc vào độ dài bạn chọn.",
             expression: "idle" as const
           }
         ];
       case "articles":
         return [
           {
-            title: t("common.mascot.articles.welcomeTitle") || "Bài viết của bạn",
-            content: t("common.mascot.articles.welcomeTip") || "Đây là nơi bạn có thể quản lý tất cả bài viết đã tạo.",
+            title: t("landing.mascot.articles.welcomeTitle") || "Bài viết của bạn",
+            content: t("landing.mascot.articles.welcomeTip") || "Đây là nơi bạn có thể quản lý tất cả bài viết đã tạo.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.articles.publishTitle") || "Xuất bản bài viết",
-            content: t("common.mascot.articles.publishTip") || "Bạn có thể xuất bản bài viết lên WordPress hoặc mạng xã hội sau khi đã kết nối tài khoản.",
+            title: t("landing.mascot.articles.publishTitle") || "Xuất bản bài viết",
+            content: t("landing.mascot.articles.publishTip") || "Bạn có thể xuất bản bài viết lên WordPress hoặc mạng xã hội sau khi đã kết nối tài khoản.",
             expression: "thinking" as const
           }
         ];
       case "connections":
         return [
           {
-            title: t("common.mascot.connections.welcomeTitle") || "Kết nối tài khoản",
-            content: t("common.mascot.connections.welcomeTip") || "Kết nối WordPress và các mạng xã hội để xuất bản bài viết trực tiếp.",
+            title: t("landing.mascot.connections.welcomeTitle") || "Kết nối tài khoản",
+            content: t("landing.mascot.connections.welcomeTip") || "Kết nối WordPress và các mạng xã hội để xuất bản bài viết trực tiếp.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.connections.wordpressTitle") || "WordPress",
-            content: t("common.mascot.connections.wordpressTip") || "Để kết nối WordPress, bạn cần URL trang web, tên người dùng và Application Password.",
+            title: t("landing.mascot.connections.wordpressTitle") || "WordPress",
+            content: t("landing.mascot.connections.wordpressTip") || "Để kết nối WordPress, bạn cần URL trang web, tên người dùng và Application Password.",
             expression: "thinking" as const
           }
         ];
       case "credits":
         return [
           {
-            title: t("common.mascot.credits.welcomeTitle") || "Quản lý tín dụng",
-            content: t("common.mascot.credits.welcomeTip") || "Mua thêm tín dụng để tiếp tục tạo nội dung chất lượng cao.",
+            title: t("landing.mascot.credits.welcomeTitle") || "Quản lý tín dụng",
+            content: t("landing.mascot.credits.welcomeTip") || "Mua thêm tín dụng để tiếp tục tạo nội dung chất lượng cao.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.credits.usageTitle") || "Sử dụng tín dụng",
-            content: t("common.mascot.credits.usageTip") || "Tín dụng được sử dụng khi tạo nội dung mới và không có thời hạn sử dụng.",
+            title: t("landing.mascot.credits.usageTitle") || "Sử dụng tín dụng",
+            content: t("landing.mascot.credits.usageTip") || "Tín dụng được sử dụng khi tạo nội dung mới và không có thời hạn sử dụng.",
             expression: "idle" as const
           }
         ];
       case "plans":
         return [
           {
-            title: t("common.mascot.plans.welcomeTitle") || "Gói đăng ký",
-            content: t("common.mascot.plans.welcomeTip") || "Nâng cấp lên gói cao hơn để nhận nhiều tín dụng và dung lượng lưu trữ hơn.",
+            title: t("landing.mascot.plans.welcomeTitle") || "Gói đăng ký",
+            content: t("landing.mascot.plans.welcomeTip") || "Nâng cấp lên gói cao hơn để nhận nhiều tín dụng và dung lượng lưu trữ hơn.",
             expression: "happy" as const
           },
           {
-            title: t("common.mascot.plans.featuresTitle") || "Tính năng",
-            content: t("common.mascot.plans.featuresTip") || "Các gói cao cấp bao gồm thêm tính năng như hỗ trợ ưu tiên và nhiều kết nối hơn.",
+            title: t("landing.mascot.plans.featuresTitle") || "Tính năng",
+            content: t("landing.mascot.plans.featuresTip") || "Các gói cao cấp bao gồm thêm tính năng như hỗ trợ ưu tiên và nhiều kết nối hơn.",
             expression: "thinking" as const
           }
         ];
       default:
         return [
           {
-            title: t("common.mascot.general.welcomeTitle") || "Xin chào!",
-            content: t("common.mascot.general.welcomeTip") || "Tôi là trợ lý AI của bạn. Tôi sẽ giúp bạn sử dụng hệ thống này hiệu quả nhất.",
+            title: t("landing.mascot.general.welcomeTitle") || "Xin chào!",
+            content: t("landing.mascot.general.welcomeTip") || "Tôi là trợ lý AI của bạn. Tôi sẽ giúp bạn sử dụng hệ thống này hiệu quả nhất.",
             expression: "happy" as const
           }
         ];

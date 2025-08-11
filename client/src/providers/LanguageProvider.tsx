@@ -342,6 +342,16 @@ const translations: TranslationsType = {
           welcomeTip: "Mua thêm tín dụng để tiếp tục tạo nội dung chất lượng cao.",
           usageTitle: "Sử dụng tín dụng",
           usageTip: "Tín dụng được sử dụng khi tạo nội dung mới và không thể hoàn lại."
+        },
+        plans: {
+          welcomeTitle: "Gói đăng ký",
+          welcomeTip: "Nâng cấp lên gói cao hơn để nhận nhiều tín dụng và dung lượng lưu trữ hơn.",
+          featuresTitle: "Tính năng",
+          featuresTip: "Các gói cao cấp bao gồm thêm tính năng như hỗ trợ ưu tiên và nhiều kết nối hơn."
+        },
+        general: {
+          welcomeTitle: "Xin chào!",
+          welcomeTip: "Tôi là trợ lý AI của bạn. Tôi sẽ giúp bạn sử dụng hệ thống này hiệu quả nhất."
         }
       },
       
@@ -1228,6 +1238,16 @@ const translations: TranslationsType = {
           welcomeTip: "Buy more credits to continue creating high-quality content.",
           usageTitle: "Using credits",
           usageTip: "Credits are used when creating new content and cannot be refunded."
+        },
+        plans: {
+          welcomeTitle: "Subscription plans",
+          welcomeTip: "Upgrade to a higher plan to receive more credits and storage space.",
+          featuresTitle: "Features",
+          featuresTip: "Premium plans include additional features like priority support and more connections."
+        },
+        general: {
+          welcomeTitle: "Hello!",
+          welcomeTip: "I'm your AI assistant. I'll help you use this system most effectively."
         }
       }
     },
