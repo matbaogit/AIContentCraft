@@ -89,7 +89,7 @@ export function FeedbackButton({ page = "unknown", variant = "floating" }: Feedb
   };
 
   const buttonClass = variant === "floating" 
-    ? "fixed bottom-20 right-6 z-50 bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-full h-12 w-12 p-0"
+    ? "fixed bottom-24 right-6 z-50 bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-full h-12 w-12 p-0"
     : "bg-transparent border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-colors";
 
   return (
