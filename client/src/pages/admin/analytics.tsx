@@ -290,12 +290,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Tổng số tài khoản người dùng đã đăng ký trên hệ thống' : 'Total number of user accounts registered in the system'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Tổng số tài khoản người dùng đã đăng ký trên hệ thống trong khoảng thời gian được chọn' : 'Total number of user accounts registered in the system during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -315,12 +315,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Người dùng hoạt động' : 'Active Users'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Số người dùng đã đăng nhập và sử dụng hệ thống trong 30 ngày qua' : 'Number of users who logged in and used the system in the last 30 days'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Số người dùng đã tạo nội dung (bài viết, hình ảnh, hoặc đăng bài) trong khoảng thời gian được chọn' : 'Number of users who created content (articles, images, or posts) during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -340,12 +340,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Nội dung SEO' : 'SEO Content'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Số bài viết SEO được tạo bởi AI với tối ưu hóa từ khóa' : 'Number of SEO articles created by AI with keyword optimization'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Số bài viết SEO được tạo bởi AI với tối ưu hóa từ khóa và meta description trong khoảng thời gian được chọn' : 'Number of SEO articles created by AI with keyword optimization and meta descriptions during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -365,12 +365,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Hình ảnh tạo' : 'Images Created'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Tổng số hình ảnh được tạo ra bằng AI hoặc upload bởi người dùng' : 'Total number of images generated by AI or uploaded by users'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Tổng số hình ảnh được tạo ra bằng AI hoặc upload bởi người dùng trong khoảng thời gian được chọn' : 'Total number of images generated by AI or uploaded by users during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -390,12 +390,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Nội dung mạng xã hội' : 'Social Content'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Số bài viết được tạo cho các nền tảng mạng xã hội như Facebook, Twitter, LinkedIn' : 'Number of posts created for social media platforms like Facebook, Twitter, LinkedIn'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Số bài viết được tạo cho các nền tảng mạng xã hội như Facebook, Twitter, LinkedIn trong khoảng thời gian được chọn' : 'Number of posts created for social media platforms like Facebook, Twitter, LinkedIn during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -415,12 +415,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Đăng WordPress' : 'WordPress Posts'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Số bài viết SEO đã được tự động đăng lên các website WordPress' : 'Number of SEO articles automatically published to WordPress websites'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Số bài viết SEO đã được tự động đăng lên các website WordPress trong khoảng thời gian được chọn' : 'Number of SEO articles automatically published to WordPress websites during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -440,12 +440,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Tổng bài viết' : 'Total Articles'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Tổng số bài viết đã được tạo ra trên hệ thống (bao gồm cả draft và published)' : 'Total number of articles created in the system (including drafts and published)'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Tổng số bài viết đã được tạo ra trên hệ thống (bao gồm cả draft và published) trong khoảng thời gian được chọn' : 'Total number of articles created in the system (including drafts and published) during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
@@ -465,12 +465,12 @@ export default function AdminAnalytics() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Tổng hình ảnh' : 'Total Images'}
-                  <UITooltip>
-                    <TooltipTrigger>
-                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                  <UITooltip delayDuration={100}>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground hover:text-foreground cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{language === 'vi' ? 'Tổng số file hình ảnh được lưu trữ trong hệ thống' : 'Total number of image files stored in the system'}</p>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p>{language === 'vi' ? 'Tổng số file hình ảnh được lưu trữ trong hệ thống trong khoảng thời gian được chọn' : 'Total number of image files stored in the system during the selected time period'}</p>
                     </TooltipContent>
                   </UITooltip>
                 </CardTitle>
