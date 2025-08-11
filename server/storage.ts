@@ -1958,7 +1958,7 @@ class DatabaseStorage implements IStorage {
         SELECT COUNT(*) as total
         FROM scheduled_posts 
         WHERE created_at >= $1 AND created_at <= $2
-          AND platforms && ARRAY['facebook', 'twitter', 'linkedin']
+          AND (platforms ? 'facebook' OR platforms ? 'twitter' OR platforms ? 'linkedin')
       `;
 
       // WordPress posts published
@@ -1966,7 +1966,7 @@ class DatabaseStorage implements IStorage {
         SELECT COUNT(*) as total
         FROM scheduled_posts 
         WHERE created_at >= $1 AND created_at <= $2
-          AND platforms && ARRAY['wordpress']
+          AND platforms ? 'wordpress'
           AND status = 'published'
       `;
 
@@ -1984,8 +1984,11 @@ class DatabaseStorage implements IStorage {
         WHERE created_at >= $1 AND created_at <= $2
       `;
 
+      console.log('Executing registered query with dates:', [startDate, endDate]);
+      const registeredResult = await pool.query(registeredQuery, [startDate, endDate]);
+      console.log('Registered result:', registeredResult.rows[0]);
+
       const [
-        registeredResult, 
         activeResult, 
         seoContentResult,
         imagesGeneratedResult,
@@ -1994,7 +1997,6 @@ class DatabaseStorage implements IStorage {
         articlesResult, 
         imagesResult
       ] = await Promise.all([
-        pool.query(registeredQuery, [startDate, endDate]),
         pool.query(activeQuery, [startDate, endDate]),
         pool.query(seoContentQuery, [startDate, endDate]),
         pool.query(imagesGeneratedQuery, [startDate, endDate]),
