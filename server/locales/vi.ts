@@ -209,6 +209,33 @@ export const vi = {
         activity: "Hoạt động gần đây",
         suspend: "Khóa tài khoản"
       },
+      stats: {
+        totalUsers: "Tổng số người dùng",
+        totalArticles: "Tổng số bài viết",
+        totalCredits: "Tổng tín dụng",
+        totalRevenue: "Tổng doanh thu",
+        userGrowth: "Tăng trưởng người dùng",
+        userGrowthDesc: "Tổng số người dùng mới theo tháng",
+        noGrowthDataYet: "Chưa có dữ liệu tăng trưởng",
+        growthDataWillShow: "Dữ liệu sẽ hiển thị khi có nhiều người dùng hơn",
+        revenue: "Doanh thu",
+        revenueDesc: "Tổng doanh thu theo quý",
+        noRevenueDataYet: "Chưa có dữ liệu doanh thu",
+        revenueDataWillShow: "Dữ liệu sẽ hiển thị khi có giao dịch",
+        planDistribution: "Phân bổ gói dịch vụ",
+        planDistributionDesc: "Phân bổ gói tín dụng",
+        noDataAvailable: "Chưa có dữ liệu",
+        recentUsers: "Người dùng gần đây",
+        noUsersYet: "Chưa có người dùng nào",
+        recentTransactions: "Giao dịch gần đây",
+        noTransactionsYet: "Chưa có giao dịch nào"
+      },
+      user: {
+        username: "Tên đăng nhập",
+        fullName: "Họ và tên",
+        joinDate: "Ngày tham gia",
+        credits: "Tín dụng"
+      },
       sidebar: {
         dashboard: "Bảng điều khiển",
         users: "Người dùng",

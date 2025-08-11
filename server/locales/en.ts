@@ -145,6 +145,33 @@ export const en = {
         activity: "Recent Activity",
         suspend: "Suspend Account"
       },
+      stats: {
+        totalUsers: "Total Users",
+        totalArticles: "Total Articles",
+        totalCredits: "Total Credits",
+        totalRevenue: "Total Revenue",
+        userGrowth: "User Growth",
+        userGrowthDesc: "Total new users per month",
+        noGrowthDataYet: "No growth data yet",
+        growthDataWillShow: "Data will show when there are more users",
+        revenue: "Revenue",
+        revenueDesc: "Total revenue per quarter",
+        noRevenueDataYet: "No revenue data yet",
+        revenueDataWillShow: "Data will show when there are transactions",
+        planDistribution: "Plan Distribution",
+        planDistributionDesc: "Distribution of credit packages",
+        noDataAvailable: "No data available",
+        recentUsers: "Recent Users",
+        noUsersYet: "No users yet",
+        recentTransactions: "Recent Transactions",
+        noTransactionsYet: "No transactions yet"
+      },
+      user: {
+        username: "Username",
+        fullName: "Full Name",
+        joinDate: "Join Date",
+        credits: "Credits"
+      },
       common: {
         actions: "Actions",
         openMenu: "Open menu",
