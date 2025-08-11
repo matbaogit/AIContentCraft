@@ -1917,6 +1917,7 @@ class DatabaseStorage implements IStorage {
     wordpressPostsPublished: number;
   }> {
     try {
+      console.log('Analytics date range:', { startDate, endDate });
       // Registered accounts in period
       const registeredQuery = `
         SELECT COUNT(*) as total
@@ -1957,7 +1958,7 @@ class DatabaseStorage implements IStorage {
         SELECT COUNT(*) as total
         FROM scheduled_posts 
         WHERE created_at >= $1 AND created_at <= $2
-          AND platform IN ('facebook', 'twitter', 'linkedin')
+          AND platforms && ARRAY['facebook', 'twitter', 'linkedin']
       `;
 
       // WordPress posts published
@@ -1965,7 +1966,7 @@ class DatabaseStorage implements IStorage {
         SELECT COUNT(*) as total
         FROM scheduled_posts 
         WHERE created_at >= $1 AND created_at <= $2
-          AND platform = 'wordpress'
+          AND platforms && ARRAY['wordpress']
           AND status = 'published'
       `;
 
