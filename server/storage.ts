@@ -1967,7 +1967,7 @@ class DatabaseStorage implements IStorage {
         FROM scheduled_posts 
         WHERE created_at >= $1 AND created_at <= $2
           AND platforms ? 'wordpress'
-          AND status = 'published'
+          AND status = 'completed'
       `;
 
       // Articles created in period (all articles)
@@ -2006,7 +2006,7 @@ class DatabaseStorage implements IStorage {
         pool.query(imagesQuery, [startDate, endDate])
       ]);
 
-      return {
+      const result = {
         registeredAccounts: parseInt(registeredResult.rows[0]?.total || '0'),
         activeUsers: parseInt(activeResult.rows[0]?.total || '0'),
         seoContentCreated: parseInt(seoContentResult.rows[0]?.total || '0'),
@@ -2016,6 +2016,9 @@ class DatabaseStorage implements IStorage {
         totalArticles: parseInt(articlesResult.rows[0]?.total || '0'),
         totalImages: parseInt(imagesResult.rows[0]?.total || '0')
       };
+      
+      console.log('Final analytics result:', result);
+      return result;
     } catch (error) {
       console.error('Error getting analytics overview:', error);
       return {
