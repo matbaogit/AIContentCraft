@@ -21,6 +21,31 @@ interface AdminStats {
   totalRevenue: number;
 }
 
+interface RecentUser {
+  id: number;
+  username: string;
+  email: string;
+  fullName?: string;
+  credits: number;
+  createdAt: string;
+}
+
+interface RecentTransaction {
+  id: number;
+  userId: number;
+  username: string;
+  amount: number;
+  type: string;
+  description?: string;
+  createdAt: string;
+}
+
+interface PlanDistribution {
+  name: string;
+  count: number;
+  percentage: number;
+}
+
 export default function AdminDashboard() {
   const { t } = useLanguage();
 
@@ -29,23 +54,20 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/stats"],
   });
 
-  // Removed chart data
+  // Fetch recent users
+  const { data: recentUsers = [], isLoading: isLoadingUsers } = useQuery<RecentUser[]>({
+    queryKey: ["/api/admin/recent-users"],
+  });
 
-  const mockRecentUsers = [
-    { id: 1, username: "johndoe@example.com", email: "johndoe@example.com", fullName: "John Doe", joinDate: "2023-11-15T10:30:00Z", credits: 25 },
-    { id: 2, username: "janedoe@example.com", email: "janedoe@example.com", fullName: "Jane Doe", joinDate: "2023-11-14T14:20:00Z", credits: 50 },
-    { id: 3, username: "bobsmith@example.com", email: "bobsmith@example.com", fullName: "Bob Smith", joinDate: "2023-11-13T09:15:00Z", credits: 10 },
-    { id: 4, username: "alicejones@example.com", email: "alicejones@example.com", fullName: "Alice Jones", joinDate: "2023-11-12T16:45:00Z", credits: 100 },
-    { id: 5, username: "davidlee@example.com", email: "davidlee@example.com", fullName: "David Lee", joinDate: "2023-11-11T11:25:00Z", credits: 75 },
-  ];
+  // Fetch recent transactions
+  const { data: recentTransactions = [], isLoading: isLoadingTransactions } = useQuery<RecentTransaction[]>({
+    queryKey: ["/api/admin/recent-transactions"],
+  });
 
-  const mockRecentTransactions = [
-    { id: 1, userId: 1, username: "johndoe@example.com", amount: 900000, type: "credit purchase", date: "2023-11-15T14:30:00Z" },
-    { id: 2, userId: 3, username: "bobsmith@example.com", amount: 500000, type: "credit purchase", date: "2023-11-14T12:20:00Z" },
-    { id: 3, userId: 2, username: "janedoe@example.com", amount: 1000000, type: "storage plan", date: "2023-11-14T10:15:00Z" },
-    { id: 4, userId: 5, username: "davidlee@example.com", amount: 2000000, type: "credit purchase", date: "2023-11-13T16:45:00Z" },
-    { id: 5, userId: 4, username: "alicejones@example.com", amount: 500000, type: "storage plan", date: "2023-11-12T09:25:00Z" },
-  ];
+  // Fetch plan distribution
+  const { data: planDistribution = [], isLoading: isLoadingPlans } = useQuery<PlanDistribution[]>({
+    queryKey: ["/api/admin/user-plan-distribution"],
+  });
 
   return (
     <>
@@ -131,64 +153,34 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Static Information Cards (replaced charts) */}
+        {/* Growth Information Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>User Growth</CardTitle>
+              <CardTitle>{t("admin.stats.userGrowth") || "User Growth"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-muted-foreground">Tổng số người dùng mới theo tháng</p>
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q1</p>
-                    <p className="text-lg font-bold">370</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q2</p>
-                    <p className="text-lg font-bold">640</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q3</p>
-                    <p className="text-lg font-bold">950</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q4</p>
-                    <p className="text-lg font-bold">1250</p>
-                  </div>
+                <p className="text-muted-foreground">{t("admin.stats.userGrowthDesc") || "Tổng số người dùng mới theo tháng"}</p>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">{t("admin.stats.noGrowthDataYet") || "Chưa có dữ liệu tăng trưởng"}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("admin.stats.growthDataWillShow") || "Dữ liệu sẽ hiển thị khi có nhiều người dùng hơn"}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Tăng trưởng: +12% so với quý trước</p>
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle>Revenue</CardTitle>
+              <CardTitle>{t("admin.stats.revenue") || "Revenue"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-muted-foreground">Tổng doanh thu theo quý</p>
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q1</p>
-                    <p className="text-lg font-bold">{formatCurrency(19300000)}</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q2</p>
-                    <p className="text-lg font-bold">{formatCurrency(27800000)}</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q3</p>
-                    <p className="text-lg font-bold">{formatCurrency(34500000)}</p>
-                  </div>
-                  <div className="border rounded p-2 text-center">
-                    <p className="font-semibold">Q4</p>
-                    <p className="text-lg font-bold">{formatCurrency(48000000)}</p>
-                  </div>
+                <p className="text-muted-foreground">{t("admin.stats.revenueDesc") || "Tổng doanh thu theo quý"}</p>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">{t("admin.stats.noRevenueDataYet") || "Chưa có dữ liệu doanh thu"}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("admin.stats.revenueDataWillShow") || "Dữ liệu sẽ hiển thị khi có giao dịch"}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Tăng trưởng: +30% so với quý trước</p>
               </div>
             </CardContent>
           </Card>
@@ -197,28 +189,41 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Credit Package Distribution</CardTitle>
+              <CardTitle>{t("admin.stats.planDistribution") || "Credit Package Distribution"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-muted-foreground">Phân bổ gói tín dụng</p>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                    <span className="flex-1">Basic</span>
-                    <span className="font-bold">35%</span>
+                <p className="text-muted-foreground">{t("admin.stats.planDistributionDesc") || "Phân bổ gói tín dụng"}</p>
+                {isLoadingPlans ? (
+                  <div className="space-y-2">
+                    <div className="animate-pulse flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>
+                      <div className="flex-1 h-4 bg-gray-300 rounded"></div>
+                      <div className="w-8 h-4 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="animate-pulse flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>
+                      <div className="flex-1 h-4 bg-gray-300 rounded"></div>
+                      <div className="w-8 h-4 bg-gray-300 rounded"></div>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <span className="flex-1">Advanced</span>
-                    <span className="font-bold">45%</span>
+                ) : planDistribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {planDistribution.map((plan, index) => {
+                      const colors = ["bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-red-500"];
+                      const color = colors[index % colors.length];
+                      return (
+                        <div key={plan.name} className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${color} mr-2`}></div>
+                          <span className="flex-1">{plan.name}</span>
+                          <span className="font-bold">{plan.percentage}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
-                    <span className="flex-1">Professional</span>
-                    <span className="font-bold">20%</span>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">{t("admin.stats.noDataAvailable") || "Chưa có dữ liệu"}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -238,14 +243,31 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockRecentUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.fullName}</TableCell>
-                      <TableCell>{formatDate(user.joinDate)}</TableCell>
-                      <TableCell className="text-right">{user.credits}</TableCell>
+                  {isLoadingUsers ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                        <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                        <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                        <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                      </TableRow>
+                    ))
+                  ) : recentUsers.length > 0 ? (
+                    recentUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.username}</TableCell>
+                        <TableCell>{user.fullName || user.email}</TableCell>
+                        <TableCell>{formatDate(user.createdAt)}</TableCell>
+                        <TableCell className="text-right">{user.credits}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        {t("admin.stats.noUsersYet") || "Chưa có người dùng nào"}
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -269,15 +291,33 @@ export default function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockRecentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
-                    <TableCell>{transaction.username}</TableCell>
-                    <TableCell className="capitalize">{transaction.type}</TableCell>
-                    <TableCell>{formatDate(transaction.date)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
+                {isLoadingTransactions ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                      <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                      <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                      <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                      <TableCell><div className="animate-pulse h-4 bg-gray-300 rounded"></div></TableCell>
+                    </TableRow>
+                  ))
+                ) : recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.id}</TableCell>
+                      <TableCell>{transaction.username || `User ${transaction.userId}`}</TableCell>
+                      <TableCell className="capitalize">{transaction.type}</TableCell>
+                      <TableCell>{formatDate(transaction.createdAt)}</TableCell>
+                      <TableCell className="text-right">{transaction.amount} credits</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      {t("admin.stats.noTransactionsYet") || "Chưa có giao dịch nào"}
+                    </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
