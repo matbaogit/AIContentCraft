@@ -155,7 +155,6 @@ export default function Dashboard() {
       <Head>
         <title>{t("dashboard.overview")} - {t("common.appName")}</title>
       </Head>
-      
       <DashboardLayout title={t("dashboard.overview")}>
         {/* Mascot Helper */}
         {showMascot && (
@@ -184,8 +183,8 @@ export default function Dashboard() {
                       <Coins className="h-6 w-6" />
                     </div>
                     <div className="ml-4">
-                      <h2 className="text-sm font-medium text-white">{t("dashboard.stats.creditsLeft")}</h2>
-                      <p className="text-2xl font-semibold text-white">
+                      <h2 className="text-sm font-medium text-[#000000]">{t("dashboard.stats.creditsLeft")}</h2>
+                      <p className="text-2xl font-semibold text-[#000000]">
                         {stats?.creditBalance ?? 0} {t("dashboard.stats.credits")}
                       </p>
                     </div>
