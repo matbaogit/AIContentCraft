@@ -108,7 +108,12 @@ export function Sidebar() {
             <li key={link.href}>
               <Link 
                 href={link.href}
-                className="flex items-center py-3 px-4 rounded-md text-sm transition-colors dark:text-white font-semibold hover:text-[#084d91] dark:hover:text-white hover:bg-sidebar-accent/50 dark:hover:bg-primary-900/50 text-[#ffffff]"
+                className={cn(
+                  "flex items-center py-3 px-4 rounded-md text-sm font-medium transition-colors",
+                  location === link.href
+                    ? "bg-sidebar-accent dark:bg-primary-800 text-[#084d91] dark:text-white font-semibold"
+                    : "text-[#084d91] dark:text-white font-semibold hover:text-[#084d91] dark:hover:text-white hover:bg-sidebar-accent/50 dark:hover:bg-primary-900/50"
+                )}
               >
                 {link.icon}
                 {link.label}
