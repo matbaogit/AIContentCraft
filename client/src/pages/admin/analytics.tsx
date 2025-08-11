@@ -101,15 +101,48 @@ export default function AdminAnalytics() {
     }
   });
 
-  const overview: AnalyticsOverview = overviewData?.data || {
-    registeredAccounts: 0,
-    activeUsers: 0,
-    totalArticles: 0,
-    totalImages: 0
+  // Mock overview data để test
+  const mockOverview: AnalyticsOverview = {
+    registeredAccounts: 1250,
+    activeUsers: 342,
+    totalArticles: 8650,
+    totalImages: 4320
   };
 
-  const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
-  const activeUsersChartData: ChartData = activeUsersData?.data || { total: 0, data: [] };
+  const overview: AnalyticsOverview = mockOverview;
+
+  // Mock data để test biểu đồ
+  const mockRegisteredData: ChartData = {
+    total: 150,
+    data: [
+      { date: "2025-01", count: 12 },
+      { date: "2025-02", count: 19 },
+      { date: "2025-03", count: 25 },
+      { date: "2025-04", count: 22 },
+      { date: "2025-05", count: 30 },
+      { date: "2025-06", count: 28 },
+      { date: "2025-07", count: 35 },
+      { date: "2025-08", count: 18 }
+    ]
+  };
+
+  const mockActiveUsersData: ChartData = {
+    total: 89,
+    data: [
+      { date: "2025-01", count: 8 },
+      { date: "2025-02", count: 14 },
+      { date: "2025-03", count: 18 },
+      { date: "2025-04", count: 16 },
+      { date: "2025-05", count: 22 },
+      { date: "2025-06", count: 20 },
+      { date: "2025-07", count: 25 },
+      { date: "2025-08", count: 12 }
+    ]
+  };
+
+  // Sử dụng mock data thay vì real data để test
+  const registeredChartData: ChartData = mockRegisteredData;
+  const activeUsersChartData: ChartData = mockActiveUsersData;
 
 
 
