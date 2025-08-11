@@ -184,7 +184,7 @@ export default function Dashboard() {
                     </div>
                     <div className="ml-4">
                       <h2 className="text-sm font-medium text-[#000000]">{t("dashboard.stats.creditsLeft")}</h2>
-                      <p className="text-2xl font-semibold text-[#000000]">
+                      <p className="text-2xl font-semibold text-[#ffffff]">
                         {stats?.creditBalance ?? 0} {t("dashboard.stats.credits")}
                       </p>
                     </div>
