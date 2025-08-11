@@ -98,7 +98,7 @@ export function Sidebar() {
     <div className="w-64 bg-sidebar dark:bg-card h-screen flex flex-col fixed left-0 top-0 z-10">
       <div className="p-4 flex items-center border-b border-sidebar-border dark:border-border">
         <ScrollIcon className="h-8 w-auto text-white dark:text-secondary-100" />
-        <span className="ml-2 text-xl font-bold dark:text-secondary-100 font-heading text-[#ffffff]">
+        <span className="ml-2 font-bold dark:text-secondary-100 font-heading text-[#ffffff] text-[28px]">
           {t("common.appName")}
         </span>
       </div>
