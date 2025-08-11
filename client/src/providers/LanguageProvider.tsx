@@ -99,6 +99,36 @@ const translations: TranslationsType = {
         edit: "Chỉnh sửa bài viết",
         view: "Xem chi tiết"
       },
+      
+      stats: {
+        totalUsers: "Tổng số người dùng",
+        totalArticles: "Tổng số bài viết",
+        totalCredits: "Tổng tín dụng",
+        totalRevenue: "Tổng doanh thu",
+        userGrowth: "Tăng trưởng người dùng",
+        userGrowthDesc: "Tổng số người dùng mới theo tháng",
+        noGrowthDataYet: "Chưa có dữ liệu tăng trưởng",
+        growthDataWillShow: "Dữ liệu sẽ hiển thị khi có nhiều người dùng hơn",
+        revenue: "Doanh thu",
+        revenueDesc: "Tổng doanh thu theo quý",
+        noRevenueDataYet: "Chưa có dữ liệu doanh thu",
+        revenueDataWillShow: "Dữ liệu sẽ hiển thị khi có giao dịch",
+        planDistribution: "Phân bổ gói dịch vụ",
+        planDistributionDesc: "Phân bổ gói tín dụng",
+        noDataAvailable: "Chưa có dữ liệu",
+        recentUsers: "Người dùng gần đây",
+        noUsersYet: "Chưa có người dùng nào",
+        recentTransactions: "Giao dịch gần đây",
+        noTransactionsYet: "Chưa có giao dịch nào"
+      },
+      
+      user: {
+        username: "Tên đăng nhập",
+        fullName: "Họ và tên",
+        joinDate: "Ngày tham gia",
+        credits: "Tín dụng"
+      },
+      
       plans: "Gói dịch vụ",
       payments: "Thanh toán",
       performance: "Hiệu suất",
@@ -174,13 +204,6 @@ const translations: TranslationsType = {
         last7d: "7 ngày qua",
         last30d: "30 ngày qua",
         requestsHistory: "Lịch sử yêu cầu"
-      },
-      
-      stats: {
-        totalUsers: "Tổng số người dùng",
-        totalArticles: "Tổng số bài viết",
-        totalCredits: "Tổng số tín dụng",
-        totalRevenue: "Tổng doanh thu"
       }
     },
     
@@ -1129,7 +1152,29 @@ const translations: TranslationsType = {
         totalUsers: "Total Users",
         totalArticles: "Total Articles",
         totalCredits: "Total Credits",
-        totalRevenue: "Total Revenue"
+        totalRevenue: "Total Revenue",
+        userGrowth: "User Growth",
+        userGrowthDesc: "Total new users per month",
+        noGrowthDataYet: "No growth data yet",
+        growthDataWillShow: "Data will show when there are more users",
+        revenue: "Revenue",
+        revenueDesc: "Total revenue per quarter",
+        noRevenueDataYet: "No revenue data yet",
+        revenueDataWillShow: "Data will show when there are transactions",
+        planDistribution: "Plan Distribution",
+        planDistributionDesc: "Distribution of credit packages",
+        noDataAvailable: "No data available",
+        recentUsers: "Recent Users",
+        noUsersYet: "No users yet",
+        recentTransactions: "Recent Transactions",
+        noTransactionsYet: "No transactions yet"
+      },
+      
+      user: {
+        username: "Username",
+        fullName: "Full Name",
+        joinDate: "Join Date",
+        credits: "Credits"
       }
     },
     
