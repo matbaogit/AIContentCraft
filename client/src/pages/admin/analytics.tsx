@@ -35,7 +35,7 @@ import {
   Eye,
 } from "lucide-react";
 import Head from "@/components/head";
-import { format } from "date-fns";
+import { format as formatDate } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 
 interface AnalyticsOverview {
@@ -111,6 +111,14 @@ export default function AdminAnalytics() {
   const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
   const activeUsersChartData: ChartData = activeUsersData?.data || { total: 0, data: [] };
 
+  // Debug logs for development
+  console.log('Analytics Debug:', {
+    registeredData,
+    activeUsersData,
+    registeredChartData,
+    activeUsersChartData
+  });
+
   // Export function
   const handleExport = async (format: 'csv' | 'pdf') => {
     setIsExporting(true);
@@ -141,7 +149,7 @@ export default function AdminAnalytics() {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', `analytics-${selectedPeriod}-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+        link.setAttribute('download', `analytics-${selectedPeriod}-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -162,16 +170,16 @@ export default function AdminAnalytics() {
       if (selectedPeriod === '1d') {
         // Format: YYYY-MM-DD HH:00:00
         parsedDate = new Date(date);
-        return format(parsedDate, 'HH:mm', { locale: dateLocale });
+        return formatDate(parsedDate, 'HH:mm', { locale: dateLocale });
       } else if (selectedPeriod === '12m') {
         // Format: YYYY-MM
         const [year, month] = date.split('-');
         parsedDate = new Date(parseInt(year), parseInt(month) - 1);
-        return format(parsedDate, 'MMM yyyy', { locale: dateLocale });
+        return formatDate(parsedDate, 'MMM yyyy', { locale: dateLocale });
       } else {
         // Format: YYYY-MM-DD
         parsedDate = new Date(date);
-        return format(parsedDate, 'dd/MM', { locale: dateLocale });
+        return formatDate(parsedDate, 'dd/MM', { locale: dateLocale });
       }
     } catch (error) {
       return date;
@@ -180,10 +188,10 @@ export default function AdminAnalytics() {
 
   return (
     <>
-      <Head 
-        title={language === 'vi' ? 'Thống kê Admin' : 'Admin Analytics'} 
-        description={language === 'vi' ? 'Bảng thống kê chi tiết cho admin' : 'Detailed analytics dashboard for admin'}
-      />
+      <Head>
+        <title>{language === 'vi' ? 'Thống kê Admin' : 'Admin Analytics'}</title>
+        <meta name="description" content={language === 'vi' ? 'Bảng thống kê chi tiết cho admin' : 'Detailed analytics dashboard for admin'} />
+      </Head>
       <AdminLayout>
         <div className="space-y-6">
           {/* Header */}
