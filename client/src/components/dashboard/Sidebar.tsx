@@ -98,11 +98,10 @@ export function Sidebar() {
     <div className="w-64 bg-sidebar dark:bg-card h-screen flex flex-col fixed left-0 top-0 z-10">
       <div className="p-4 flex items-center border-b border-sidebar-border dark:border-border">
         <ScrollIcon className="h-8 w-auto text-white dark:text-secondary-100" />
-        <span className="ml-2 text-xl font-bold text-white dark:text-secondary-100 font-heading">
+        <span className="ml-2 text-xl font-bold dark:text-secondary-100 font-heading text-[#ffffff]">
           {t("common.appName")}
         </span>
       </div>
-      
       <nav className="flex-1 overflow-y-auto pt-5 pb-20">
         <ul className="space-y-1 px-2">
           {links.map((link) => (
@@ -155,7 +154,6 @@ export function Sidebar() {
           })()}
         </ul>
       </nav>
-      
       <div className="p-4 border-t border-sidebar-border dark:border-border mt-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
