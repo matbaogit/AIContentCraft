@@ -144,6 +144,14 @@ export default function AdminAnalytics() {
   const registeredChartData: ChartData = mockRegisteredData;
   const activeUsersChartData: ChartData = mockActiveUsersData;
 
+  // Debug: kiểm tra dữ liệu biểu đồ
+  console.log('Chart Data:', {
+    registeredChartData,
+    activeUsersChartData,
+    registeredDataLength: registeredChartData.data.length,
+    activeUsersDataLength: activeUsersChartData.data.length
+  });
+
 
 
   // Export function
@@ -375,31 +383,28 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart 
-                        data={registeredChartData.data}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          tickFormatter={formatChartDate}
-                          fontSize={12}
-                        />
-                        <YAxis fontSize={12} />
-                        <Tooltip 
-                          labelFormatter={(value) => formatChartDate(value as string)}
-                          formatter={(value) => [value, language === 'vi' ? 'Đăng ký' : 'Registrations']}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="count" 
-                          stroke="#8884d8" 
-                          strokeWidth={2}
-                          dot={{ r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    <div style={{ width: '100%', height: '300px', border: '1px solid #ccc' }}>
+                      <div style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
+                        Data: {registeredChartData.data.length} items
+                      </div>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart 
+                          data={registeredChartData.data}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            stroke="#8884d8" 
+                            strokeWidth={2}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -428,29 +433,26 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart 
-                        data={activeUsersChartData.data}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          tickFormatter={formatChartDate}
-                          fontSize={12}
-                        />
-                        <YAxis fontSize={12} />
-                        <Tooltip 
-                          labelFormatter={(value) => formatChartDate(value as string)}
-                          formatter={(value) => [value, language === 'vi' ? 'Người dùng hoạt động' : 'Active Users']}
-                        />
-                        <Bar 
-                          dataKey="count" 
-                          fill="#82ca9d"
-                          radius={[4, 4, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <div style={{ width: '100%', height: '300px', border: '1px solid #ccc' }}>
+                      <div style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
+                        Data: {activeUsersChartData.data.length} items
+                      </div>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart 
+                          data={activeUsersChartData.data}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar 
+                            dataKey="count" 
+                            fill="#82ca9d"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   )}
                 </div>
               </CardContent>
