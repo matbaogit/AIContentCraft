@@ -12,17 +12,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
   Tooltip,
-  ResponsiveContainer,
   Legend,
-} from "recharts";
+} from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 import {
   TrendingUp,
   Users,
@@ -346,31 +358,56 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-[300px] p-4">
-                      {/* Simple CSS Bar Chart */}
-                      <div className="h-full flex items-end justify-between gap-2">
-                        {registeredChartData.data.map((item, index) => {
-                          const maxValue = Math.max(...registeredChartData.data.map(d => d.count));
-                          const height = (item.count / maxValue) * 100;
-                          return (
-                            <div key={index} className="flex flex-col items-center flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">
-                                {item.count}
-                              </div>
-                              <div 
-                                className="bg-primary w-full rounded-t transition-all duration-500 ease-out"
-                                style={{ 
-                                  height: `${height}%`,
-                                  minHeight: '4px'
-                                }}
-                              />
-                              <div className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
-                                {item.date}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="w-full h-[300px]">
+                      <Bar
+                        data={{
+                          labels: registeredChartData.data.map(item => formatChartDate(item.date)),
+                          datasets: [
+                            {
+                              label: language === 'vi' ? 'Đăng ký mới' : 'New Registrations',
+                              data: registeredChartData.data.map(item => item.count),
+                              backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                              borderColor: 'rgba(59, 130, 246, 1)',
+                              borderWidth: 1,
+                              borderRadius: 4,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false,
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              titleColor: 'white',
+                              bodyColor: 'white',
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1,
+                                color: 'rgba(156, 163, 175, 1)',
+                              },
+                              grid: {
+                                color: 'rgba(156, 163, 175, 0.1)',
+                              },
+                            },
+                            x: {
+                              ticks: {
+                                color: 'rgba(156, 163, 175, 1)',
+                              },
+                              grid: {
+                                display: false,
+                              },
+                            },
+                          },
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -400,31 +437,60 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-[300px] p-4">
-                      {/* Simple CSS Bar Chart */}
-                      <div className="h-full flex items-end justify-between gap-2">
-                        {activeUsersChartData.data.map((item, index) => {
-                          const maxValue = Math.max(...activeUsersChartData.data.map(d => d.count));
-                          const height = (item.count / maxValue) * 100;
-                          return (
-                            <div key={index} className="flex flex-col items-center flex-1">
-                              <div className="text-xs text-muted-foreground mb-1">
-                                {item.count}
-                              </div>
-                              <div 
-                                className="bg-green-500 w-full rounded-t transition-all duration-500 ease-out"
-                                style={{ 
-                                  height: `${height}%`,
-                                  minHeight: '4px'
-                                }}
-                              />
-                              <div className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
-                                {item.date}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="w-full h-[300px]">
+                      <Line
+                        data={{
+                          labels: activeUsersChartData.data.map(item => formatChartDate(item.date)),
+                          datasets: [
+                            {
+                              label: language === 'vi' ? 'Người dùng hoạt động' : 'Active Users',
+                              data: activeUsersChartData.data.map(item => item.count),
+                              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                              borderColor: 'rgba(34, 197, 94, 1)',
+                              borderWidth: 2,
+                              fill: true,
+                              tension: 0.4,
+                              pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                              pointBorderColor: 'rgba(34, 197, 94, 1)',
+                              pointRadius: 4,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false,
+                            },
+                            tooltip: {
+                              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                              titleColor: 'white',
+                              bodyColor: 'white',
+                            },
+                          },
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              ticks: {
+                                stepSize: 1,
+                                color: 'rgba(156, 163, 175, 1)',
+                              },
+                              grid: {
+                                color: 'rgba(156, 163, 175, 0.1)',
+                              },
+                            },
+                            x: {
+                              ticks: {
+                                color: 'rgba(156, 163, 175, 1)',
+                              },
+                              grid: {
+                                display: false,
+                              },
+                            },
+                          },
+                        }}
+                      />
                     </div>
                   )}
                 </div>
