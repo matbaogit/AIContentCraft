@@ -32,7 +32,11 @@ const translations: TranslationsType = {
       delete: "Xóa",
       view: "Xem",
       create: "Tạo mới",
-      update: "Cập nhật"
+      update: "Cập nhật",
+      viewAll: "Xem tất cả",
+      loadingData: "Đang tải dữ liệu...",
+      appName: "SEO AI Writer",
+      notConnected: "Chưa kết nối"
     },
 
     admin: {
