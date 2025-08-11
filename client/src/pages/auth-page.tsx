@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
+import { Eye, EyeOff } from "lucide-react";
 import Head from "@/components/head";
 import { signInWithGoogle, signInWithFacebook } from "@/lib/firebase";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -77,6 +78,8 @@ export default function AuthPage() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registrationEmail, setRegistrationEmail] = useState("");
   const [referralCode, setReferralCode] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   
   // Fetch appearance settings for login page
@@ -454,12 +457,25 @@ export default function AuthPage() {
                             <FormItem>
                               <FormLabel className="text-slate-200">{loginPageSettings.password_label}</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="password" 
-                                  placeholder={loginPageSettings.password_placeholder}
-                                  className="bg-slate-700/50 border-slate-600" 
-                                  {...field} 
-                                />
+                                <div className="relative">
+                                  <Input 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder={loginPageSettings.password_placeholder}
+                                    className="bg-slate-700/50 border-slate-600 pr-10" 
+                                    {...field} 
+                                  />
+                                  <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -542,7 +558,24 @@ export default function AuthPage() {
                             <FormItem>
                               <FormLabel className="text-slate-200">{t("auth.register.password")}</FormLabel>
                               <FormControl>
-                                <Input type="password" className="bg-slate-700/50 border-slate-600" {...field} />
+                                <div className="relative">
+                                  <Input 
+                                    type={showPassword ? "text" : "password"} 
+                                    className="bg-slate-700/50 border-slate-600 pr-10" 
+                                    {...field} 
+                                  />
+                                  <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -556,7 +589,24 @@ export default function AuthPage() {
                             <FormItem>
                               <FormLabel className="text-slate-200">{t("auth.register.confirmPassword")}</FormLabel>
                               <FormControl>
-                                <Input type="password" className="bg-slate-700/50 border-slate-600" {...field} />
+                                <div className="relative">
+                                  <Input 
+                                    type={showConfirmPassword ? "text" : "password"} 
+                                    className="bg-slate-700/50 border-slate-600 pr-10" 
+                                    {...field} 
+                                  />
+                                  <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                  >
+                                    {showConfirmPassword ? (
+                                      <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
