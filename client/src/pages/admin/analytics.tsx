@@ -21,6 +21,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 
@@ -33,7 +34,8 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 import {
   TrendingUp,
@@ -45,7 +47,18 @@ import {
   Calendar,
   Activity,
   Eye,
+  PenTool,
+  ImageIcon,
+  Share2,
+  Globe,
+  HelpCircle,
 } from "lucide-react";
+import { 
+  Tooltip as UITooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 import Head from "@/components/head";
 import { format as formatDate } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
@@ -55,6 +68,10 @@ interface AnalyticsOverview {
   activeUsers: number;
   totalArticles: number;
   totalImages: number;
+  seoContentCreated: number;
+  imagesGenerated: number;
+  socialContentCreated: number;
+  wordpressPostsPublished: number;
 }
 
 interface ChartData {
@@ -117,7 +134,11 @@ export default function AdminAnalytics() {
     registeredAccounts: 0,
     activeUsers: 0,
     totalArticles: 0,
-    totalImages: 0
+    totalImages: 0,
+    seoContentCreated: 0,
+    imagesGenerated: 0,
+    socialContentCreated: 0,
+    wordpressPostsPublished: 0
   };
 
   const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
@@ -208,9 +229,10 @@ export default function AdminAnalytics() {
         <meta name="description" content={language === 'vi' ? 'Bảng thống kê chi tiết cho admin' : 'Detailed analytics dashboard for admin'} />
       </Head>
       <AdminLayout>
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <TooltipProvider>
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {language === 'vi' ? 'Thống kê' : 'Analytics'}
@@ -266,42 +288,166 @@ export default function AdminAnalytics() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {language === 'vi' ? 'Tài khoản đã đăng ký' : 'Registered Accounts'}
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Tổng số tài khoản người dùng đã đăng ký trên hệ thống' : 'Total number of user accounts registered in the system'}</p>
+                    </TooltipContent>
+                  </UITooltip>
                 </CardTitle>
-                <UserCheck className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {overviewLoading ? '...' : overview.registeredAccounts.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {language === 'vi' ? 'Người dùng đã xác minh' : 'Verified users'}
+                  {language === 'vi' ? 'Tổng số tài khoản' : 'Total accounts'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
                   {language === 'vi' ? 'Người dùng hoạt động' : 'Active Users'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Số người dùng đã đăng nhập và sử dụng hệ thống trong 30 ngày qua' : 'Number of users who logged in and used the system in the last 30 days'}</p>
+                    </TooltipContent>
+                  </UITooltip>
                 </CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {overviewLoading ? '...' : overview.activeUsers.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {language === 'vi' ? 'Có hoạt động cốt lõi' : 'With core actions'}
+                  {language === 'vi' ? 'Trong 30 ngày qua' : 'Last 30 days'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {language === 'vi' ? 'Bài viết' : 'Articles'}
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Nội dung SEO' : 'SEO Content'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Số bài viết SEO được tạo bởi AI với tối ưu hóa từ khóa' : 'Number of SEO articles created by AI with keyword optimization'}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardTitle>
+                <PenTool className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {overviewLoading ? '...' : overview.seoContentCreated.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'vi' ? 'Bài viết SEO' : 'SEO articles'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Hình ảnh tạo' : 'Images Created'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Tổng số hình ảnh được tạo ra bằng AI hoặc upload bởi người dùng' : 'Total number of images generated by AI or uploaded by users'}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardTitle>
+                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {overviewLoading ? '...' : overview.imagesGenerated.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'vi' ? 'Hình ảnh' : 'Images'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Nội dung mạng xã hội' : 'Social Content'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Số bài viết được tạo cho các nền tảng mạng xã hội như Facebook, Twitter, LinkedIn' : 'Number of posts created for social media platforms like Facebook, Twitter, LinkedIn'}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardTitle>
+                <Share2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {overviewLoading ? '...' : overview.socialContentCreated.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'vi' ? 'Bài đăng' : 'Posts'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Đăng WordPress' : 'WordPress Posts'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Số bài viết SEO đã được tự động đăng lên các website WordPress' : 'Number of SEO articles automatically published to WordPress websites'}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                </CardTitle>
+                <Globe className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {overviewLoading ? '...' : overview.wordpressPostsPublished.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'vi' ? 'Đã đăng' : 'Published'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Tổng bài viết' : 'Total Articles'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Tổng số bài viết đã được tạo ra trên hệ thống (bao gồm cả draft và published)' : 'Total number of articles created in the system (including drafts and published)'}</p>
+                    </TooltipContent>
+                  </UITooltip>
                 </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -310,15 +456,23 @@ export default function AdminAnalytics() {
                   {overviewLoading ? '...' : overview.totalArticles.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {language === 'vi' ? 'Được tạo trong kỳ' : 'Created in period'}
+                  {language === 'vi' ? 'Tất cả' : 'All articles'}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {language === 'vi' ? 'Hình ảnh' : 'Images'}
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {language === 'vi' ? 'Tổng hình ảnh' : 'Total Images'}
+                  <UITooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'vi' ? 'Tổng số file hình ảnh được lưu trữ trong hệ thống' : 'Total number of image files stored in the system'}</p>
+                    </TooltipContent>
+                  </UITooltip>
                 </CardTitle>
                 <Image className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -327,7 +481,7 @@ export default function AdminAnalytics() {
                   {overviewLoading ? '...' : overview.totalImages.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {language === 'vi' ? 'Được tạo trong kỳ' : 'Created in period'}
+                  {language === 'vi' ? 'File ảnh' : 'Image files'}
                 </p>
               </CardContent>
             </Card>
@@ -498,6 +652,7 @@ export default function AdminAnalytics() {
             </Card>
           </div>
         </div>
+        </TooltipProvider>
       </AdminLayout>
     </>
   );
