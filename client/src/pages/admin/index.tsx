@@ -54,35 +54,6 @@ export default function AdminDashboard() {
       </Head>
       
       <AdminLayout title={t("admin.dashboard")}>
-        {/* Performance Mini Dashboard */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>
-              {t("admin.performanceMetrics.title") || "Performance Insights"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 border rounded-lg">
-                <h3 className="text-sm font-medium">{t("admin.performanceMetrics.responseTime") || "Thời gian phản hồi"}</h3>
-                <p className="text-2xl font-bold">145ms</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h3 className="text-sm font-medium">{t("admin.performanceMetrics.requests") || "Lượt truy cập"}</h3>
-                <p className="text-2xl font-bold">35/min</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h3 className="text-sm font-medium">{t("admin.performanceMetrics.cpuMemory") || "CPU & Bộ nhớ"}</h3>
-                <p className="text-2xl font-bold">45%</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h3 className="text-sm font-medium">{t("admin.performanceMetrics.diskUsage") || "Dung lượng ổ cứng"}</h3>
-                <p className="text-2xl font-bold">38%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
