@@ -35,7 +35,7 @@ const translations: TranslationsType = {
       update: "Cập nhật",
       viewAll: "Xem tất cả",
       loadingData: "Đang tải dữ liệu...",
-      appName: "SEO AI Writer",
+      appName: "ToolBox",
       notConnected: "Chưa kết nối"
     },
 
@@ -166,7 +166,7 @@ const translations: TranslationsType = {
         backingUp: "Đang sao lưu...",
         refreshSystemInfo: "Làm mới thông tin",
         systemLog: "Nhật ký hệ thống",
-        systemInfoFooter: "Hệ thống được phát triển bởi SEO AI Writer Team. Để được hỗ trợ, vui lòng liên hệ support@example.com",
+        systemInfoFooter: "Hệ thống được phát triển bởi ToolBox Team. Để được hỗ trợ, vui lòng liên hệ support@example.com",
         webhookDescription: "Cấu hình webhook cho n8n và các dịch vụ khác",
         webhookSecret: "Khóa bí mật webhook",
         webhookSecretDescription: "Khóa bí mật để xác thực webhook, bắt đầu bằng 'whsec_'",
@@ -338,7 +338,7 @@ const translations: TranslationsType = {
       mascot: {
         dashboard: {
           welcomeTitle: "Xin chào!",
-          welcomeTip: "Chào mừng bạn đến với SEO AI Writer! Đây là nơi bạn có thể xem tổng quan về tài khoản của mình.",
+          welcomeTip: "Chào mừng bạn đến với ToolBox! Đây là nơi bạn có thể xem tổng quan về tài khoản của mình.",
           creditsTitle: "Tín dụng",
           creditsTip: "Số tín dụng hiển thị ở bảng điều khiển cho biết bạn có thể tạo bao nhiêu bài viết mới.",
           articlesTitle: "Bài viết của bạn",
@@ -1181,7 +1181,7 @@ const translations: TranslationsType = {
     common: {
       loading: "Loading...",
       error: "An error occurred",
-      appName: "SEO AI Writer",
+      appName: "ToolBox",
       notConnected: "Not connected",
       loadingData: "Loading data...",
       viewAll: "View all",
