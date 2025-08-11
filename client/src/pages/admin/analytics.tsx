@@ -140,17 +140,11 @@ export default function AdminAnalytics() {
     ]
   };
 
-  // Sử dụng mock data thay vì real data để test
-  const registeredChartData: ChartData = mockRegisteredData;
-  const activeUsersChartData: ChartData = mockActiveUsersData;
+  // Sử dụng real data từ API
+  const registeredChartData: ChartData = registeredData?.data || { total: 0, data: [] };
+  const activeUsersChartData: ChartData = activeUsersData?.data || { total: 0, data: [] };
 
-  // Debug: kiểm tra dữ liệu biểu đồ
-  console.log('Chart Data:', {
-    registeredChartData,
-    activeUsersChartData,
-    registeredDataLength: registeredChartData.data.length,
-    activeUsersDataLength: activeUsersChartData.data.length
-  });
+
 
 
 
@@ -383,27 +377,31 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <div style={{ width: '100%', height: '300px', border: '1px solid #ccc' }}>
-                      <div style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
-                        Data: {registeredChartData.data.length} items
+                    <div className="w-full h-[300px] p-4">
+                      {/* Simple CSS Bar Chart */}
+                      <div className="h-full flex items-end justify-between gap-2">
+                        {registeredChartData.data.map((item, index) => {
+                          const maxValue = Math.max(...registeredChartData.data.map(d => d.count));
+                          const height = (item.count / maxValue) * 100;
+                          return (
+                            <div key={index} className="flex flex-col items-center flex-1">
+                              <div className="text-xs text-muted-foreground mb-1">
+                                {item.count}
+                              </div>
+                              <div 
+                                className="bg-primary w-full rounded-t transition-all duration-500 ease-out"
+                                style={{ 
+                                  height: `${height}%`,
+                                  minHeight: '4px'
+                                }}
+                              />
+                              <div className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
+                                {item.date}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart 
-                          data={registeredChartData.data}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            stroke="#8884d8" 
-                            strokeWidth={2}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
                     </div>
                   )}
                 </div>
@@ -433,25 +431,31 @@ export default function AdminAnalytics() {
                       </div>
                     </div>
                   ) : (
-                    <div style={{ width: '100%', height: '300px', border: '1px solid #ccc' }}>
-                      <div style={{ padding: '10px', fontSize: '12px', color: '#666' }}>
-                        Data: {activeUsersChartData.data.length} items
+                    <div className="w-full h-[300px] p-4">
+                      {/* Simple CSS Bar Chart */}
+                      <div className="h-full flex items-end justify-between gap-2">
+                        {activeUsersChartData.data.map((item, index) => {
+                          const maxValue = Math.max(...activeUsersChartData.data.map(d => d.count));
+                          const height = (item.count / maxValue) * 100;
+                          return (
+                            <div key={index} className="flex flex-col items-center flex-1">
+                              <div className="text-xs text-muted-foreground mb-1">
+                                {item.count}
+                              </div>
+                              <div 
+                                className="bg-green-500 w-full rounded-t transition-all duration-500 ease-out"
+                                style={{ 
+                                  height: `${height}%`,
+                                  minHeight: '4px'
+                                }}
+                              />
+                              <div className="text-xs text-muted-foreground mt-2 transform -rotate-45 origin-left">
+                                {item.date}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart 
-                          data={activeUsersChartData.data}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar 
-                            dataKey="count" 
-                            fill="#82ca9d"
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
                     </div>
                   )}
                 </div>
