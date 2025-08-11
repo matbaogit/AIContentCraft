@@ -116,6 +116,8 @@ export default function AuthPage() {
     
     return {
       logo_url: settings.logo_url || "",
+      logo_width: settings.logo_width || "48",
+      logo_height: settings.logo_height || "48",
       site_title: settings.site_title || "SEO AI Writer",
       login_title: settings.login_title || "Đăng nhập",
       login_subtitle: settings.login_subtitle || "Nhập thông tin để đăng nhập",
@@ -697,10 +699,10 @@ export default function AuthPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-center">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="text-4xl font-bold text-white tracking-tight sm:text-5xl mb-6">
-                {t("common.appName")}
+                {loginPageSettings.site_title}
               </h2>
               <p className="text-xl text-white/90 mb-8 max-w-lg mx-auto">
-                {t("common.tagline")}
+                {loginPageSettings.login_subtitle || "Tạo nội dung SEO chất lượng với AI"}
               </p>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
