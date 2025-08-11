@@ -159,15 +159,23 @@ export default function AdminAnalytics() {
       console.log(`Exporting analytics data as ${format.toUpperCase()}`);
       
       if (format === 'csv') {
-        // Export as CSV
+        // Export as CSV with all 8 analytics fields (multilingual)
+        const metricLabel = language === 'vi' ? 'Chỉ số' : 'Metric';
+        const valueLabel = language === 'vi' ? 'Giá trị' : 'Value';
+        const dateLabel = language === 'vi' ? 'Ngày' : 'Date';
+        
         const csvData = [
-          ['Metric', 'Value'],
-          ['Registered Accounts', overview.registeredAccounts],
-          ['Active Users', overview.activeUsers],
-          ['Total Articles', overview.totalArticles],
-          ['Total Images', overview.totalImages],
+          [metricLabel, valueLabel],
+          [language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts', overview.registeredAccounts],
+          [language === 'vi' ? 'Người dùng hoạt động' : 'Active Users', overview.activeUsers],
+          [language === 'vi' ? 'Nội dung SEO' : 'SEO Content Created', overview.seoContentCreated],
+          [language === 'vi' ? 'Hình ảnh tạo' : 'Images Generated', overview.imagesGenerated],
+          [language === 'vi' ? 'Nội dung mạng xã hội' : 'Social Content Created', overview.socialContentCreated],
+          [language === 'vi' ? 'Đăng WordPress' : 'WordPress Posts Published', overview.wordpressPostsPublished],
+          [language === 'vi' ? 'Tổng bài viết' : 'Total Articles', overview.totalArticles],
+          [language === 'vi' ? 'Tổng hình ảnh' : 'Total Images', overview.totalImages],
           [''],
-          ['Date', 'Registered Accounts', 'Active Users'],
+          [dateLabel, language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts', language === 'vi' ? 'Người dùng hoạt động' : 'Active Users'],
           ...registeredChartData.data.map((item, index) => [
             item.date,
             item.count,
@@ -185,6 +193,75 @@ export default function AdminAnalytics() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      } else if (format === 'pdf') {
+        // Export as PDF with all 8 analytics fields
+        const { jsPDF } = await import('jspdf');
+        const autoTable = await import('jspdf-autotable');
+        
+        const doc = new jsPDF();
+        
+        // Title (multilingual)
+        doc.setFontSize(20);
+        const reportTitle = language === 'vi' ? 'Báo cáo Thống kê' : 'Analytics Report';
+        doc.text(reportTitle, 20, 20);
+        
+        // Period info (multilingual)
+        doc.setFontSize(12);
+        const periodText = language === 'vi' ? 
+          (selectedPeriod === '1d' ? '24 Giờ' : 
+           selectedPeriod === '7d' ? '7 Ngày' : 
+           selectedPeriod === '1m' ? '1 Tháng' : '12 Tháng') :
+          (selectedPeriod === '1d' ? '24 Hours' : 
+           selectedPeriod === '7d' ? '7 Days' : 
+           selectedPeriod === '1m' ? '1 Month' : '12 Months');
+        
+        const periodLabel = language === 'vi' ? 'Khoảng thời gian:' : 'Period:';
+        const generatedLabel = language === 'vi' ? 'Tạo lúc:' : 'Generated:';
+        
+        doc.text(`${periodLabel} ${periodText}`, 20, 30);
+        doc.text(`${generatedLabel} ${formatDate(new Date(), 'dd/MM/yyyy HH:mm')}`, 20, 40);
+        
+        // Overview data table (multilingual)
+        const overviewData = [
+          [language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts', overview.registeredAccounts.toLocaleString()],
+          [language === 'vi' ? 'Người dùng hoạt động' : 'Active Users', overview.activeUsers.toLocaleString()],
+          [language === 'vi' ? 'Nội dung SEO' : 'SEO Content Created', overview.seoContentCreated.toLocaleString()],
+          [language === 'vi' ? 'Hình ảnh tạo' : 'Images Generated', overview.imagesGenerated.toLocaleString()],
+          [language === 'vi' ? 'Nội dung mạng xã hội' : 'Social Content Created', overview.socialContentCreated.toLocaleString()],
+          [language === 'vi' ? 'Đăng WordPress' : 'WordPress Posts Published', overview.wordpressPostsPublished.toLocaleString()],
+          [language === 'vi' ? 'Tổng bài viết' : 'Total Articles', overview.totalArticles.toLocaleString()],
+          [language === 'vi' ? 'Tổng hình ảnh' : 'Total Images', overview.totalImages.toLocaleString()]
+        ];
+        
+        (doc as any).autoTable({
+          head: [[metricLabel, valueLabel]],
+          body: overviewData,
+          startY: 50,
+          margin: { left: 20, right: 20 },
+          styles: { fontSize: 10 },
+          headStyles: { fillColor: [59, 130, 246] }
+        });
+        
+        // Chart data table if available (multilingual)
+        if (registeredChartData.data.length > 0) {
+          const chartData = registeredChartData.data.map((item, index) => [
+            formatChartDate(item.date),
+            item.count.toString(),
+            (activeUsersChartData.data[index]?.count || 0).toString()
+          ]);
+          
+          (doc as any).autoTable({
+            head: [[dateLabel, language === 'vi' ? 'Tài khoản đăng ký' : 'Registered Accounts', language === 'vi' ? 'Người dùng hoạt động' : 'Active Users']],
+            body: chartData,
+            startY: (doc as any).lastAutoTable.finalY + 20,
+            margin: { left: 20, right: 20 },
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [34, 197, 94] }
+          });
+        }
+        
+        // Save PDF
+        doc.save(`analytics-${selectedPeriod}-${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`);
       }
     } catch (error) {
       console.error('Export error:', error);
