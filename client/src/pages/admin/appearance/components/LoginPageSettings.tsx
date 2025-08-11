@@ -18,6 +18,7 @@ const loginPageSchema = z.object({
   logo_url: z.string().optional(),
   logo_width: z.string().optional(),
   logo_height: z.string().optional(),
+  page_title: z.string().min(1, "Tiêu đề trang web không được để trống"),
   site_title: z.string().min(1, "Tiêu đề trang không được để trống"),
   login_title: z.string().min(1, "Tiêu đề đăng nhập không được để trống"),
   login_subtitle: z.string().optional(),
@@ -55,6 +56,7 @@ export default function LoginPageSettings() {
       logo_url: "",
       logo_width: "48",
       logo_height: "48",
+      page_title: "SEO AI Writer",
       site_title: "",
       login_title: "",
       login_subtitle: "",
@@ -90,6 +92,7 @@ export default function LoginPageSettings() {
         // Set default values for any missing fields
         const defaultValues = {
           logo_url: "",
+          page_title: "SEO AI Writer",
           site_title: "",
           login_title: "",
           login_subtitle: "",
@@ -227,10 +230,24 @@ export default function LoginPageSettings() {
 
                     <FormField
                       control={form.control}
+                      name="page_title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tiêu đề trang web (HTML Title)</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="SEO AI Writer" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="site_title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Tên trang web</FormLabel>
+                          <FormLabel>Tên trang web hiển thị</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="SEO AI Writer" />
                           </FormControl>

@@ -121,6 +121,7 @@ export default function AuthPage() {
       logo_url: settings.logo_url || "",
       logo_width: settings.logo_width || "48",
       logo_height: settings.logo_height || "48",
+      page_title: settings.page_title || "SEO AI Writer",
       site_title: settings.site_title || "SEO AI Writer",
       login_title: settings.login_title || "Đăng nhập",
       login_subtitle: settings.login_subtitle || "Nhập thông tin để đăng nhập",
@@ -236,10 +237,10 @@ export default function AuthPage() {
       fullName: data.fullName,
       referralCode: data.referralCode,
     }, {
-      onSuccess: (response) => {
+      onSuccess: (response: any) => {
         // Check if response indicates email verification is required
-        if (response && typeof response === 'object' && 'message' in response && 
-            response.message?.includes('verification')) {
+        if (response && typeof response === 'object' && response.message && 
+            typeof response.message === 'string' && response.message.includes('verification')) {
           setRegistrationSuccess(true);
           setRegistrationEmail(data.email);
           toast({
@@ -334,7 +335,7 @@ export default function AuthPage() {
   return (
     <>
       <Head>
-        <title>{activeTab === "login" ? t("auth.login.title") : t("auth.register.title")} - {t("common.appName")}</title>
+        <title>{loginPageSettings.page_title || (activeTab === "login" ? t("auth.login.title") : t("auth.register.title")) + " - " + t("common.appName")}</title>
       </Head>
       
       <div className="min-h-screen flex flex-col md:flex-row">
