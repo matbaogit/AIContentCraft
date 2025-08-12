@@ -886,8 +886,7 @@ export default function AdminSettings() {
   // Update Theme settings mutation
   const updateThemeSettingsMutation = useMutation({
     mutationFn: async (data: ThemeSettingsValues) => {
-      const res = await apiRequest("PATCH", "/api/admin/settings/theme", data);
-      return res.json();
+      return await apiRequest("PATCH", "/api/admin/settings/theme", data);
     },
     onSuccess: () => {
       toast({
