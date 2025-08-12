@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Sparkles, FileText, TrendingUp, Loader2, ImageIcon, Check, Copy, Eye, Zap, ChevronsUpDown } from 'lucide-react';
+import { CreditConfirmationModal } from '@/components/CreditConfirmationModal';
 
 interface SocialContentForm {
   contentSource: string;
@@ -59,6 +60,10 @@ export default function CreateSocialContentPage() {
   const [showFinalResultDialog, setShowFinalResultDialog] = useState(false);
   const [finalSocialContent, setFinalSocialContent] = useState<any>(null);
   const [savingToCreatedContent, setSavingToCreatedContent] = useState(false);
+  
+  // Credit confirmation modal states
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<SocialContentForm | null>(null);
 
   // Fetch user's articles when content source is from existing articles
   const { data: articlesData } = useQuery({
@@ -167,6 +172,32 @@ export default function CreateSocialContentPage() {
     }));
   };
 
+  // Function to calculate credit breakdown for social content
+  const calculateSocialCreditBreakdown = () => {
+    const breakdown = [];
+    let totalCredits = 0;
+
+    // Base content generation: 3 credits
+    breakdown.push({
+      label: 'Tạo nội dung social media',
+      credits: 3,
+      color: 'default' as const
+    });
+    totalCredits += 3;
+
+    // Image generation: 2 credits (if enabled)
+    if (form.includeImage && form.imageSource === 'ai-generated') {
+      breakdown.push({
+        label: 'Tạo hình ảnh AI',
+        credits: 2,
+        color: 'secondary' as const
+      });
+      totalCredits += 2;
+    }
+
+    return { breakdown, totalCredits };
+  };
+
   const handleSubmit = () => {
     if (!form.contentSource || form.platforms.length === 0) {
       toast({
@@ -195,7 +226,17 @@ export default function CreateSocialContentPage() {
       return;
     }
 
-    generateContentMutation.mutate(form);
+    // Show credit confirmation modal
+    setPendingFormData(form);
+    setShowCreditModal(true);
+  };
+
+  // Function to actually generate content after credit confirmation
+  const confirmAndGenerateContent = () => {
+    if (!pendingFormData) return;
+    
+    setShowCreditModal(false);
+    generateContentMutation.mutate(pendingFormData);
   };
 
   const copyToClipboard = (text: string) => {
@@ -942,6 +983,21 @@ export default function CreateSocialContentPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Credit Confirmation Modal */}
+      <CreditConfirmationModal
+        isOpen={showCreditModal}
+        onClose={() => {
+          setShowCreditModal(false);
+          setPendingFormData(null);
+        }}
+        onConfirm={confirmAndGenerateContent}
+        title="Xác nhận tạo nội dung social media"
+        breakdown={calculateSocialCreditBreakdown().breakdown}
+        totalCredits={calculateSocialCreditBreakdown().totalCredits}
+        userCurrentCredits={user?.credits || 0}
+        isLoading={generateContentMutation.isPending}
+      />
     </DashboardLayout>
   );
 }

@@ -82,6 +82,7 @@ import {
 import { GenerateContentRequest, GenerateContentResponse } from "@shared/types";
 import { copyToClipboard, downloadAsFile } from "@/lib/utils";
 import Head from "@/components/head";
+import { CreditConfirmationModal } from "@/components/CreditConfirmationModal";
 
 const formSchema = z.object({
   contentType: z.enum(["blog", "product", "news", "social"]),
@@ -138,6 +139,10 @@ export default function CreateContent() {
   
   // Khởi tạo linkItems ban đầu
   const [isLinkItemsInitialized, setIsLinkItemsInitialized] = useState(false);
+  
+  // Credit confirmation modal states
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<FormValues | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -336,16 +341,97 @@ export default function CreateContent() {
     },
   });
 
+  // Function to calculate credit breakdown
+  const calculateCreditBreakdown = (data: FormValues) => {
+    const breakdown = [];
+    let totalCredits = 0;
+
+    // Content length credits
+    let contentCredits = 1;
+    switch (data.length) {
+      case 'short':
+        contentCredits = 1;
+        break;
+      case 'medium':
+        contentCredits = 3;
+        break;
+      case 'long':
+        contentCredits = 5;
+        break;
+      case 'extra_long':
+        contentCredits = 8;
+        break;
+    }
+    
+    const lengthLabels = {
+      'short': 'Nội dung ngắn',
+      'medium': 'Nội dung trung bình', 
+      'long': 'Nội dung dài',
+      'extra_long': 'Nội dung rất dài'
+    };
+    
+    breakdown.push({
+      label: lengthLabels[data.length],
+      credits: contentCredits,
+      color: 'default' as const
+    });
+    totalCredits += contentCredits;
+
+    // AI Model credits
+    if (data.aiModel) {
+      let aiCredits = 1;
+      const aiLabels = {
+        'chatgpt': 'ChatGPT AI',
+        'gemini': 'Gemini AI',
+        'claude': 'Claude AI'
+      };
+      
+      switch (data.aiModel) {
+        case 'chatgpt':
+          aiCredits = 1;
+          break;
+        case 'gemini':
+          aiCredits = 1;
+          break;
+        case 'claude':
+          aiCredits = 2;
+          break;
+      }
+      
+      breakdown.push({
+        label: aiLabels[data.aiModel],
+        credits: aiCredits,
+        color: 'secondary' as const
+      });
+      totalCredits += aiCredits;
+    }
+
+    // Image generation credits
+    if (data.generateImages) {
+      // Estimate image count (default logic from backend)
+      let imageCount = 1;
+      if (data.length === 'short') imageCount = 1;
+      else if (data.length === 'medium') imageCount = 2;
+      else if (data.length === 'long') imageCount = 3;
+      else if (data.length === 'extra_long') imageCount = 4;
+      
+      const imageCredits = imageCount * 2; // 2 credits per image
+      
+      breakdown.push({
+        label: `Tạo ${imageCount} hình ảnh`,
+        credits: imageCredits,
+        color: 'outline' as const
+      });
+      totalCredits += imageCredits;
+    }
+
+    return { breakdown, totalCredits };
+  };
+
   const onSubmit = (data: FormValues) => {
     console.log("onSubmit triggered", data);
     
-    // Hiển thị thông báo khi nhấn nút
-    toast({
-      title: "Đang xử lý...",
-      description: "Hệ thống đang xử lý yêu cầu của bạn"
-    });
-    
-    // Kiểm tra từ khóa trước khi kiểm tra credits
+    // Kiểm tra từ khóa trước
     if (!data.keywords || data.keywords.trim() === '') {
       toast({
         title: "Thiếu từ khóa",
@@ -355,52 +441,65 @@ export default function CreateContent() {
       return;
     }
     
-    if ((user?.credits || 0) < 1) {
-      toast({
-        title: "Không đủ credits",
-        description: "Vui lòng mua thêm credits để tạo nội dung",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Calculate credit breakdown
+    const { breakdown, totalCredits } = calculateCreditBreakdown(data);
+    
+    // Store form data for later use
+    setPendingFormData(data);
+    
+    // Show credit confirmation modal
+    setShowCreditModal(true);
+  };
+
+  // Function to actually submit after credit confirmation
+  const confirmAndSubmit = () => {
+    if (!pendingFormData) return;
+    
+    setShowCreditModal(false);
+    
+    // Show processing toast
+    toast({
+      title: "Đang tạo nội dung",
+      description: "Vui lòng đợi trong khi hệ thống tạo nội dung của bạn...",
+    });
 
     // Đặt relatedKeywords vào request và xử lý linkItems
-    const filteredLinkItems = data.linkItems
-      ? data.linkItems.filter(item => item.keyword && item.url)
+    const filteredLinkItems = pendingFormData.linkItems
+      ? pendingFormData.linkItems.filter(item => item.keyword && item.url)
       : [];
     
     // Đã kiểm tra keywords ở phía trên rồi
       
     // Tách từ khóa chính và từ khóa phụ từ chuỗi keywords
-    const keywordsArray = data.keywords.split(',').filter(Boolean);
+    const keywordsArray = pendingFormData.keywords.split(',').filter(Boolean);
     const mainKeyword = keywordsArray.length > 0 ? keywordsArray[0].trim() : '';
     const secondaryKeywords = keywordsArray.length > 1 ? keywordsArray.slice(1).map(k => k.trim()) : [];
 
     // Convert form data to match the expected JSON format
     const requestData = {
-      keywords: data.keywords, // Main keywords field
+      keywords: pendingFormData.keywords, // Main keywords field
       mainKeyword: mainKeyword, // Primary keyword
       secondaryKeywords: secondaryKeywords.join(','), // Secondary keywords
-      length: data.length,
-      tone: data.tone,
-      prompt: data.prompt || '',
-      addHeadings: data.addHeadings,
-      useBold: data.useBold,
-      useItalic: data.useItalic,
-      useBullets: data.useBullets,
-      relatedKeywords: data.relatedKeywords || "",
-      language: data.language || 'vietnamese',
-      country: data.country || 'vietnam',
-      perspective: data.perspective || 'auto',
-      complexity: data.complexity || 'auto', // Match expected format
-      useWebResearch: data.useWebResearch || false,
-      refSources: data.refSources || "",
-      aiModel: data.aiModel || 'chatgpt',
+      length: pendingFormData.length,
+      tone: pendingFormData.tone,
+      prompt: pendingFormData.prompt || '',
+      addHeadings: pendingFormData.addHeadings,
+      useBold: pendingFormData.useBold,
+      useItalic: pendingFormData.useItalic,
+      useBullets: pendingFormData.useBullets,
+      relatedKeywords: pendingFormData.relatedKeywords || "",
+      language: pendingFormData.language || 'vietnamese',
+      country: pendingFormData.country || 'vietnam',
+      perspective: pendingFormData.perspective || 'auto',
+      complexity: pendingFormData.complexity || 'auto', // Match expected format
+      useWebResearch: pendingFormData.useWebResearch || false,
+      refSources: pendingFormData.refSources || "",
+      aiModel: pendingFormData.aiModel || 'chatgpt',
       linkItems: filteredLinkItems,
-      imageSize: data.imageSize || 'medium',
-      generateImages: data.generateImages || false,
+      imageSize: pendingFormData.imageSize || 'medium',
+      generateImages: pendingFormData.generateImages || false,
       image_size: (() => {
-        const size = data.imageSize || 'medium';
+        const size = pendingFormData.imageSize || 'medium';
         switch(size) {
           case 'small':
             return { width: 640, height: 480 };
@@ -1838,6 +1937,23 @@ export default function CreateContent() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Credit Confirmation Modal */}
+        {pendingFormData && (
+          <CreditConfirmationModal
+            isOpen={showCreditModal}
+            onClose={() => {
+              setShowCreditModal(false);
+              setPendingFormData(null);
+            }}
+            onConfirm={confirmAndSubmit}
+            title="Xác nhận tạo nội dung AI"
+            breakdown={calculateCreditBreakdown(pendingFormData).breakdown}
+            totalCredits={calculateCreditBreakdown(pendingFormData).totalCredits}
+            userCurrentCredits={user?.credits || 0}
+            isLoading={generateContentMutation.isPending}
+          />
+        )}
       </DashboardLayout>
     </>
   );

@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreditCache } from '@/hooks/use-credit-cache';
 import { Sparkles, Loader2, CheckCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { CreditConfirmationModal } from '@/components/CreditConfirmationModal';
 
 interface FormData {
   keywords: string;
@@ -28,6 +29,10 @@ export default function CreateSeoArticle() {
     keywords: '',
     topic: ''
   });
+  
+  // Credit confirmation modal states
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [pendingFormSubmit, setPendingFormSubmit] = useState(false);
 
   const createArticleMutation = useMutation({
     mutationFn: async () => {
@@ -68,6 +73,20 @@ export default function CreateSeoArticle() {
     }
   });
 
+  // Function to calculate credit breakdown for SEO article
+  const calculateSeoArticleCreditBreakdown = () => {
+    const breakdown = [];
+    const articleCredits = 1; // Fixed 1 credit for SEO articles
+
+    breakdown.push({
+      label: 'Tạo bài viết SEO',
+      credits: articleCredits,
+      color: 'default' as const
+    });
+
+    return { breakdown, totalCredits: articleCredits };
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -80,6 +99,15 @@ export default function CreateSeoArticle() {
       return;
     }
 
+    // Show credit confirmation modal
+    setPendingFormSubmit(true);
+    setShowCreditModal(true);
+  };
+
+  // Function to actually create article after credit confirmation
+  const confirmAndCreateArticle = () => {
+    setShowCreditModal(false);
+    setPendingFormSubmit(false);
     createArticleMutation.mutate();
   };
 
@@ -163,6 +191,21 @@ export default function CreateSeoArticle() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Credit Confirmation Modal */}
+      <CreditConfirmationModal
+        isOpen={showCreditModal}
+        onClose={() => {
+          setShowCreditModal(false);
+          setPendingFormSubmit(false);
+        }}
+        onConfirm={confirmAndCreateArticle}
+        title="Xác nhận tạo bài viết SEO"
+        breakdown={calculateSeoArticleCreditBreakdown().breakdown}
+        totalCredits={calculateSeoArticleCreditBreakdown().totalCredits}
+        userCurrentCredits={user?.credits || 0}
+        isLoading={createArticleMutation.isPending}
+      />
     </DashboardLayout>
   );
 }

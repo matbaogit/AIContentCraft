@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreditCache } from '@/hooks/use-credit-cache';
 import { useLanguage } from '@/hooks/use-language';
 import confetti from 'canvas-confetti';
+import { CreditConfirmationModal } from '@/components/CreditConfirmationModal';
 
 interface Article {
   id: number;
@@ -58,6 +59,10 @@ export default function CreateImagePage() {
   const [selectedImageForDetail, setSelectedImageForDetail] = useState<GeneratedImage | null>(null);
   const [showImageDetailDialog, setShowImageDetailDialog] = useState(false);
   const [activePreviewFormat, setActivePreviewFormat] = useState<string>('original');
+  
+  // Credit confirmation modal states
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [pendingImageData, setPendingImageData] = useState<any>(null);
 
   // Confetti animation function
   const triggerConfetti = () => {
@@ -253,6 +258,20 @@ export default function CreateImagePage() {
     return styleDescriptions[style] || "high quality, detailed";
   };
 
+  // Function to calculate credit breakdown for image generation
+  const calculateImageCreditBreakdown = () => {
+    const breakdown = [];
+    const imageCredits = 2; // Default 2 credits per image
+
+    breakdown.push({
+      label: 'Tạo 1 hình ảnh AI',
+      credits: imageCredits,
+      color: 'default' as const
+    });
+
+    return { breakdown, totalCredits: imageCredits };
+  };
+
   const handleGenerateImage = () => {
     if (!title.trim() || !prompt.trim()) {
       toast({
@@ -263,16 +282,28 @@ export default function CreateImagePage() {
       return;
     }
 
-    // Combine the user prompt with style description
+    // Prepare image data
     const styleDescription = getStyleDescription(imageStyle);
     const enhancedPrompt = `${prompt.trim()}, ${styleDescription}`;
 
-    generateImageMutation.mutate({
+    const imageData = {
       title: title.trim(),
       prompt: enhancedPrompt,
       sourceText: sourceText.trim() || undefined,
       articleId: selectedArticleId && selectedArticleId !== 'none' ? parseInt(selectedArticleId) : undefined,
-    });
+    };
+
+    // Store image data and show confirmation modal
+    setPendingImageData(imageData);
+    setShowCreditModal(true);
+  };
+
+  // Function to actually generate image after credit confirmation
+  const confirmAndGenerateImage = () => {
+    if (!pendingImageData) return;
+    
+    setShowCreditModal(false);
+    generateImageMutation.mutate(pendingImageData);
   };
 
   const handleRegenerateImage = () => {
@@ -1284,6 +1315,21 @@ export default function CreateImagePage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Credit Confirmation Modal */}
+        <CreditConfirmationModal
+          isOpen={showCreditModal}
+          onClose={() => {
+            setShowCreditModal(false);
+            setPendingImageData(null);
+          }}
+          onConfirm={confirmAndGenerateImage}
+          title="Xác nhận tạo hình ảnh AI"
+          breakdown={calculateImageCreditBreakdown().breakdown}
+          totalCredits={calculateImageCreditBreakdown().totalCredits}
+          userCurrentCredits={user?.credits || 0}
+          isLoading={generateImageMutation.isPending}
+        />
     </DashboardLayout>
   );
 }
