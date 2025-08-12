@@ -660,11 +660,10 @@ export default function CreateContent() {
       <Head>
         <title>{t("dashboard.createContent")} - {t("common.appName")}</title>
       </Head>
-      
       <DashboardLayout>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-secondary-900">{t("dashboard.create.title")}</h1>
-          <div className="text-secondary-500 bg-secondary-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+          <h1 className="text-2xl font-bold text-[#ffffff]">{t("dashboard.create.title")}</h1>
+          <div className="bg-secondary-100 px-3 py-1 rounded-full text-sm font-medium flex items-center text-[#ffffff]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4 mr-1 text-accent-500"
