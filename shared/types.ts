@@ -31,16 +31,7 @@ export interface GenerateContentRequest {
   image_size: { width: number; height: number }; // Image dimensions
   userId?: number; // User ID
   username?: string; // Username
-  timestamp?: string; // Request timestampự động tạo hình ảnh cho bài viết
-  // Các trường được thêm vào từ server
-  userId?: number; // ID người dùng gửi yêu cầu
-  username?: string; // Tên người dùng gửi yêu cầu
-  timestamp?: string; // Thời gian yêu cầu
-  // (để tương thích)
-  image_size?: { 
-    width: number;
-    height: number; 
-  }; // Định dạng mới cho kích thước hình ảnh
+  timestamp?: string; // Request timestamp
 }
 
 export interface ContentGenerationMetrics {

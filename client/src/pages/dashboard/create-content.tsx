@@ -187,8 +187,7 @@ export default function CreateContent() {
         description: "Vui lòng đợi trong khi hệ thống tạo nội dung của bạn...",
       });
       
-      const res = await apiRequest("POST", "/api/dashboard/generate-content", data);
-      const responseData = await res.json();
+      const responseData = await apiRequest("POST", "/api/dashboard/generate-content", data);
       if (!responseData.success) {
         throw new Error(responseData.error || "Failed to generate content");
       }
@@ -317,8 +316,6 @@ export default function CreateContent() {
       console.log('Credits used extracted:', creditsUsed);
       console.log('Full response data for debugging:', {
         creditsUsed: data.creditsUsed,
-        creditsNeeded: data.creditsNeeded,
-        totalCredits: data.totalCredits,
         actualUsed: creditsUsed
       });
       
@@ -422,7 +419,7 @@ export default function CreateContent() {
     };
 
     console.log('Sending content generation request:', requestData);
-    generateContentMutation.mutate(requestData as any);
+    generateContentMutation.mutate(requestData);
   };
 
   // Hàm trả về kích thước hình ảnh theo định dạng width/height dựa trên loại kích thước
