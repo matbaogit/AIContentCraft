@@ -2106,4 +2106,60 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // ========== Theme Settings API ==========
+  // Update theme settings
+  app.patch("/api/admin/settings/theme", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { defaultTheme, allowUserThemeChange } = req.body;
+
+      // Validate required fields
+      if (!defaultTheme || typeof allowUserThemeChange !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: "All theme configuration fields are required"
+        });
+      }
+
+      // Validate theme value
+      if (!['light', 'dark', 'system'].includes(defaultTheme)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid theme value. Must be 'light', 'dark', or 'system'"
+        });
+      }
+
+      // Update theme settings
+      await storage.setSetting('defaultTheme', defaultTheme, 'theme');
+      await storage.setSetting('allowUserThemeChange', allowUserThemeChange.toString(), 'theme');
+
+      console.log('Theme settings updated by admin:', {
+        defaultTheme,
+        allowUserThemeChange,
+        adminId: req.user.id
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Theme settings updated successfully",
+        data: {
+          defaultTheme,
+          allowUserThemeChange
+        }
+      });
+    } catch (error) {
+      console.error("Error updating theme settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update theme settings"
+      });
+    }
+  });
 }

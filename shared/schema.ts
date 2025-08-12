@@ -791,7 +791,7 @@ export type InsertPublishingLog = z.infer<typeof insertPublishingLogsSchema>;
 // Appearance Settings and History Management
 
 // Enum for appearance setting types
-export const appearanceTypeEnum = pgEnum('appearance_type', ['seo_meta', 'header', 'footer', 'login_page']);
+export const appearanceTypeEnum = pgEnum('appearance_type', ['seo_meta', 'header', 'footer', 'login_page', 'theme']);
 
 // Appearance Settings table
 export const appearanceSettings = pgTable('appearance_settings', {

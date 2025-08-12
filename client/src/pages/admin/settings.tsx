@@ -33,6 +33,7 @@ import {
   Globe,
   KeyRound,
   Mail,
+  Palette,
   RefreshCw,
   Save,
   Server,
@@ -370,6 +371,9 @@ interface SystemSettings {
   facebookAppId: string;
   facebookAppSecret: string;
   enableFacebookOAuth: boolean;
+  // Theme settings
+  defaultTheme: "light" | "dark" | "system";
+  allowUserThemeChange: boolean;
   // System info
   version: string;
   lastBackup: string;
@@ -454,6 +458,12 @@ const trialPlanSettingsSchema = z.object({
   trialPlanId: z.string().min(1, "Please select a trial plan"),
 });
 
+// Theme settings form schema
+const themeSettingsSchema = z.object({
+  defaultTheme: z.enum(["light", "dark", "system"]),
+  allowUserThemeChange: z.boolean(),
+});
+
 type GeneralSettingsValues = z.infer<typeof generalSettingsSchema>;
 type AiSettingsValues = z.infer<typeof aiSettingsSchema>;
 type EmailSettingsValues = z.infer<typeof emailSettingsSchema>;
@@ -462,6 +472,7 @@ type WebhookSettingsValues = z.infer<typeof webhookSettingsSchema>;
 type SocialOAuthSettingsValues = z.infer<typeof socialOAuthSettingsSchema>;
 type TrialPlanSettingsValues = z.infer<typeof trialPlanSettingsSchema>;
 type FirebaseSettingsValues = z.infer<typeof firebaseSettingsSchema>;
+type ThemeSettingsValues = z.infer<typeof themeSettingsSchema>;
 
 export default function AdminSettings() {
   const { t } = useLanguage();
@@ -618,6 +629,15 @@ export default function AdminSettings() {
     },
   });
 
+  // Theme settings form
+  const themeForm = useForm<ThemeSettingsValues>({
+    resolver: zodResolver(themeSettingsSchema),
+    defaultValues: {
+      defaultTheme: settings?.defaultTheme || "dark",
+      allowUserThemeChange: settings?.allowUserThemeChange || true,
+    },
+  });
+
   // Update settings when data is loaded
   useEffect(() => {
     if (settings) {
@@ -686,6 +706,11 @@ export default function AdminSettings() {
         facebookAppId: settings.facebookAppId || "",
         facebookAppSecret: settings.facebookAppSecret || "",
         enableFacebookOAuth: settings.enableFacebookOAuth || false,
+      });
+
+      themeForm.reset({
+        defaultTheme: settings.defaultTheme || "dark",
+        allowUserThemeChange: settings.allowUserThemeChange || true,
       });
     }
   }, [settings]);
@@ -858,6 +883,28 @@ export default function AdminSettings() {
     },
   });
 
+  // Update Theme settings mutation
+  const updateThemeSettingsMutation = useMutation({
+    mutationFn: async (data: ThemeSettingsValues) => {
+      const res = await apiRequest("PATCH", "/api/admin/settings/theme", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thành công",
+        description: "Cài đặt giao diện đã được cập nhật",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Lỗi",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Test email settings mutation
   const testEmailSettingsMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
@@ -928,6 +975,10 @@ export default function AdminSettings() {
 
   const onSocialOAuthSubmit = (data: SocialOAuthSettingsValues) => {
     updateSocialOAuthSettingsMutation.mutate(data);
+  };
+
+  const onThemeSubmit = (data: ThemeSettingsValues) => {
+    updateThemeSettingsMutation.mutate(data);
   };
 
   const [testEmailAddress, setTestEmailAddress] = useState("");
@@ -1009,6 +1060,10 @@ export default function AdminSettings() {
                     <TabsTrigger value="webhook" className="justify-start">
                       <Webhook className="h-4 w-4 mr-2" />
                       {t("admin.settingsPage.webhook") || "Webhook"}
+                    </TabsTrigger>
+                    <TabsTrigger value="theme" className="justify-start">
+                      <Palette className="h-4 w-4 mr-2" />
+                      Giao diện
                     </TabsTrigger>
                     <TabsTrigger value="firebase" className="justify-start">
                       <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -2201,6 +2256,91 @@ export default function AdminSettings() {
                             : "Lưu cấu hình"}
                         </Button>
                       </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Theme Settings */}
+            <TabsContent value="theme" className="mt-0 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cài đặt giao diện</CardTitle>
+                  <CardDescription>
+                    Cấu hình chế độ hiển thị và quyền thay đổi giao diện của người dùng
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...themeForm}>
+                    <form onSubmit={themeForm.handleSubmit(onThemeSubmit)} className="space-y-6">
+                      
+                      <FormField
+                        control={themeForm.control}
+                        name="defaultTheme"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Chế độ giao diện mặc định</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Chọn chế độ giao diện mặc định" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="light">Sáng</SelectItem>
+                                <SelectItem value="dark">Tối</SelectItem>
+                                <SelectItem value="system">Theo hệ thống</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              Chế độ giao diện sẽ được áp dụng cho người dùng mới và khi reset cài đặt
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={themeForm.control}
+                        name="allowUserThemeChange"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base">
+                                Cho phép người dùng thay đổi giao diện
+                              </FormLabel>
+                              <FormDescription>
+                                Khi bật, người dùng có thể tự điều chỉnh chế độ sáng/tối trong cài đặt cá nhân
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={updateThemeSettingsMutation.isPending}
+                        className="w-full sm:w-auto"
+                      >
+                        {updateThemeSettingsMutation.isPending ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Đang lưu...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Lưu cài đặt giao diện
+                          </>
+                        )}
+                      </Button>
                     </form>
                   </Form>
                 </CardContent>

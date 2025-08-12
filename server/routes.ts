@@ -3271,6 +3271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageSettings = await storage.getSettingsByCategory('image_generation');
       const socialSettings = await storage.getSettingsByCategory('social_content');
       const socialOAuthSettings = await storage.getSettingsByCategory('social');
+      const themeSettings = await storage.getSettingsByCategory('theme');
       
       // Chuẩn bị đối tượng cài đặt
       const settings = {
@@ -3338,6 +3339,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         facebookAppId: socialOAuthSettings.facebookAppId || "",
         facebookAppSecret: socialOAuthSettings.facebookAppSecret || "",
         enableFacebookOAuth: socialOAuthSettings.enableFacebookOAuth === "true",
+        
+        // Theme settings
+        defaultTheme: themeSettings.defaultTheme || "light",
+        allowUserThemeChange: themeSettings.allowUserThemeChange !== "false",
         
         // System info
         version: "1.0.0",
