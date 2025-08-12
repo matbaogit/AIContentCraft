@@ -3342,7 +3342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Theme settings
         defaultTheme: themeSettings.defaultTheme || "light",
-        allowUserThemeChange: themeSettings.allowUserThemeChange !== "false",
+        allowUserThemeChange: themeSettings.allowUserThemeChange === "true",
         
         // System info
         version: "1.0.0",
