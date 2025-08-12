@@ -2109,7 +2109,7 @@ export function registerAdminRoutes(app: Express) {
 
   // ========== Theme Settings API ==========
   // Update theme settings
-  app.patch("/api/admin/settings/theme", async (req: Request, res: Response) => {
+  app.patch("/api/admin/settings/theme", async (req, res) => {
     if (!req.isAuthenticated() || req.user.role !== "admin") {
       return res.status(403).json({ 
         success: false, 
