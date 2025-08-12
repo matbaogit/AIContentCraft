@@ -306,6 +306,7 @@ export function registerAdminRoutes(app: Express) {
         'contentGeneration.long',
         'contentGeneration.extraLong',
         'imageGeneration.perImage',
+        'socialContent.perGeneration',
         'aiModels.chatgpt',
         'aiModels.gemini',
         'aiModels.claude'

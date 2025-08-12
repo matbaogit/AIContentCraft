@@ -18,6 +18,9 @@ interface CreditConfig {
   imageGeneration: {
     perImage: number;
   };
+  socialContent: {
+    perGeneration: number;
+  };
   aiModels: {
     chatgpt: number;
     gemini: number;
@@ -28,12 +31,15 @@ interface CreditConfig {
 const defaultConfig: CreditConfig = {
   contentGeneration: {
     short: 1,
-    medium: 2,
-    long: 3,
-    extraLong: 4
+    medium: 3,
+    long: 5,
+    extraLong: 8
   },
   imageGeneration: {
-    perImage: 1
+    perImage: 2
+  },
+  socialContent: {
+    perGeneration: 5
   },
   aiModels: {
     chatgpt: 1,
@@ -257,6 +263,29 @@ export default function AdminCreditConfig() {
             <p className="text-sm text-muted-foreground mt-2">
               Số tín dụng tiêu hao cho mỗi hình ảnh được tạo trong bài viết
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Social Content Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Nội dung mạng xã hội</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label htmlFor="social-generation">Tín dụng mỗi lần tạo content social</Label>
+              <Input
+                id="social-generation"
+                type="number"
+                min="1"
+                value={config.socialContent.perGeneration}
+                onChange={(e) => updateConfig('socialContent.perGeneration', parseInt(e.target.value) || 5)}
+                className="mt-1 max-w-xs"
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                Áp dụng cho tất cả các platform (Facebook, LinkedIn, Twitter, Instagram)
+              </p>
+            </div>
           </CardContent>
         </Card>
 

@@ -768,13 +768,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get credit configuration from admin settings
       console.log('=== FETCHING CREDIT CONFIGURATION ===');
       const creditConfigRes = await db.query.systemSettings.findFirst({
-        where: eq(systemSettings.key, 'creditConfiguration')
+        where: eq(systemSettings.key, 'credit_config')
       });
       
       let creditConfig = {
         contentGeneration: { short: 1, medium: 3, long: 5, extraLong: 8 },
         aiModels: { chatgpt: 1, gemini: 1, claude: 2 },
-        imageGeneration: { perImage: 2 }
+        imageGeneration: { perImage: 2 },
+        socialContent: { perGeneration: 5 }
       };
       
       if (creditConfigRes?.value) {
@@ -2514,12 +2515,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parsedResult = { output: webhookResult };
         }
 
+        // Get social content credit configuration
+        const socialCreditConfigRes = await db.query.systemSettings.findFirst({
+          where: eq(systemSettings.key, 'credit_config')
+        });
+        
+        let socialCredits = 5; // Default
+        if (socialCreditConfigRes?.value) {
+          try {
+            const parsedConfig = typeof socialCreditConfigRes.value === 'string' 
+              ? JSON.parse(socialCreditConfigRes.value) 
+              : socialCreditConfigRes.value;
+            socialCredits = parsedConfig?.socialContent?.perGeneration || 5;
+          } catch (error) {
+            console.log('Using default social content credits:', error);
+          }
+        }
+
         // Deduct credits for webhook usage
-        await storage.subtractUserCredits(userId, 5, `Tạo nội dung social media`);
+        await storage.subtractUserCredits(userId, socialCredits, `Tạo nội dung social media`);
 
         return res.json({ 
           success: true, 
-          data: Object.assign(parsedResult || {}, { creditsUsed: 5 })
+          data: Object.assign(parsedResult || {}, { creditsUsed: socialCredits })
         });
       }
 
@@ -2553,12 +2571,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Get social content credit requirement
+      const socialCreditConfigRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'credit_config')
+      });
+      
+      let socialCreditsRequired = 5; // Default
+      if (socialCreditConfigRes?.value) {
+        try {
+          const parsedConfig = typeof socialCreditConfigRes.value === 'string' 
+            ? JSON.parse(socialCreditConfigRes.value) 
+            : socialCreditConfigRes.value;
+          socialCreditsRequired = parsedConfig?.socialContent?.perGeneration || 5;
+        } catch (error) {
+          console.log('Using default social content credits requirement:', error);
+        }
+      }
+
       // Check user credits
       const user = await storage.getUser(userId);
-      if (!user || user.credits < 5) {
+      if (!user || user.credits < socialCreditsRequired) {
         return res.status(400).json({ 
           success: false, 
-          error: 'Insufficient credits. Need at least 5 credits.' 
+          error: `Insufficient credits. Need at least ${socialCreditsRequired} credits.` 
         });
       }
 
@@ -2723,8 +2758,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Get social content credit configuration and deduct credits
+      const regularSocialCreditConfigRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'credit_config')
+      });
+      
+      let regularSocialCredits = 5; // Default
+      if (regularSocialCreditConfigRes?.value) {
+        try {
+          const parsedConfig = typeof regularSocialCreditConfigRes.value === 'string' 
+            ? JSON.parse(regularSocialCreditConfigRes.value) 
+            : regularSocialCreditConfigRes.value;
+          regularSocialCredits = parsedConfig?.socialContent?.perGeneration || 5;
+        } catch (error) {
+          console.log('Using default regular social content credits:', error);
+        }
+      }
+
       // Deduct credits after successful webhook call
-      await storage.subtractUserCredits(userId, 5, `Tạo nội dung social media cho ${platforms.length} nền tảng`);
+      await storage.subtractUserCredits(userId, regularSocialCredits, `Tạo nội dung social media cho ${platforms.length} nền tảng`);
 
       // Log credit usage for social media content generation
       await logCreditUsage(
@@ -2734,8 +2786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         null, // no specific AI model
         false, // not image generation
         0, // no images
-        5, // social media content costs 5 credits
-        { social_content: 5, total: 5 },
+        regularSocialCredits, // social media content costs from config
+        { social_content: regularSocialCredits, total: regularSocialCredits },
         { contentSource, platforms, briefDescription, seoTopic, seoKeywords },
         contentSource === 'create-new-seo' ? seoTopic : briefDescription?.substring(0, 100) || 'Social Media Content',
         webhookResult?.content ? webhookResult.content.split(/\s+/).length : 0,
@@ -2745,7 +2797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return webhook response to frontend
       res.json({ 
         success: true, 
-        data: Object.assign(webhookResult || {}, { creditsUsed: 5 })
+        data: Object.assign(webhookResult || {}, { creditsUsed: regularSocialCredits })
       });
     } catch (error) {
       console.error('Error generating social media content:', error);
@@ -3063,6 +3115,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('contentSource:', contentSource);
       console.log('genSEO from frontend:', genSEO);
 
+      // Get social content credit configuration and check user credits
+      const finalSocialCreditCheckRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'credit_config')
+      });
+      
+      let requiredCredits = 5; // Default
+      if (finalSocialCreditCheckRes?.value) {
+        try {
+          const parsedConfig = typeof finalSocialCreditCheckRes.value === 'string' 
+            ? JSON.parse(finalSocialCreditCheckRes.value) 
+            : finalSocialCreditCheckRes.value;
+          requiredCredits = parsedConfig?.socialContent?.perGeneration || 5;
+        } catch (error) {
+          console.log('Using default social content credits for check:', error);
+        }
+      }
+
+      // Check if user has enough credits
+      const user = await storage.getUser(userId);
+      if (!user || user.credits < requiredCredits) {
+        return res.status(400).json({ 
+          success: false, 
+          error: `Insufficient credits. Need at least ${requiredCredits} credits.` 
+        });
+      }
+
       // Get webhook URL from settings
       const socialContentWebhookUrl = await storage.getSetting('socialContentWebhookUrl');
       if (!socialContentWebhookUrl) {
@@ -3148,10 +3226,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log('=== END WEBHOOK DEBUG ===');
 
+      // Get social content credit configuration and deduct credits
+      const finalSocialCreditConfigRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'credit_config')
+      });
+      
+      let finalSocialCredits = 5; // Default
+      if (finalSocialCreditConfigRes?.value) {
+        try {
+          const parsedConfig = typeof finalSocialCreditConfigRes.value === 'string' 
+            ? JSON.parse(finalSocialCreditConfigRes.value) 
+            : finalSocialCreditConfigRes.value;
+          finalSocialCredits = parsedConfig?.socialContent?.perGeneration || 5;
+        } catch (error) {
+          console.log('Using default final social content credits:', error);
+        }
+      }
+
+      // Deduct credits for successful social content generation
+      await storage.subtractUserCredits(userId, finalSocialCredits, `Tạo nội dung social media hoàn chỉnh`);
+
       // Return webhook response to frontend - ensure it's the actual webhook data
       res.json({ 
         success: true, 
-        data: webhookResult || { message: 'Content approved and sent to Social Media Content webhook' }
+        data: Object.assign(webhookResult || { message: 'Content approved and sent to Social Media Content webhook' }, { creditsUsed: finalSocialCredits })
       });
     } catch (error) {
       console.error('Error creating final social media content:', error);
@@ -4006,8 +4104,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get image generation settings
       const imageSettings = await storage.getSettingsByCategory('image_generation');
       const imageWebhookUrl = imageSettings.imageWebhookUrl;
-      const creditsPerGeneration = parseInt(imageSettings.imageCreditsPerGeneration || '1');
       const enableImageGeneration = imageSettings.enableImageGeneration === 'true';
+      
+      // Get credit configuration from admin settings for consistency
+      const creditConfigRes = await db.query.systemSettings.findFirst({
+        where: eq(systemSettings.key, 'credit_config')
+      });
+      
+      let creditsPerGeneration = 2; // Default from credit config
+      if (creditConfigRes?.value) {
+        try {
+          const parsedConfig = typeof creditConfigRes.value === 'string' 
+            ? JSON.parse(creditConfigRes.value) 
+            : creditConfigRes.value;
+          creditsPerGeneration = parsedConfig?.imageGeneration?.perImage || 2;
+        } catch (error) {
+          console.log('Using default image generation credits:', error);
+        }
+      } else {
+        // Fallback to old settings method if credit config not found
+        creditsPerGeneration = parseInt(imageSettings.imageCreditsPerGeneration || '2');
+      }
       
       if (!enableImageGeneration) {
         return res.status(400).json({ 
