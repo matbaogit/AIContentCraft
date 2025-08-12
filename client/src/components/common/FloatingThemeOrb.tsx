@@ -12,7 +12,7 @@ export function FloatingThemeOrb({
   showSwitcher = true, 
   position = "bottom-right" 
 }: FloatingThemeOrbProps) {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, allowUserThemeChange } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
   
@@ -28,6 +28,11 @@ export function FloatingThemeOrb({
   }, []);
 
   if (!mounted) return null;
+
+  // Ẩn floating orb nếu admin không cho phép thay đổi theme
+  if (!allowUserThemeChange) {
+    return null;
+  }
 
   const getPositionClasses = () => {
     switch (position) {

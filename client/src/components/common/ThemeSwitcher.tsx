@@ -23,7 +23,7 @@ export function ThemeSwitcher({
   className = "",
   showDropdown = true,
 }: ThemeSwitcherProps) {
-  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, toggleTheme, allowUserThemeChange } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Sau khi component mount mới hiển thị để tránh hydration mismatch
@@ -32,6 +32,11 @@ export function ThemeSwitcher({
   }, []);
 
   if (!mounted) {
+    return null;
+  }
+
+  // Ẩn theme switcher nếu admin không cho phép thay đổi theme
+  if (!allowUserThemeChange) {
     return null;
   }
 

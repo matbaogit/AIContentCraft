@@ -132,6 +132,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Public Theme Settings API ==========
+  // Public endpoint for theme settings (không cần authentication)
+  app.get("/api/admin/settings/theme-public", async (req, res) => {
+    try {
+      const themeSettings = await storage.getSettingsByCategory('theme');
+      
+      return res.status(200).json({
+        allowUserThemeChange: themeSettings.allowUserThemeChange === "true",
+        defaultTheme: themeSettings.defaultTheme || "dark"
+      });
+    } catch (error) {
+      console.error("Error getting public theme settings:", error);
+      // Return default settings on error
+      return res.status(200).json({
+        allowUserThemeChange: true,
+        defaultTheme: "dark"
+      });
+    }
+  });
+
   // ========== Legal Pages API ==========
   // Get all legal pages
   app.get('/api/admin/legal-pages', isAuthenticated, async (req, res) => {

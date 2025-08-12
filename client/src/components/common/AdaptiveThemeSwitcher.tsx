@@ -27,7 +27,7 @@ export function AdaptiveThemeSwitcher({
   playful = true,
   size = "md",
 }: AdaptiveThemeSwitcherProps) {
-  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, toggleTheme, allowUserThemeChange } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number }>>([]);
@@ -37,6 +37,11 @@ export function AdaptiveThemeSwitcher({
   }, []);
 
   if (!mounted) {
+    return null;
+  }
+
+  // Ẩn theme switcher nếu admin không cho phép thay đổi theme
+  if (!allowUserThemeChange) {
     return null;
   }
 
