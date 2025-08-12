@@ -7,6 +7,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Animations */
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-gradient {
+  background-size: 300% 300%;
+  animation: gradient 6s ease infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+.slow {
+  animation-duration: 4s !important;
+}
+
+.delay-1000 {
+  animation-delay: 1s !important;
+}
+
+.delay-500 {
+  animation-delay: 0.5s !important;
+}
+
+.delay-300 {
+  animation-delay: 0.3s !important;
+}
+
+.delay-700 {
+  animation-delay: 0.7s !important;
+}
+
+/* Enhanced glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* ReactQuill Dark Mode Styles */
 .dark .ql-editor {
   color: white !important;

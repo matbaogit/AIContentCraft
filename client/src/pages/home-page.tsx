@@ -20,8 +20,8 @@ export default function HomePage() {
   });
 
   // Get dynamic site name from SEO meta settings first, then header settings
-  const seoSiteTitle = appearanceSettings?.data?.find((s: any) => s.type === 'seo_meta' && s.key === 'site_title' && s.language === language)?.value;
-  const headerSiteName = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value;
+  const seoSiteTitle = (appearanceSettings as any)?.data?.find((s: any) => s.type === 'seo_meta' && s.key === 'site_title' && s.language === language)?.value;
+  const headerSiteName = (appearanceSettings as any)?.data?.find((s: any) => s.type === 'header' && s.key === 'site_name' && s.language === language)?.value;
   const siteName = seoSiteTitle || headerSiteName || t("common.appName");
 
   return (

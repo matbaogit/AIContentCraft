@@ -26,8 +26,8 @@ export function Navbar() {
   });
 
   // Get logo dimensions from settings
-  const logoHeight = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_height' && s.language === language)?.value || '32';
-  const logoWidth = appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_width' && s.language === language)?.value || 'auto';
+  const logoHeight = (appearanceSettings as any)?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_height' && s.language === language)?.value || '32';
+  const logoWidth = (appearanceSettings as any)?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_width' && s.language === language)?.value || 'auto';
   
   // Create dynamic style for logo
   const logoStyle = {
@@ -75,10 +75,10 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center group">
               <div className="flex-shrink-0 flex items-center mr-4">
-                {appearanceSettings?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language) ? (
+                {(appearanceSettings as any)?.data?.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language) ? (
                   <div className="flex items-center">
                     <img
-                      src={appearanceSettings.data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
+                      src={(appearanceSettings as any).data.find((s: any) => s.type === 'header' && s.key === 'logo_url' && s.language === language)?.value}
                       alt={t("common.appName")}
                       style={logoStyle}
                       className="transition-all duration-300"

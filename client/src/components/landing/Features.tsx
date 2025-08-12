@@ -107,37 +107,34 @@ function FeatureCard({ title, description, icon: Icon, iconColor, bgColor, index
 export function Features() {
   const { t, language } = useLanguage();
   
-  // Debug log to check language value
-  console.log("Current language in Features:", language);
-  
   const mainFeatures = useMemo(() => [
     {
       icon: Bot,
       iconColor: "text-blue-50 dark:text-blue-100",
       bgColor: "bg-gradient-to-br from-blue-500 to-indigo-600",
-      title: language === "en" ? "AI Content Creation" : "Nội dung AI",
-      description: language === "en" ? "Advanced AI system automatically analyzes and creates high-quality content with appropriate tone for every industry." : "Tạo nội dung SEO tự động với AI tiên tiến"
+      title: language === "en" ? "AI Content Creation" : "Tạo nội dung AI",
+      description: language === "en" ? "Advanced AI system automatically analyzes and creates high-quality content with appropriate tone for every industry." : "Hệ thống AI tiên tiến tự động phân tích và tạo nội dung chất lượng cao với giọng văn phù hợp cho mọi lĩnh vực."
     },
     {
       icon: Search,
       iconColor: "text-amber-50 dark:text-amber-100",
       bgColor: "bg-gradient-to-br from-amber-500 to-orange-600", 
-      title: language === "en" ? "Multilingual Support" : "Đa ngôn ngữ",
-      description: language === "en" ? "Support Vietnamese and multiple languages for global reach." : "Hỗ trợ tiếng Việt và nhiều ngôn ngữ"
+      title: language === "en" ? "SEO Optimization" : "Tối ưu SEO",
+      description: language === "en" ? "Intelligent keyword research and SEO optimization with real-time suggestions to boost your content ranking." : "Nghiên cứu từ khóa thông minh và tối ưu SEO với gợi ý thời gian thực để tăng thứ hạng nội dung."
     },
     {
       icon: Share2,
       iconColor: "text-emerald-50 dark:text-emerald-100",
       bgColor: "bg-gradient-to-br from-emerald-500 to-teal-600",
-      title: language === "en" ? "Platform Integration" : "Tích hợp",
-      description: language === "en" ? "Connect with WordPress, Facebook, TikTok and other social channels seamlessly." : "Kết nối WordPress, Facebook, TikTok"
+      title: language === "en" ? "Platform Integration" : "Tích hợp đa nền tảng",
+      description: language === "en" ? "Connect with WordPress, Facebook, TikTok and other social channels seamlessly with automated posting." : "Kết nối WordPress, Facebook, TikTok và các kênh mạng xã hội khác một cách liền mạch với tính năng đăng tự động."
     },
     {
       icon: BarChart4,
       iconColor: "text-purple-50 dark:text-purple-100",
       bgColor: "bg-gradient-to-br from-purple-500 to-pink-600",
-      title: language === "en" ? "Performance Analytics" : "Phân tích",
-      description: language === "en" ? "Track performance and optimize content effectively with detailed insights." : "Theo dõi hiệu suất và tối ưu nội dung"
+      title: language === "en" ? "Performance Analytics" : "Phân tích hiệu suất",
+      description: language === "en" ? "Track performance and optimize content effectively with detailed insights and advanced metrics." : "Theo dõi hiệu suất và tối ưu nội dung hiệu quả với thông tin chi tiết và chỉ số nâng cao."
     }
   ], [language]);
 
