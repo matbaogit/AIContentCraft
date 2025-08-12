@@ -63,8 +63,7 @@ import SidebarMenuManagement from "@/pages/admin/sidebar-menu";
 import CreditUsageHistory from "@/pages/admin/credit-usage-history";
 import LegalPagesManagement from "@/pages/admin/legal-pages";
 import CreditHistory from "@/pages/dashboard/credit-history";
-import FacebookOAuthDebug from "@/pages/debug/facebook-oauth";
-import FacebookAppSetup from "@/pages/debug/facebook-app-setup";
+
 import FacebookCallbackInfo from "@/pages/debug/facebook-callback-info";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import DataDeletion from "@/pages/DataDeletion";
@@ -165,8 +164,6 @@ function Router() {
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />
       
       {/* Debug routes (Admin only) */}
-      <ProtectedRoute path="/debug/facebook-oauth" component={FacebookOAuthDebug} adminOnly={true} />
-      <ProtectedRoute path="/debug/facebook-app-setup" component={FacebookAppSetup} adminOnly={true} />
       <ProtectedRoute path="/debug/facebook-callback-info" component={FacebookCallbackInfo} adminOnly={true} />
       
       {/* Demo routes */}
