@@ -1947,7 +1947,7 @@ export default function CreateContent() {
               setPendingFormData(null);
             }}
             onConfirm={confirmAndSubmit}
-            title="Xác nhận tạo nội dung AI"
+            title={t('credit.modal.title.content', 'Xác nhận tạo nội dung AI', 'Confirm AI Content Creation')}
             breakdown={calculateCreditBreakdown(pendingFormData).breakdown}
             totalCredits={calculateCreditBreakdown(pendingFormData).totalCredits}
             userCurrentCredits={user?.credits || 0}

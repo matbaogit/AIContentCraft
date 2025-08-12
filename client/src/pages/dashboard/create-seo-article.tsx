@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useDbTranslations } from '@/hooks/use-db-translations';
+import { useLanguage } from '@/hooks/use-language';
 import { DashboardLayout } from '@/components/dashboard/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +23,20 @@ interface FormData {
 
 export default function CreateSeoArticle() {
   const { user } = useAuth();
+  const { t: dbT } = useDbTranslations();
+  const { language } = useLanguage();
   const { toast } = useToast();
+  
+  // Translation helper function with fallbacks
+  const t = (key: string, fallbackVi: string, fallbackEn: string) => {
+    // Try database translations first
+    const dbTranslation = dbT(key);
+    if (dbTranslation && dbTranslation !== key) {
+      return dbTranslation;
+    }
+    // Fallback to hardcoded translations
+    return language === 'vi' ? fallbackVi : fallbackEn;
+  };
   const { invalidateCreditHistory } = useCreditCache();
   const [, setLocation] = useLocation();
   
@@ -200,7 +215,7 @@ export default function CreateSeoArticle() {
           setPendingFormSubmit(false);
         }}
         onConfirm={confirmAndCreateArticle}
-        title="Xác nhận tạo bài viết SEO"
+        title={t('credit.modal.title.seo', 'Xác nhận tạo bài viết SEO', 'Confirm SEO Article Creation')}
         breakdown={calculateSeoArticleCreditBreakdown().breakdown}
         totalCredits={calculateSeoArticleCreditBreakdown().totalCredits}
         userCurrentCredits={user?.credits || 0}

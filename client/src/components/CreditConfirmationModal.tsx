@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, Coins, CheckCircle, XCircle } from 'lucide-react';
+import { useLanguage } from '@/hooks/use-language';
+import { useDbTranslations } from '@/hooks/use-db-translations';
 
 interface CreditBreakdown {
   label: string;
@@ -32,8 +34,35 @@ export function CreditConfirmationModal({
   userCurrentCredits,
   isLoading = false
 }: CreditConfirmationModalProps) {
+  const { language } = useLanguage();
+  const { t: dbT } = useDbTranslations();
   const hasEnoughCredits = userCurrentCredits >= totalCredits;
   const remainingCredits = userCurrentCredits - totalCredits;
+
+  // Translation helper function with fallbacks
+  const t = (key: string, fallbackVi: string, fallbackEn: string) => {
+    // Try database translations first
+    const dbTranslation = dbT(key);
+    if (dbTranslation && dbTranslation !== key) {
+      return dbTranslation;
+    }
+    // Fallback to hardcoded translations
+    return language === 'vi' ? fallbackVi : fallbackEn;
+  };
+
+  // Dynamic translations
+  const creditWord = t('credit.unit', 'tín dụng', 'credits');
+  const currentCreditsLabel = t('credit.current', 'Tín dụng hiện tại', 'Current Credits');
+  const detailLabel = t('credit.detail', 'Chi tiết tín dụng sử dụng:', 'Credit Usage Details:');
+  const totalLabel = t('credit.total', 'Tổng cộng', 'Total');
+  const sufficientMessage = t('credit.sufficient', 'Đủ tín dụng để thực hiện', 'Sufficient credits to proceed');
+  const insufficientMessage = t('credit.insufficient', 'Không đủ tín dụng', 'Insufficient credits');
+  const remainingMessage = t('credit.remaining', 'Còn lại:', 'Remaining:');
+  const neededMessage = t('credit.needed', 'Thiếu:', 'Needed:');
+  const afterExecutionMessage = t('credit.afterExecution', 'sau khi thực hiện', 'after execution');
+  const cancelLabel = t('common.cancel', 'Hủy bỏ', 'Cancel');
+  const confirmLabel = t('credit.confirm', 'Xác nhận thực hiện', 'Confirm Execution');
+  const processingLabel = t('common.processing', 'Đang xử lý...', 'Processing...');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -50,10 +79,10 @@ export function CreditConfirmationModal({
           <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-sm text-slate-600 dark:text-slate-400">
-                Tín dụng hiện tại
+                {currentCreditsLabel}
               </span>
               <Badge variant="outline" className="font-mono">
-                {userCurrentCredits} tín dụng
+                {userCurrentCredits} {creditWord}
               </Badge>
             </div>
           </div>
@@ -61,7 +90,7 @@ export function CreditConfirmationModal({
           {/* Credit Breakdown */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Chi tiết tín dụng sử dụng:
+              {detailLabel}
             </h4>
             
             {breakdown.map((item, index) => (
@@ -73,7 +102,7 @@ export function CreditConfirmationModal({
                   variant={item.color || 'secondary'}
                   className="font-mono"
                 >
-                  {item.credits} tín dụng
+                  {item.credits} {creditWord}
                 </Badge>
               </div>
             ))}
@@ -83,13 +112,13 @@ export function CreditConfirmationModal({
             {/* Total */}
             <div className="flex items-center justify-between py-2 bg-slate-50 dark:bg-slate-800 px-3 rounded-lg">
               <span className="font-medium text-slate-800 dark:text-slate-200">
-                Tổng cộng
+                {totalLabel}
               </span>
               <Badge 
                 variant={hasEnoughCredits ? 'default' : 'destructive'}
                 className="font-mono text-base px-3 py-1"
               >
-                {totalCredits} tín dụng
+                {totalCredits} {creditWord}
               </Badge>
             </div>
           </div>
@@ -100,10 +129,10 @@ export function CreditConfirmationModal({
               <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
               <div className="text-sm">
                 <div className="font-medium text-green-800 dark:text-green-300">
-                  Đủ tín dụng để thực hiện
+                  {sufficientMessage}
                 </div>
                 <div className="text-green-600 dark:text-green-400">
-                  Còn lại: {remainingCredits} tín dụng sau khi thực hiện
+                  {remainingMessage} {remainingCredits} {creditWord} {afterExecutionMessage}
                 </div>
               </div>
             </div>
@@ -112,10 +141,10 @@ export function CreditConfirmationModal({
               <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
               <div className="text-sm">
                 <div className="font-medium text-red-800 dark:text-red-300">
-                  Không đủ tín dụng
+                  {insufficientMessage}
                 </div>
                 <div className="text-red-600 dark:text-red-400">
-                  Thiếu: {Math.abs(remainingCredits)} tín dụng
+                  {neededMessage} {Math.abs(remainingCredits)} {creditWord}
                 </div>
               </div>
             </div>
@@ -131,7 +160,7 @@ export function CreditConfirmationModal({
             className="flex-1"
           >
             <XCircle className="h-4 w-4 mr-2" />
-            Hủy bỏ
+            {cancelLabel}
           </Button>
           
           <Button
@@ -142,12 +171,12 @@ export function CreditConfirmationModal({
             {isLoading ? (
               <div className="flex items-center">
                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                Đang xử lý...
+                {processingLabel}
               </div>
             ) : (
               <>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Xác nhận thực hiện
+                {confirmLabel}
               </>
             )}
           </Button>

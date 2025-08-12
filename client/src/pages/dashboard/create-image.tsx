@@ -1324,7 +1324,7 @@ export default function CreateImagePage() {
             setPendingImageData(null);
           }}
           onConfirm={confirmAndGenerateImage}
-          title="Xác nhận tạo hình ảnh AI"
+          title={t('credit.modal.title.image', 'Xác nhận tạo hình ảnh AI', 'Confirm AI Image Creation')}
           breakdown={calculateImageCreditBreakdown().breakdown}
           totalCredits={calculateImageCreditBreakdown().totalCredits}
           userCurrentCredits={user?.credits || 0}

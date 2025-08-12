@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useDbTranslations } from '@/hooks/use-db-translations';
+import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -34,9 +35,21 @@ interface SocialContentForm {
 
 export default function CreateSocialContentPage() {
   const { user } = useAuth();
-  const { t, language } = useDbTranslations();
+  const { t: dbT, language } = useDbTranslations();
+  const { language: langCtx } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Translation helper function with fallbacks
+  const t = (key: string, fallbackVi: string, fallbackEn: string) => {
+    // Try database translations first
+    const dbTranslation = dbT(key);
+    if (dbTranslation && dbTranslation !== key) {
+      return dbTranslation;
+    }
+    // Fallback to hardcoded translations
+    return langCtx === 'vi' ? fallbackVi : fallbackEn;
+  };
   
   const [form, setForm] = useState<SocialContentForm>({
     contentSource: '',
@@ -301,9 +314,9 @@ export default function CreateSocialContentPage() {
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold">{t('dashboard.create.socialContent.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('dashboard.create.socialContent.title', 'Tạo Nội Dung Mạng Xã Hội', 'Create Social Media Content')}</h1>
             <p className="text-muted-foreground mt-2">
-              {t('dashboard.create.socialContent.subtitle')}
+              {t('dashboard.create.socialContent.subtitle', 'Tạo nội dung tối ưu cho nhiều nền tảng mạng xã hội', 'Create optimized content for multiple social media platforms')}
             </p>
           </div>
           <Button onClick={handleSubmit} disabled={generateContentMutation.isPending}>
@@ -442,16 +455,16 @@ export default function CreateSocialContentPage() {
                 {/* Reference Link for existing article */}
                 {form.contentSource === 'existing-article' && (
                   <div className="space-y-2">
-                    <Label htmlFor="referenceLink">{t('dashboard.create.socialContent.step1.referenceLink')}</Label>
+                    <Label htmlFor="referenceLink">{t('dashboard.create.socialContent.step1.referenceLink', 'URL tham khảo', 'Reference URL')}</Label>
                     <Input
                       id="referenceLink"
                       type="url"
-                      placeholder={t('dashboard.create.socialContent.step1.referencePlaceholder')}
+                      placeholder={t('dashboard.create.socialContent.step1.referencePlaceholder', 'https://example.com/article', 'https://example.com/article')}
                       value={form.referenceLink}
                       onChange={(e) => setForm(prev => ({ ...prev, referenceLink: e.target.value }))}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('dashboard.create.socialContent.referenceDescription')}
+                      {t('dashboard.create.socialContent.referenceDescription', 'URL bài viết hoặc nguồn tham khảo để trích xuất nội dung', 'Article URL or reference source for content extraction')}
                     </p>
                   </div>
                 )}
@@ -459,23 +472,23 @@ export default function CreateSocialContentPage() {
                 {/* Reference Link (only when using AI from keywords) */}
                 {form.contentSource === 'ai-keyword' && (
                   <div className="space-y-2">
-                    <Label htmlFor="referenceLink">{t('dashboard.create.socialContent.step1.referenceLink')}</Label>
+                    <Label htmlFor="referenceLink">{t('dashboard.create.socialContent.step1.referenceLink', 'URL tham khảo', 'Reference URL')}</Label>
                     <Input
                       id="referenceLink"
                       type="url"
-                      placeholder={t('dashboard.create.socialContent.step1.referencePlaceholder')}
+                      placeholder={t('dashboard.create.socialContent.step1.referencePlaceholder', 'https://example.com/article', 'https://example.com/article')}
                       value={form.referenceLink}
                       onChange={(e) => setForm(prev => ({ ...prev, referenceLink: e.target.value }))}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('dashboard.create.socialContent.referenceHelp')}
+                      {t('dashboard.create.socialContent.referenceHelp', 'URL tham khảo để hỗ trợ tạo nội dung (tùy chọn)', 'Reference URL to assist content creation (optional)')}
                     </p>
                   </div>
                 )}
 
                 {/* Target Platforms */}
                 <div className="space-y-3">
-                  <Label>{t('dashboard.create.socialContent.step1.platforms')}</Label>
+                  <Label>{t('dashboard.create.socialContent.step1.platforms', 'Nền tảng mục tiêu', 'Target Platforms')}</Label>
                   <div className="grid grid-cols-2 gap-3">
                     {platforms.map((platform) => (
                       <div key={platform.id} className="flex items-center space-x-2">
@@ -903,9 +916,9 @@ export default function CreateSocialContentPage() {
                       </h3>
                       <div className={`p-4 ${config.bgColor} rounded-lg border`}>
                         <div className="space-y-2">
-                          <p className="text-sm font-medium">{t('dashboard.create.socialContent.articleContent')}:</p>
+                          <p className="text-sm font-medium">{t('dashboard.create.socialContent.articleContent', 'Nội dung bài viết', 'Article Content')}:</p>
                           <div className="text-sm whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded border">
-                            {content || t('dashboard.create.socialContent.noContent')}
+                            {content || t('dashboard.create.socialContent.noContent', 'Không có nội dung', 'No content')}
                           </div>
                         </div>
                       </div>
@@ -918,7 +931,7 @@ export default function CreateSocialContentPage() {
             {/* Fallback for non-array response */}
             {finalSocialContent && !Array.isArray(finalSocialContent) && (
               <div className="space-y-3">
-                <h3 className="font-medium text-sm">{t('dashboard.create.socialContent.generatedContent')}:</h3>
+                <h3 className="font-medium text-sm">{t('dashboard.create.socialContent.generatedContent', 'Nội dung đã tạo', 'Generated Content')}:</h3>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
                   <div className="text-sm whitespace-pre-wrap">
                     {finalSocialContent.output || JSON.stringify(finalSocialContent, null, 2)}
@@ -932,7 +945,7 @@ export default function CreateSocialContentPage() {
               <div className="mt-6">
                 <details className="space-y-2">
                   <summary className="cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400">
-{t('dashboard.create.socialContent.viewFullResponse')}
+{t('dashboard.create.socialContent.viewFullResponse', 'Xem toàn bộ phản hồi', 'View Full Response')}
                   </summary>
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border max-h-40 overflow-y-auto">
                     <pre className="text-xs">
@@ -953,12 +966,12 @@ export default function CreateSocialContentPage() {
                 {handleSaveToCreatedContent.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {t('social.action.save', 'Đang lưu...')}
+                    {t('social.action.save', 'Đang lưu...', 'Saving...')}
                   </>
                 ) : (
                   <>
                     <Check className="h-4 w-4" />
-                    {t('social.nav.finish', 'Hoàn thành')}
+                    {t('social.nav.finish', 'Hoàn thành', 'Complete')}
                   </>
                 )}
               </Button>
@@ -969,15 +982,15 @@ export default function CreateSocialContentPage() {
                   if (finalSocialContent) {
                     navigator.clipboard.writeText(JSON.stringify(finalSocialContent, null, 2));
                     toast({
-                      title: t('social.action.copy', 'Đã sao chép'),
-                      description: t('social.action.copyDesc', 'Toàn bộ nội dung đã được sao chép vào clipboard'),
+                      title: t('social.action.copy', 'Đã sao chép', 'Copied'),
+                      description: t('social.action.copyDesc', 'Toàn bộ nội dung đã được sao chép vào clipboard', 'All content has been copied to clipboard'),
                     });
                   }
                 }}
                 className="flex items-center gap-2"
               >
                 <Copy className="h-4 w-4" />
-                {t('social.action.copyAll', 'Copy tất cả')}
+                {t('social.action.copyAll', 'Copy tất cả', 'Copy All')}
               </Button>
             </div>
           </div>
@@ -992,7 +1005,7 @@ export default function CreateSocialContentPage() {
           setPendingFormData(null);
         }}
         onConfirm={confirmAndGenerateContent}
-        title="Xác nhận tạo nội dung social media"
+        title={t('credit.modal.title.social', 'Xác nhận tạo nội dung social media', 'Confirm Social Media Content Creation')}
         breakdown={calculateSocialCreditBreakdown().breakdown}
         totalCredits={calculateSocialCreditBreakdown().totalCredits}
         userCurrentCredits={user?.credits || 0}
