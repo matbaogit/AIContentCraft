@@ -634,7 +634,7 @@ export default function AdminSettings() {
     resolver: zodResolver(themeSettingsSchema),
     defaultValues: {
       defaultTheme: settings?.defaultTheme || "dark",
-      allowUserThemeChange: settings?.allowUserThemeChange || true,
+      allowUserThemeChange: settings?.allowUserThemeChange ?? true,
     },
   });
 
@@ -710,7 +710,7 @@ export default function AdminSettings() {
 
       themeForm.reset({
         defaultTheme: settings.defaultTheme || "dark",
-        allowUserThemeChange: settings.allowUserThemeChange || true,
+        allowUserThemeChange: settings.allowUserThemeChange ?? true,
       });
     }
   }, [settings]);
