@@ -271,7 +271,6 @@ function Layout({ children, title }: AdminLayoutProps) {
           )}
         </div>
       </aside>
-
       {/* Mobile sidebar */}
       <div className="md:hidden">
         <Sheet>
@@ -355,11 +354,10 @@ function Layout({ children, title }: AdminLayoutProps) {
           </SheetContent>
         </Sheet>
       </div>
-
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm">
-          <div className="h-16 px-4 md:px-6 flex items-center justify-between">
+          <div className="h-16 px-4 md:px-6 flex items-center justify-between text-[2e82d0]">
             <h1 className="text-2xl font-bold text-secondary-900">
               {title || t("admin.dashboard")}
             </h1>
