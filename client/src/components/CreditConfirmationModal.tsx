@@ -53,7 +53,7 @@ export function CreditConfirmationModal({
                 Tín dụng hiện tại
               </span>
               <Badge variant="outline" className="font-mono">
-                {userCurrentCredits} credits
+                {userCurrentCredits} tín dụng
               </Badge>
             </div>
           </div>
@@ -73,7 +73,7 @@ export function CreditConfirmationModal({
                   variant={item.color || 'secondary'}
                   className="font-mono"
                 >
-                  {item.credits} credits
+                  {item.credits} tín dụng
                 </Badge>
               </div>
             ))}
@@ -89,7 +89,7 @@ export function CreditConfirmationModal({
                 variant={hasEnoughCredits ? 'default' : 'destructive'}
                 className="font-mono text-base px-3 py-1"
               >
-                {totalCredits} credits
+                {totalCredits} tín dụng
               </Badge>
             </div>
           </div>
@@ -103,7 +103,7 @@ export function CreditConfirmationModal({
                   Đủ tín dụng để thực hiện
                 </div>
                 <div className="text-green-600 dark:text-green-400">
-                  Còn lại: {remainingCredits} credits sau khi thực hiện
+                  Còn lại: {remainingCredits} tín dụng sau khi thực hiện
                 </div>
               </div>
             </div>
@@ -112,10 +112,10 @@ export function CreditConfirmationModal({
               <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
               <div className="text-sm">
                 <div className="font-medium text-red-800 dark:text-red-300">
-                  Không đủ tín dùng
+                  Không đủ tín dụng
                 </div>
                 <div className="text-red-600 dark:text-red-400">
-                  Thiếu: {Math.abs(remainingCredits)} credits
+                  Thiếu: {Math.abs(remainingCredits)} tín dụng
                 </div>
               </div>
             </div>
