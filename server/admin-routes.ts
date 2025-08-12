@@ -1632,25 +1632,32 @@ export function registerAdminRoutes(app: Express) {
     }
 
     try {
-      const { period = '1m' } = req.query;
+      const { from, to, period = '1m' } = req.query;
       let startDate: Date;
-      let endDate = new Date();
+      let endDate: Date;
 
-      switch (period) {
-        case '1d':
-          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          break;
-        case '7d':
-          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case '1m':
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case '12m':
-          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      // Use from/to dates if provided, otherwise fallback to period
+      if (from && to) {
+        startDate = new Date(from as string);
+        endDate = new Date(to as string);
+      } else {
+        endDate = new Date();
+        switch (period) {
+          case '1d':
+            startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            break;
+          case '7d':
+            startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case '1m':
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case '12m':
+            startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        }
       }
 
       const overview = await storage.getAnalyticsOverview(startDate, endDate);
@@ -1676,25 +1683,32 @@ export function registerAdminRoutes(app: Express) {
     }
 
     try {
-      const { period = '1m' } = req.query;
+      const { from, to, period = '1m' } = req.query;
       let startDate: Date;
-      let endDate = new Date();
+      let endDate: Date;
 
-      switch (period) {
-        case '1d':
-          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          break;
-        case '7d':
-          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case '1m':
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case '12m':
-          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      // Use from/to dates if provided, otherwise fallback to period
+      if (from && to) {
+        startDate = new Date(from as string);
+        endDate = new Date(to as string);
+      } else {
+        endDate = new Date();
+        switch (period) {
+          case '1d':
+            startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            break;
+          case '7d':
+            startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case '1m':
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case '12m':
+            startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        }
       }
 
       const stats = await storage.getRegisteredAccountsStats(period as string, startDate, endDate);
@@ -1720,25 +1734,32 @@ export function registerAdminRoutes(app: Express) {
     }
 
     try {
-      const { period = '1m' } = req.query;
+      const { from, to, period = '1m' } = req.query;
       let startDate: Date;
-      let endDate = new Date();
+      let endDate: Date;
 
-      switch (period) {
-        case '1d':
-          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          break;
-        case '7d':
-          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case '1m':
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case '12m':
-          startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      // Use from/to dates if provided, otherwise fallback to period
+      if (from && to) {
+        startDate = new Date(from as string);
+        endDate = new Date(to as string);
+      } else {
+        endDate = new Date();
+        switch (period) {
+          case '1d':
+            startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            break;
+          case '7d':
+            startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case '1m':
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case '12m':
+            startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        }
       }
 
       const stats = await storage.getActiveUsersStats(period as string, startDate, endDate);

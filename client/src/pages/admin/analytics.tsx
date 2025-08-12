@@ -4,13 +4,8 @@ import { AdminLayout } from "@/components/admin/Layout";
 import { useLanguage } from "@/hooks/use-language";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,6 +19,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import { DateRange } from "react-day-picker";
 
 // Register Chart.js components
 ChartJS.register(
@@ -44,7 +40,7 @@ import {
   FileText,
   Image,
   Download,
-  Calendar,
+  Calendar as CalendarIcon,
   Activity,
   Eye,
   PenTool,
@@ -60,8 +56,9 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 import Head from "@/components/head";
-import { format as formatDate } from "date-fns";
+import { format as formatDate, subDays, subMonths } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface AnalyticsOverview {
   registeredAccounts: number;
@@ -79,29 +76,56 @@ interface ChartData {
   data: { date: string; count: number }[];
 }
 
-type Period = '1d' | '7d' | '1m' | '12m';
-
 export default function AdminAnalytics() {
   const { t, language } = useLanguage();
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>('1m');
   const [isExporting, setIsExporting] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  });
 
   // Date locale for chart formatting
   const dateLocale = language === 'vi' ? vi : enUS;
 
-  // Period options
-  const periodOptions = [
-    { value: '1d', label: language === 'vi' ? '1 ngày' : '1 Day' },
-    { value: '7d', label: language === 'vi' ? '7 ngày' : '7 Days' },
-    { value: '1m', label: language === 'vi' ? '1 tháng' : '1 Month' },
-    { value: '12m', label: language === 'vi' ? '12 tháng' : '12 Months' }
+  // Quick date preset options
+  const datePresets = [
+    { 
+      label: language === 'vi' ? 'Hôm nay' : 'Today',
+      range: { from: new Date(), to: new Date() }
+    },
+    { 
+      label: language === 'vi' ? '7 ngày qua' : 'Last 7 days',
+      range: { from: subDays(new Date(), 7), to: new Date() }
+    },
+    { 
+      label: language === 'vi' ? '30 ngày qua' : 'Last 30 days',
+      range: { from: subDays(new Date(), 30), to: new Date() }
+    },
+    { 
+      label: language === 'vi' ? '3 tháng qua' : 'Last 3 months',
+      range: { from: subMonths(new Date(), 3), to: new Date() }
+    }
   ];
+
+  // Format date range for API calls
+  const formatDateForAPI = (date: Date) => formatDate(date, 'yyyy-MM-dd');
+
+  const getDateRangeParams = () => {
+    if (!dateRange?.from || !dateRange?.to) {
+      return { from: formatDateForAPI(subDays(new Date(), 30)), to: formatDateForAPI(new Date()) };
+    }
+    return { 
+      from: formatDateForAPI(dateRange.from), 
+      to: formatDateForAPI(dateRange.to) 
+    };
+  };
 
   // Overview data
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
-    queryKey: ['/api/admin/analytics/overview', selectedPeriod],
+    queryKey: ['/api/admin/analytics/overview', dateRange],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/analytics/overview?period=${selectedPeriod}`, {
+      const { from, to } = getDateRangeParams();
+      const response = await fetch(`/api/admin/analytics/overview?from=${from}&to=${to}`, {
         credentials: 'include'
       });
       return response.json();
@@ -110,9 +134,10 @@ export default function AdminAnalytics() {
 
   // Registered accounts chart data
   const { data: registeredData, isLoading: registeredLoading } = useQuery({
-    queryKey: ['/api/admin/analytics/registered-accounts', selectedPeriod],
+    queryKey: ['/api/admin/analytics/registered-accounts', dateRange],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/analytics/registered-accounts?period=${selectedPeriod}`, {
+      const { from, to } = getDateRangeParams();
+      const response = await fetch(`/api/admin/analytics/registered-accounts?from=${from}&to=${to}`, {
         credentials: 'include'
       });
       return response.json();
@@ -121,9 +146,10 @@ export default function AdminAnalytics() {
 
   // Active users chart data
   const { data: activeUsersData, isLoading: activeUsersLoading } = useQuery({
-    queryKey: ['/api/admin/analytics/active-users', selectedPeriod],
+    queryKey: ['/api/admin/analytics/active-users', dateRange],
     queryFn: async () => {
-      const response = await fetch(`/api/admin/analytics/active-users?period=${selectedPeriod}`, {
+      const { from, to } = getDateRangeParams();
+      const response = await fetch(`/api/admin/analytics/active-users?from=${from}&to=${to}`, {
         credentials: 'include'
       });
       return response.json();
@@ -261,7 +287,8 @@ export default function AdminAnalytics() {
         }
         
         // Save PDF
-        doc.save(`analytics-${selectedPeriod}-${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`);
+        const { from, to } = getDateRangeParams();
+        doc.save(`analytics-${from}-to-${to}-${formatDate(new Date(), 'yyyy-MM-dd')}.pdf`);
       }
     } catch (error) {
       console.error('Export error:', error);
@@ -273,25 +300,24 @@ export default function AdminAnalytics() {
   // Format chart date labels
   const formatChartDate = (date: string) => {
     try {
-      let parsedDate: Date;
+      const parsedDate = new Date(date);
       
-      if (selectedPeriod === '1d') {
-        // Format: YYYY-MM-DD HH:00:00
-        parsedDate = new Date(date);
-        return formatDate(parsedDate, 'HH:mm', { locale: dateLocale });
-      } else if (selectedPeriod === '12m') {
-        // Format: YYYY-MM
-        if (date.includes('-') && date.split('-').length === 2) {
-          const [year, month] = date.split('-');
-          parsedDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-          return formatDate(parsedDate, 'MMM yyyy', { locale: dateLocale });
-        } else {
-          return date;
-        }
-      } else {
-        // Format: YYYY-MM-DD
-        parsedDate = new Date(date);
+      if (!dateRange?.from || !dateRange?.to) {
         return formatDate(parsedDate, 'dd/MM', { locale: dateLocale });
+      }
+
+      // Calculate date range difference to determine format
+      const diffInDays = Math.abs((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffInDays <= 1) {
+        // Same day or very close - show hours
+        return formatDate(parsedDate, 'HH:mm', { locale: dateLocale });
+      } else if (diffInDays <= 90) {
+        // Less than 3 months - show day/month
+        return formatDate(parsedDate, 'dd/MM', { locale: dateLocale });
+      } else {
+        // More than 3 months - show month/year
+        return formatDate(parsedDate, 'MMM yyyy', { locale: dateLocale });
       }
     } catch (error) {
       console.warn('Date formatting error:', error, 'for date:', date);
@@ -322,19 +348,65 @@ export default function AdminAnalytics() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Select value={selectedPeriod} onValueChange={(value: Period) => setSelectedPeriod(value)}>
-                <SelectTrigger className="w-full sm:w-[140px]">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="date"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full sm:w-[300px] justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <>
+                            {formatDate(dateRange.from, "dd/MM/yyyy", { locale: dateLocale })} -{" "}
+                            {formatDate(dateRange.to, "dd/MM/yyyy", { locale: dateLocale })}
+                          </>
+                        ) : (
+                          formatDate(dateRange.from, "dd/MM/yyyy", { locale: dateLocale })
+                        )
+                      ) : (
+                        <span>{language === 'vi' ? 'Chọn khoảng thời gian' : 'Pick a date range'}</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 border-b border-border">
+                      <div className="text-sm font-medium mb-2">
+                        {language === 'vi' ? 'Lựa chọn nhanh' : 'Quick select'}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {datePresets.map((preset, index) => (
+                          <Button
+                            key={index}
+                            variant="ghost"
+                            size="sm"
+                            className="justify-start text-xs"
+                            onClick={() => setDateRange(preset.range)}
+                          >
+                            {preset.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
               <div className="flex gap-2">
                 <Button
