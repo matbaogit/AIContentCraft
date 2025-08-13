@@ -129,6 +129,10 @@ export default function CreateContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { invalidateCreditHistory } = useCreditCache();
+  
+  // Ref to store current articleId to prevent loss during state updates
+  const currentArticleIdRef = useRef<number | null>(null);
+  
   const [generatedContent, setGeneratedContent] = useState<GenerateContentResponse | null>(null);
   const [outlineItems, setOutlineItems] = useState<OutlineItem[]>([]);
   const [currentHeadingText, setCurrentHeadingText] = useState("");
@@ -299,6 +303,10 @@ export default function CreateContent() {
             // Backup: Store articleId in localStorage as fallback
             localStorage.setItem('currentArticleId', savedArticle.data.id.toString());
             console.log("🔄 [BACKUP] Stored articleId in localStorage:", savedArticle.data.id);
+            
+            // Also store in ref to prevent race conditions
+            currentArticleIdRef.current = savedArticle.data.id;
+            console.log("🔄 [REF STORE] Stored articleId in ref:", savedArticle.data.id);
           }, 100);
         } else {
           console.log("✗ Draft auto-save thất bại, không có articleId");
@@ -626,7 +634,13 @@ export default function CreateContent() {
         // Nếu đã có ID bài viết, thì gửi lên để cập nhật bài viết cũ
         let articleId = generatedContent.articleId;
         
-        // Backup: Try to get articleId from localStorage if missing
+        // Try to get articleId from ref first (most reliable)
+        if (!articleId && currentArticleIdRef.current) {
+          articleId = currentArticleIdRef.current;
+          console.log("🔄 [REF USED] Retrieved articleId from ref:", articleId);
+        }
+        
+        // Backup: Try to get articleId from localStorage if still missing
         if (!articleId) {
           const backupId = localStorage.getItem('currentArticleId');
           if (backupId) {
@@ -634,6 +648,10 @@ export default function CreateContent() {
             console.log("🔄 [BACKUP USED] Retrieved articleId from localStorage:", articleId);
           }
         }
+        
+        console.log("🔍 [FINAL CHECK] Final articleId to use:", articleId);
+        console.log("🔍 [FINAL CHECK] articleId type:", typeof articleId);
+        console.log("🔍 [FINAL CHECK] articleId truthy:", !!articleId);
         
         if (articleId) {
           (articlePayload as any)['id'] = articleId;
@@ -672,6 +690,7 @@ export default function CreateContent() {
         
         // Clear backup after successful save
         localStorage.removeItem('currentArticleId');
+        currentArticleIdRef.current = null;
         
         // Thêm button "Tạo bài viết mới" để user có thể reset khi muốn
         // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
