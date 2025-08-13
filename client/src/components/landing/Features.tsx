@@ -208,7 +208,6 @@ export function Features() {
         <div className="absolute right-0 top-1/4 w-1/2 h-1/2 bg-gradient-radial from-primary/5 to-transparent rounded-full"></div>
         <div className="absolute left-0 bottom-1/4 w-1/2 h-1/2 bg-gradient-radial from-accent/5 to-transparent rounded-full"></div>
       </div>
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4 border border-primary/20 shadow-sm">
@@ -216,7 +215,7 @@ export function Features() {
             {t("landing.features.powerfulFeatures")}
           </div>
           
-          <h2 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary-800 to-primary-600 dark:from-primary-400 dark:to-primary-300 bg-clip-text text-transparent font-heading mb-4">
+          <h2 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-primary-800 to-primary-600 dark:from-primary-400 dark:to-primary-300 bg-clip-text font-heading mb-4 text-[#ffffff]">
             {t("landing.features.title")}
           </h2>
           
