@@ -290,25 +290,34 @@ export default function CreateContent() {
             articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
           };
           console.log("🔄 [DEBUG] newContentState with articleId:", newContentState);
-          setGeneratedContent(newContentState);
+          
+                  // Đặt trong setTimeout để đảm bảo không bị overwrite bởi các setGeneratedContent khác
+          setTimeout(() => {
+            console.log("🔄 [DELAYED SET] Setting generatedContent with articleId:", savedArticle.data.id);
+            setGeneratedContent(newContentState);
+            
+            // Backup: Store articleId in localStorage as fallback
+            localStorage.setItem('currentArticleId', savedArticle.data.id.toString());
+            console.log("🔄 [BACKUP] Stored articleId in localStorage:", savedArticle.data.id);
+          }, 100);
         } else {
           console.log("✗ Draft auto-save thất bại, không có articleId");
           console.log("🔄 [DRAFT AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
-          setGeneratedContent({
-            ...data,
-            title: title,
-            content: content
-          });
+          // Không set state ở đây để tránh overwrite articleId nếu có
         }
       } catch (error) {
         console.error("Không thể lưu bản nháp tự động:", error);
         console.error("Error details:", JSON.stringify(error, null, 2));
         console.log("🔄 [DRAFT AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
-        setGeneratedContent({
-          ...data,
-          title: title,
-          content: content
-        });
+        // Chỉ set state với basic content, không overwrite nếu đã có articleId
+        setTimeout(() => {
+          console.log("🔄 [ERROR FALLBACK] Setting basic generatedContent without articleId");
+          setGeneratedContent({
+            ...data,
+            title: title,
+            content: content
+          });
+        }, 200);
       }
       
       // Hiển thị tiêu đề và nội dung từ webhook trong dialog
@@ -615,8 +624,19 @@ export default function CreateContent() {
         };
         
         // Nếu đã có ID bài viết, thì gửi lên để cập nhật bài viết cũ
-        if (generatedContent.articleId) {
-          (articlePayload as any)['id'] = generatedContent.articleId;
+        let articleId = generatedContent.articleId;
+        
+        // Backup: Try to get articleId from localStorage if missing
+        if (!articleId) {
+          const backupId = localStorage.getItem('currentArticleId');
+          if (backupId) {
+            articleId = parseInt(backupId);
+            console.log("🔄 [BACKUP USED] Retrieved articleId from localStorage:", articleId);
+          }
+        }
+        
+        if (articleId) {
+          (articlePayload as any)['id'] = articleId;
         }
         
         // Đảm bảo tiêu đề từ form được sử dụng khi lưu bài viết
@@ -634,10 +654,10 @@ export default function CreateContent() {
         console.log("- articlePayloadWithTitle:", articlePayloadWithTitle);
         
         let response;
-        if (generatedContent.articleId) {
+        if (articleId) {
           // Cập nhật bài viết đã tồn tại (auto-saved draft)
-          console.log("→ Sử dụng PATCH để cập nhật bài viết ID:", generatedContent.articleId);
-          response = await apiRequest("PATCH", `/api/dashboard/articles/${generatedContent.articleId}`, articlePayloadWithTitle);
+          console.log("→ Sử dụng PATCH để cập nhật bài viết ID:", articleId);
+          response = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, articlePayloadWithTitle);
         } else {
           // Không nên xảy ra nếu auto-save hoạt động đúng
           console.error("⚠️ KHÔNG CÓ ARTICLE ID - Auto-save có thể đã thất bại!");
@@ -648,7 +668,10 @@ export default function CreateContent() {
         // Đóng dialog sau khi lưu thành công
         setIsContentDialogOpen(false);
         
-        console.log("🔄 [MANUAL SAVE SUCCESS] Đã cập nhật bài viết ID:", generatedContent.articleId);
+        console.log("🔄 [MANUAL SAVE SUCCESS] Đã cập nhật bài viết ID:", articleId);
+        
+        // Clear backup after successful save
+        localStorage.removeItem('currentArticleId');
         
         // Thêm button "Tạo bài viết mới" để user có thể reset khi muốn
         // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
