@@ -248,46 +248,16 @@ export default function CreateContent() {
           keywords = form.getValues().keywords;
         }
         
-        // Extract credits used for saving
-        let creditsUsedForSave = 1; // Default fallback
-        if (data.creditsUsed) {
-          creditsUsedForSave = data.creditsUsed;
-        } else if (Array.isArray(data) && data.length > 0 && data[0].creditsUsed) {
-          creditsUsedForSave = data[0].creditsUsed;
-        }
-        
-        const saveResponse = await apiRequest("POST", "/api/dashboard/articles", {
+        // DISABLE AUTO-SAVE: Chỉ set generatedContent, không auto-save article
+        console.log("🔄 [CONTENT GENERATED] Setting generatedContent WITHOUT auto-save");
+        setGeneratedContent({
+          ...data,
           title: title,
-          content: content,
-          keywords: keywords,
-          creditsUsed: creditsUsedForSave,
+          content: content
+          // Không có articleId - sẽ được set sau khi user click save
         });
-        
-        const savedArticle = await saveResponse.json();
-        
-        // Cập nhật trạng thái với ID bài viết đã lưu
-        console.log("Auto-save result:", savedArticle);
-        if (savedArticle.success && savedArticle.data) {
-          console.log("✓ Auto-save thành công, articleId:", savedArticle.data.id);
-          console.log("🔄 [AUTO-SAVE SUCCESS] setGeneratedContent with articleId:", savedArticle.data.id);
-          setGeneratedContent({
-            ...data,
-            title: title,
-            content: content,
-            articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
-          });
-        } else {
-          console.log("✗ Auto-save thất bại, không có articleId");
-          console.log("🔄 [AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
-          setGeneratedContent({
-            ...data,
-            title: title,
-            content: content
-          });
-        }
       } catch (error) {
-        console.error("Không thể lưu bài viết tự động:", error);
-        console.log("🔄 [AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
+        console.error("Error processing content:", error);
         setGeneratedContent({
           ...data,
           title: title,
