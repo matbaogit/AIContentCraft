@@ -136,6 +136,7 @@ export default function CreateContent() {
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [editedTitle, setEditedTitle] = useState("");
+  const [isSavingArticle, setIsSavingArticle] = useState(false);
   
   // Khởi tạo linkItems ban đầu
   const [isLinkItemsInitialized, setIsLinkItemsInitialized] = useState(false);
@@ -570,8 +571,10 @@ export default function CreateContent() {
   };
 
   const handleSaveArticle = async () => {
-    if (generatedContent) {
+    if (generatedContent && !isSavingArticle) {
       try {
+        setIsSavingArticle(true);
+        
         toast({
           title: "Đang lưu bài viết",
           description: "Vui lòng đợi trong khi hệ thống lưu bài viết của bạn...",
@@ -641,6 +644,8 @@ export default function CreateContent() {
         // Đóng dialog và xóa nội dung đã tạo
         setIsContentDialogOpen(false);
         setGeneratedContent(null);
+      } finally {
+        setIsSavingArticle(false);
       }
     }
   };
@@ -1922,8 +1927,9 @@ export default function CreateContent() {
                 onClick={handleSaveArticle}
                 variant="secondary"
                 className="sm:order-2"
+                disabled={isSavingArticle}
               >
-                Lưu bài viết
+                {isSavingArticle ? "Đang lưu..." : "Lưu bài viết"}
               </Button>
               
               {/* Tạm ẩn nút xuất bản theo yêu cầu */}
