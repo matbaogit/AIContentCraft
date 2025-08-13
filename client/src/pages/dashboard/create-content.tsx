@@ -631,28 +631,20 @@ export default function CreateContent() {
         // Đóng dialog sau khi lưu thành công
         setIsContentDialogOpen(false);
         
-        // Xóa nội dung đã tạo khỏi giao diện sau khi lưu thành công
-        console.log("🔄 [MANUAL SAVE SUCCESS] setGeneratedContent(null) - RESET STATE!");
-        setGeneratedContent(null);
+        // Cập nhật articleId nếu đây là lần tạo mới
+        if (!generatedContent.articleId && result.success && result.data?.id) {
+          console.log("🔄 [MANUAL SAVE SUCCESS] Updating generatedContent with new articleId:", result.data.id);
+          setGeneratedContent({
+            ...generatedContent,
+            articleId: result.data.id
+          });
+        } else if (generatedContent.articleId) {
+          console.log("🔄 [MANUAL SAVE SUCCESS] Keeping existing articleId:", generatedContent.articleId);
+          // Giữ nguyên state với articleId để có thể update tiếp
+        }
         
-        // Reset form để người dùng có thể tạo bài viết mới
-        form.reset({
-          contentType: 'blog',
-          keywords: '',
-          mainKeyword: '',
-          length: 'medium',
-          tone: 'conversational',
-          language: 'vietnamese',
-          country: 'vietnam',
-          perspective: 'auto',
-          complexity: 'auto',
-          useBold: true,
-          useItalic: true,
-          useBullets: true,
-          addHeadings: true,
-          useWebResearch: true,
-          aiModel: 'chatgpt'
-        });
+        // Thêm button "Tạo bài viết mới" để user có thể reset khi muốn
+        // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
         
         toast({
           title: generatedContent.articleId ? "Đã cập nhật bài viết" : "Đã lưu bài viết",
@@ -671,10 +663,10 @@ export default function CreateContent() {
             : "Bài viết đã được lưu thành công, nhưng có lỗi khi cập nhật giao diện.",
         });
         
-        // Đóng dialog và xóa nội dung đã tạo
+        // Đóng dialog nhưng giữ lại state để user có thể thử lại
         setIsContentDialogOpen(false);
-        console.log("🔄 [MANUAL SAVE ERROR] setGeneratedContent(null) - RESET STATE!");
-        setGeneratedContent(null);
+        console.log("🔄 [MANUAL SAVE ERROR] Keeping generatedContent state for retry");
+        // Không reset state để user có thể thử save lại
       } finally {
         setIsSavingArticle(false);
       }
@@ -1862,30 +1854,70 @@ export default function CreateContent() {
                       
 
                       
-                      <div className="border-t border-slate-200 dark:border-slate-700 pt-6 flex justify-end space-x-3 mt-4">
-                        <Button
-                          type="button"
-                          className="bg-primary hover:bg-primary/90 dark:bg-primary dark:text-white dark:hover:bg-primary/90"
-                          onClick={() => {
-                            console.log("Button clicked");
-                            console.log("Form values:", form.getValues());
-                            console.log("Form errors:", form.formState.errors);
-                            form.handleSubmit(onSubmit)();
-                          }}
-                          disabled={generateContentMutation.isPending}
-                        >
-                          {generateContentMutation.isPending ? (
-                            <div className="flex items-center">
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              {tDb("common.generating")}
-                            </div>
-                          ) : (
-                            t("dashboard.create.generateContent")
-                          )}
-                        </Button>
+                      <div className="border-t border-slate-200 dark:border-slate-700 pt-6 flex justify-between items-center mt-4">
+                        {/* Button "Tạo bài viết mới" hiển thị khi đã có content */}
+                        {generatedContent && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-800"
+                            onClick={() => {
+                              setGeneratedContent(null);
+                              setEditedTitle("");
+                              setEditedContent("");
+                              form.reset({
+                                contentType: 'blog',
+                                keywords: '',
+                                mainKeyword: '',
+                                length: 'medium',
+                                tone: 'conversational',
+                                language: 'vietnamese',
+                                country: 'vietnam',
+                                perspective: 'auto',
+                                complexity: 'auto',
+                                useBold: true,
+                                useItalic: true,
+                                useBullets: true,
+                                addHeadings: true,
+                                useWebResearch: true,
+                                aiModel: 'chatgpt'
+                              });
+                              toast({
+                                title: "Đã reset form",
+                                description: "Bạn có thể tạo bài viết mới.",
+                              });
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Tạo bài viết mới
+                          </Button>
+                        )}
+                        
+                        <div className="flex space-x-3">
+                          <Button
+                            type="button"
+                            className="bg-primary hover:bg-primary/90 dark:bg-primary dark:text-white dark:hover:bg-primary/90"
+                            onClick={() => {
+                              console.log("Button clicked");
+                              console.log("Form values:", form.getValues());
+                              console.log("Form errors:", form.formState.errors);
+                              form.handleSubmit(onSubmit)();
+                            }}
+                            disabled={generateContentMutation.isPending}
+                          >
+                            {generateContentMutation.isPending ? (
+                              <div className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {tDb("common.generating")}
+                              </div>
+                            ) : (
+                              t("dashboard.create.generateContent")
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </form>
                   </Form>
