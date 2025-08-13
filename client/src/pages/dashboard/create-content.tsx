@@ -266,7 +266,9 @@ export default function CreateContent() {
         const savedArticle = await saveResponse.json();
         
         // Cập nhật trạng thái với ID bài viết đã lưu
+        console.log("Auto-save result:", savedArticle);
         if (savedArticle.success && savedArticle.data) {
+          console.log("✓ Auto-save thành công, articleId:", savedArticle.data.id);
           setGeneratedContent({
             ...data,
             title: title,
@@ -274,6 +276,7 @@ export default function CreateContent() {
             articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
           });
         } else {
+          console.log("✗ Auto-save thất bại, không có articleId");
           setGeneratedContent({
             ...data,
             title: title,

@@ -612,30 +612,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update article by id
   app.patch('/api/dashboard/articles/:id', async (req, res) => {
     try {
+      console.log("=== PATCH /api/dashboard/articles/:id CALLED ===");
+      console.log("Article ID:", req.params.id);
+      console.log("Request body:", req.body);
+      
       if (!req.isAuthenticated()) {
+        console.log("✗ PATCH failed: Not authenticated");
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
       const userId = req.user.id;
       const articleId = parseInt(req.params.id, 10);
       
+      console.log("User ID:", userId);
+      console.log("Parsed Article ID:", articleId);
+      
       if (isNaN(articleId)) {
+        console.log("✗ PATCH failed: Invalid article ID");
         return res.status(400).json({ success: false, error: 'Invalid article ID' });
       }
       
       const article = await storage.getArticleById(articleId);
+      console.log("Article found:", article ? "Yes" : "No");
       
       if (!article) {
+        console.log("✗ PATCH failed: Article not found");
         return res.status(404).json({ success: false, error: 'Article not found' });
       }
       
       // Kiểm tra quyền sở hữu bài viết
       if (article.userId !== userId && req.user.role !== 'admin') {
+        console.log("✗ PATCH failed: Permission denied");
         return res.status(403).json({ success: false, error: 'You do not have permission to update this article' });
       }
       
       // Lấy dữ liệu cập nhật
       const { title, content, keywords, status } = req.body;
+      console.log("Update data:", { title, content: content?.substring(0, 100) + "...", keywords, status });
       
       // Cập nhật bài viết
       const updatedArticle = await storage.updateArticle(articleId, {
@@ -645,6 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status,
       });
       
+      console.log("✓ PATCH successful, updated article:", updatedArticle?.id);
       res.json({ success: true, data: updatedArticle });
     } catch (error) {
       console.error('Error updating article:', error);
