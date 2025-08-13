@@ -319,11 +319,25 @@ export default function CreateContent() {
         console.log("🔄 [DRAFT AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
         // Chỉ set state với basic content, không overwrite nếu đã có articleId
         setTimeout(() => {
-          console.log("🔄 [ERROR FALLBACK] Setting basic generatedContent without articleId");
-          setGeneratedContent({
-            ...data,
-            title: title,
-            content: content
+          console.log("🔄 [ERROR FALLBACK] Checking existing state before override");
+          setGeneratedContent(prev => {
+            // Nếu đã có articleId từ lần trước, giữ lại
+            if (prev && prev.articleId) {
+              console.log("🔄 [ERROR FALLBACK] Preserving existing articleId:", prev.articleId);
+              return {
+                ...data,
+                title: title,
+                content: content,
+                articleId: prev.articleId // Giữ articleId cũ
+              };
+            } else {
+              console.log("🔄 [ERROR FALLBACK] Setting basic generatedContent without articleId");
+              return {
+                ...data,
+                title: title,
+                content: content
+              };
+            }
           });
         }, 200);
       }
@@ -652,9 +666,41 @@ export default function CreateContent() {
         console.log("🔍 [FINAL CHECK] Final articleId to use:", articleId);
         console.log("🔍 [FINAL CHECK] articleId type:", typeof articleId);
         console.log("🔍 [FINAL CHECK] articleId truthy:", !!articleId);
+        console.log("🔍 [DEBUG] generatedContent.articleId:", generatedContent.articleId);
+        console.log("🔍 [DEBUG] currentArticleIdRef.current:", currentArticleIdRef.current);
+        console.log("🔍 [DEBUG] localStorage value:", localStorage.getItem('currentArticleId'));
         
         if (articleId) {
           (articlePayload as any)['id'] = articleId;
+        } else {
+          // Critical fallback: Last attempt to find any trace of articleId
+          console.error("🚨 [CRITICAL] No articleId found in any source! Attempting emergency recovery...");
+          
+          // Try to find the most recent draft article for this user
+          try {
+            const recentDraftsResponse = await apiRequest("GET", "/api/dashboard/articles?status=draft&limit=1");
+            if (recentDraftsResponse.ok) {
+              const recentDrafts = await recentDraftsResponse.json();
+              if (recentDrafts.success && recentDrafts.data?.length > 0) {
+                const mostRecentDraft = recentDrafts.data[0];
+                console.log("🔄 [EMERGENCY] Found recent draft:", mostRecentDraft);
+                
+                // Use this draft ID if it was created recently (within last 5 minutes)
+                const draftCreatedAt = new Date(mostRecentDraft.createdAt);
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                
+                if (draftCreatedAt > fiveMinutesAgo) {
+                  articleId = mostRecentDraft.id;
+                  (articlePayload as any)['id'] = articleId;
+                  console.log("🔄 [EMERGENCY] Using recent draft ID:", articleId);
+                } else {
+                  console.log("🔄 [EMERGENCY] Draft too old, will create new article");
+                }
+              }
+            }
+          } catch (emergencyError) {
+            console.error("🚨 [EMERGENCY] Failed to recover articleId:", emergencyError);
+          }
         }
         
         // Đảm bảo tiêu đề từ form được sử dụng khi lưu bài viết
@@ -677,9 +723,9 @@ export default function CreateContent() {
           console.log("→ Sử dụng PATCH để cập nhật bài viết ID:", articleId);
           response = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, articlePayloadWithTitle);
         } else {
-          // Không nên xảy ra nếu auto-save hoạt động đúng
-          console.error("⚠️ KHÔNG CÓ ARTICLE ID - Auto-save có thể đã thất bại!");
-          throw new Error("Không thể lưu bài viết: Không có ID bản nháp");
+          // Fallback: Tạo bài viết mới nếu thực sự không tìm được ID
+          console.error("⚠️ KHÔNG CÓ ARTICLE ID - Tạo bài viết mới như fallback");
+          response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
         }
         const result = await response.json();
         
