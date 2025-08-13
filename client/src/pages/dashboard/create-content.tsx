@@ -600,7 +600,14 @@ export default function CreateContent() {
         };
         
         // Gửi request lưu hoặc cập nhật bài viết
-        const response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
+        let response;
+        if (generatedContent.articleId) {
+          // Cập nhật bài viết đã tồn tại
+          response = await apiRequest("PATCH", `/api/dashboard/articles/${generatedContent.articleId}`, articlePayloadWithTitle);
+        } else {
+          // Tạo bài viết mới
+          response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
+        }
         const result = await response.json();
         
         // Đóng dialog sau khi lưu thành công
@@ -629,16 +636,20 @@ export default function CreateContent() {
         });
         
         toast({
-          title: "Đã lưu bài viết",
-          description: "Bài viết đã được lưu thành công. Bạn có thể tạo bài viết mới.",
+          title: generatedContent.articleId ? "Đã cập nhật bài viết" : "Đã lưu bài viết",
+          description: generatedContent.articleId 
+            ? "Bài viết đã được cập nhật thành công." 
+            : "Bài viết đã được lưu thành công. Bạn có thể tạo bài viết mới.",
         });
       } catch (error) {
         console.error("Lỗi khi lưu bài viết:", error);
         
         // Hiển thị thông báo lỗi
         toast({
-          title: "Đã lưu bài viết",
-          description: "Bài viết đã được lưu thành công, nhưng có lỗi khi cập nhật giao diện.",
+          title: generatedContent.articleId ? "Đã cập nhật bài viết" : "Đã lưu bài viết", 
+          description: generatedContent.articleId
+            ? "Bài viết đã được cập nhật thành công, nhưng có lỗi khi cập nhật giao diện."
+            : "Bài viết đã được lưu thành công, nhưng có lỗi khi cập nhật giao diện.",
         });
         
         // Đóng dialog và xóa nội dung đã tạo
@@ -1929,7 +1940,10 @@ export default function CreateContent() {
                 className="sm:order-2"
                 disabled={isSavingArticle}
               >
-                {isSavingArticle ? "Đang lưu..." : "Lưu bài viết"}
+                {isSavingArticle 
+                  ? (generatedContent?.articleId ? "Đang cập nhật..." : "Đang lưu...") 
+                  : (generatedContent?.articleId ? "Cập nhật bài viết" : "Lưu bài viết")
+                }
               </Button>
               
               {/* Tạm ẩn nút xuất bản theo yêu cầu */}
