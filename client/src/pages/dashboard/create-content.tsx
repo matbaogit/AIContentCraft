@@ -609,6 +609,8 @@ export default function CreateContent() {
         // Gửi request lưu hoặc cập nhật bài viết
         console.log("Debug handleSaveArticle:");
         console.log("- generatedContent.articleId:", generatedContent.articleId);
+        console.log("- generatedContent.articleId type:", typeof generatedContent.articleId);
+        console.log("- generatedContent.articleId truthy?:", !!generatedContent.articleId);
         console.log("- articlePayloadWithTitle:", articlePayloadWithTitle);
         
         let response;
@@ -618,7 +620,7 @@ export default function CreateContent() {
           response = await apiRequest("PATCH", `/api/dashboard/articles/${generatedContent.articleId}`, articlePayloadWithTitle);
         } else {
           // Tạo bài viết mới
-          console.log("→ Sử dụng POST để tạo bài viết mới");
+          console.log("→ Sử dụng POST để tạo bài viết mới (articleId is falsy)");
           response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
         }
         const result = await response.json();
