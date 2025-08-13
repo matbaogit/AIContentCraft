@@ -275,15 +275,22 @@ export default function CreateContent() {
         
         // Cập nhật trạng thái với ID bài viết đã lưu
         console.log("Draft auto-save result:", savedArticle);
-        if (savedArticle.success && savedArticle.data) {
+        console.log("savedArticle.success:", savedArticle.success);
+        console.log("savedArticle.data:", savedArticle.data);
+        console.log("savedArticle.data.id:", savedArticle.data?.id);
+        
+        if (savedArticle.success && savedArticle.data && savedArticle.data.id) {
           console.log("✓ Draft auto-save thành công, articleId:", savedArticle.data.id);
-          console.log("🔄 [DRAFT AUTO-SAVE SUCCESS] setGeneratedContent with articleId:", savedArticle.data.id);
-          setGeneratedContent({
+          console.log("🔄 [DRAFT AUTO-SAVE SUCCESS] About to call setGeneratedContent with articleId:", savedArticle.data.id);
+          
+          const newContentState = {
             ...data,
             title: title,
             content: content,
             articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
-          });
+          };
+          console.log("🔄 [DEBUG] newContentState with articleId:", newContentState);
+          setGeneratedContent(newContentState);
         } else {
           console.log("✗ Draft auto-save thất bại, không có articleId");
           console.log("🔄 [DRAFT AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
@@ -620,6 +627,7 @@ export default function CreateContent() {
         
         // Gửi request lưu hoặc cập nhật bài viết
         console.log("Debug handleSaveArticle:");
+        console.log("- generatedContent full object:", generatedContent);
         console.log("- generatedContent.articleId:", generatedContent.articleId);
         console.log("- generatedContent.articleId type:", typeof generatedContent.articleId);
         console.log("- generatedContent.articleId truthy?:", !!generatedContent.articleId);
