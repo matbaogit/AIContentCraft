@@ -269,6 +269,7 @@ export default function CreateContent() {
         console.log("Auto-save result:", savedArticle);
         if (savedArticle.success && savedArticle.data) {
           console.log("✓ Auto-save thành công, articleId:", savedArticle.data.id);
+          console.log("🔄 [AUTO-SAVE SUCCESS] setGeneratedContent with articleId:", savedArticle.data.id);
           setGeneratedContent({
             ...data,
             title: title,
@@ -277,6 +278,7 @@ export default function CreateContent() {
           });
         } else {
           console.log("✗ Auto-save thất bại, không có articleId");
+          console.log("🔄 [AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
           setGeneratedContent({
             ...data,
             title: title,
@@ -285,6 +287,7 @@ export default function CreateContent() {
         }
       } catch (error) {
         console.error("Không thể lưu bài viết tự động:", error);
+        console.log("🔄 [AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
         setGeneratedContent({
           ...data,
           title: title,
@@ -629,6 +632,7 @@ export default function CreateContent() {
         setIsContentDialogOpen(false);
         
         // Xóa nội dung đã tạo khỏi giao diện sau khi lưu thành công
+        console.log("🔄 [MANUAL SAVE SUCCESS] setGeneratedContent(null) - RESET STATE!");
         setGeneratedContent(null);
         
         // Reset form để người dùng có thể tạo bài viết mới
@@ -669,6 +673,7 @@ export default function CreateContent() {
         
         // Đóng dialog và xóa nội dung đã tạo
         setIsContentDialogOpen(false);
+        console.log("🔄 [MANUAL SAVE ERROR] setGeneratedContent(null) - RESET STATE!");
         setGeneratedContent(null);
       } finally {
         setIsSavingArticle(false);
@@ -751,6 +756,7 @@ export default function CreateContent() {
   const handleSaveEditedContent = () => {
     if (generatedContent) {
       // Cập nhật nội dung và tiêu đề đã chỉnh sửa vào generatedContent
+      console.log("🔄 [EDIT CONTENT] setGeneratedContent with updated title/content, preserving articleId:", generatedContent.articleId);
       setGeneratedContent({
         ...generatedContent,
         title: editedTitle, // Sử dụng tiêu đề đã chỉnh sửa
