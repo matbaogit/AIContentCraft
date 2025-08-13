@@ -248,16 +248,50 @@ export default function CreateContent() {
           keywords = form.getValues().keywords;
         }
         
-        // DISABLE AUTO-SAVE: Chỉ set generatedContent, không auto-save article
-        console.log("🔄 [CONTENT GENERATED] Setting generatedContent WITHOUT auto-save");
-        setGeneratedContent({
-          ...data,
+        // AUTO-SAVE AS DRAFT: Tự động lưu bản nháp
+        console.log("🔄 [AUTO-SAVE DRAFT] Saving article as draft...");
+        
+        // Extract credits used for saving
+        let creditsUsedForSave = 1; // Default fallback
+        if (data.creditsUsed) {
+          creditsUsedForSave = data.creditsUsed;
+        } else if (Array.isArray(data) && data.length > 0 && data[0].creditsUsed) {
+          creditsUsedForSave = data[0].creditsUsed;
+        }
+        
+        const saveResponse = await apiRequest("POST", "/api/dashboard/articles", {
           title: title,
-          content: content
-          // Không có articleId - sẽ được set sau khi user click save
+          content: content,
+          keywords: keywords,
+          creditsUsed: creditsUsedForSave,
+          status: 'draft' // Lưu làm bản nháp
         });
+        
+        const savedArticle = await saveResponse.json();
+        
+        // Cập nhật trạng thái với ID bài viết đã lưu
+        console.log("Draft auto-save result:", savedArticle);
+        if (savedArticle.success && savedArticle.data) {
+          console.log("✓ Draft auto-save thành công, articleId:", savedArticle.data.id);
+          console.log("🔄 [DRAFT AUTO-SAVE SUCCESS] setGeneratedContent with articleId:", savedArticle.data.id);
+          setGeneratedContent({
+            ...data,
+            title: title,
+            content: content,
+            articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
+          });
+        } else {
+          console.log("✗ Draft auto-save thất bại, không có articleId");
+          console.log("🔄 [DRAFT AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
+          setGeneratedContent({
+            ...data,
+            title: title,
+            content: content
+          });
+        }
       } catch (error) {
-        console.error("Error processing content:", error);
+        console.error("Không thể lưu bản nháp tự động:", error);
+        console.log("🔄 [DRAFT AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
         setGeneratedContent({
           ...data,
           title: title,
@@ -303,7 +337,7 @@ export default function CreateContent() {
       
       toast({
         title: "Đã tạo nội dung thành công",
-        description: `Đã sử dụng ${creditsUsed} tín dụng và lưu bài viết tự động`,
+        description: `Đã sử dụng ${creditsUsed} tín dụng và lưu bản nháp tự động`,
       });
 
       // Invalidate credit history cache
@@ -617,20 +651,17 @@ export default function CreateContent() {
         // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
         
         toast({
-          title: generatedContent.articleId ? "Đã cập nhật bài viết" : "Đã lưu bài viết",
-          description: generatedContent.articleId 
-            ? "Bài viết đã được cập nhật thành công." 
-            : "Bài viết đã được lưu thành công. Bạn có thể tạo bài viết mới.",
+          title: "Đã cập nhật bài viết",
+          description: "Bản nháp đã được cập nhật thành công.",
         });
       } catch (error) {
         console.error("Lỗi khi lưu bài viết:", error);
         
         // Hiển thị thông báo lỗi
         toast({
-          title: generatedContent.articleId ? "Đã cập nhật bài viết" : "Đã lưu bài viết", 
-          description: generatedContent.articleId
-            ? "Bài viết đã được cập nhật thành công, nhưng có lỗi khi cập nhật giao diện."
-            : "Bài viết đã được lưu thành công, nhưng có lỗi khi cập nhật giao diện.",
+          title: "Lỗi khi cập nhật", 
+          description: "Có lỗi xảy ra khi cập nhật bản nháp. Vui lòng thử lại.",
+          variant: "destructive",
         });
         
         // Đóng dialog nhưng giữ lại state để user có thể thử lại
