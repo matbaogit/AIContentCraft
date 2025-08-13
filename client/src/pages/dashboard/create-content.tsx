@@ -574,6 +574,10 @@ export default function CreateContent() {
   };
 
   const handleSaveArticle = async () => {
+    console.log("=== handleSaveArticle CALLED ===");
+    console.log("- generatedContent:", generatedContent ? "EXISTS" : "NULL");
+    console.log("- isSavingArticle:", isSavingArticle);
+    
     if (generatedContent && !isSavingArticle) {
       try {
         setIsSavingArticle(true);
