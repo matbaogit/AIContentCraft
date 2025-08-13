@@ -267,6 +267,10 @@ export default function CreateContent() {
           status: 'draft' // Lưu làm bản nháp
         });
         
+        if (!saveResponse.ok) {
+          throw new Error(`HTTP ${saveResponse.status}: ${saveResponse.statusText}`);
+        }
+        
         const savedArticle = await saveResponse.json();
         
         // Cập nhật trạng thái với ID bài viết đã lưu
@@ -291,6 +295,7 @@ export default function CreateContent() {
         }
       } catch (error) {
         console.error("Không thể lưu bản nháp tự động:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
         console.log("🔄 [DRAFT AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
         setGeneratedContent({
           ...data,
