@@ -622,30 +622,20 @@ export default function CreateContent() {
         
         let response;
         if (generatedContent.articleId) {
-          // Cập nhật bài viết đã tồn tại
+          // Cập nhật bài viết đã tồn tại (auto-saved draft)
           console.log("→ Sử dụng PATCH để cập nhật bài viết ID:", generatedContent.articleId);
           response = await apiRequest("PATCH", `/api/dashboard/articles/${generatedContent.articleId}`, articlePayloadWithTitle);
         } else {
-          // Tạo bài viết mới
-          console.log("→ Sử dụng POST để tạo bài viết mới (articleId is falsy)");
-          response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
+          // Không nên xảy ra nếu auto-save hoạt động đúng
+          console.error("⚠️ KHÔNG CÓ ARTICLE ID - Auto-save có thể đã thất bại!");
+          throw new Error("Không thể lưu bài viết: Không có ID bản nháp");
         }
         const result = await response.json();
         
         // Đóng dialog sau khi lưu thành công
         setIsContentDialogOpen(false);
         
-        // Cập nhật articleId nếu đây là lần tạo mới
-        if (!generatedContent.articleId && result.success && result.data?.id) {
-          console.log("🔄 [MANUAL SAVE SUCCESS] Updating generatedContent with new articleId:", result.data.id);
-          setGeneratedContent({
-            ...generatedContent,
-            articleId: result.data.id
-          });
-        } else if (generatedContent.articleId) {
-          console.log("🔄 [MANUAL SAVE SUCCESS] Keeping existing articleId:", generatedContent.articleId);
-          // Giữ nguyên state với articleId để có thể update tiếp
-        }
+        console.log("🔄 [MANUAL SAVE SUCCESS] Đã cập nhật bài viết ID:", generatedContent.articleId);
         
         // Thêm button "Tạo bài viết mới" để user có thể reset khi muốn
         // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
