@@ -907,7 +907,22 @@ export default function CreateContent() {
         isOpen={showCreditModal}
         onClose={() => setShowCreditModal(false)}
         onConfirm={handleCreditConfirm}
-        formData={pendingFormData}
+        title="Xác nhận tạo nội dung"
+        breakdown={[
+          {
+            label: "Tạo nội dung AI",
+            credits: 10,
+            color: 'default'
+          },
+          ...(pendingFormData?.generateImages ? [{
+            label: "Tạo hình ảnh",
+            credits: 5,
+            color: 'secondary' as const
+          }] : [])
+        ]}
+        totalCredits={pendingFormData?.generateImages ? 15 : 10}
+        userCurrentCredits={user?.credits || 0}
+        isLoading={generateContentMutation.isPending}
       />
 
       {/* Preview Dialog */}
