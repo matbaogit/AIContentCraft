@@ -451,11 +451,24 @@ const socialOAuthSettingsSchema = z.object({
   facebookAppId: z.string().optional().or(z.literal("")),
   facebookAppSecret: z.string().optional().or(z.literal("")),
   enableFacebookOAuth: z.boolean(),
+  zaloAppId: z.string().optional().or(z.literal("")),
+  zaloAppSecret: z.string().optional().or(z.literal("")),
+  enableZaloOAuth: z.boolean(),
 });
 
 // Trial plan settings schema
 const trialPlanSettingsSchema = z.object({
   trialPlanId: z.string().min(1, "Please select a trial plan"),
+});
+
+// Admin password change schema
+const adminPasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Mật khẩu hiện tại là bắt buộc"),
+  newPassword: z.string().min(8, "Mật khẩu mới phải có ít nhất 8 ký tự"),
+  confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Mật khẩu xác nhận không khớp",
+  path: ["confirmPassword"],
 });
 
 // Theme settings form schema
@@ -473,6 +486,7 @@ type SocialOAuthSettingsValues = z.infer<typeof socialOAuthSettingsSchema>;
 type TrialPlanSettingsValues = z.infer<typeof trialPlanSettingsSchema>;
 type FirebaseSettingsValues = z.infer<typeof firebaseSettingsSchema>;
 type ThemeSettingsValues = z.infer<typeof themeSettingsSchema>;
+type AdminPasswordValues = z.infer<typeof adminPasswordSchema>;
 
 export default function AdminSettings() {
   const { t } = useLanguage();
@@ -491,6 +505,18 @@ export default function AdminSettings() {
     },
   });
   
+  // Fetch social OAuth settings
+  const { data: socialOAuthResponse, isLoading: isLoadingSocialOAuth } = useQuery<{ success: boolean, data: any }>({
+    queryKey: ["/api/admin/settings/social-oauth"],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/settings/social-oauth');
+      if (!response.ok) {
+        throw new Error(`Error fetching social OAuth settings: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+  });
+
   // Fetch trial plan info
   const { data: trialPlanResponse, isLoading: isLoadingTrialPlan } = useQuery<{ success: boolean, data: any }>({
     queryKey: ["/api/admin/trial-plan"],
@@ -623,9 +649,22 @@ export default function AdminSettings() {
   const socialOAuthForm = useForm<SocialOAuthSettingsValues>({
     resolver: zodResolver(socialOAuthSettingsSchema),
     defaultValues: {
-      facebookAppId: settings?.facebookAppId || "",
-      facebookAppSecret: settings?.facebookAppSecret || "",
-      enableFacebookOAuth: settings?.enableFacebookOAuth || false,
+      facebookAppId: "",
+      facebookAppSecret: "",
+      enableFacebookOAuth: false,
+      zaloAppId: "",
+      zaloAppSecret: "",
+      enableZaloOAuth: false,
+    },
+  });
+
+  // Admin password change form
+  const adminPasswordForm = useForm<AdminPasswordValues>({
+    resolver: zodResolver(adminPasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
@@ -702,11 +741,7 @@ export default function AdminSettings() {
         enableFacebookAuth: settings.enableFacebookAuth || false,
       });
 
-      socialOAuthForm.reset({
-        facebookAppId: settings.facebookAppId || "",
-        facebookAppSecret: settings.facebookAppSecret || "",
-        enableFacebookOAuth: settings.enableFacebookOAuth || false,
-      });
+
 
       themeForm.reset({
         defaultTheme: settings.defaultTheme || "dark",
@@ -728,6 +763,21 @@ export default function AdminSettings() {
       });
     }
   }, [emailSettings, emailForm]);
+
+  // Update social OAuth form when social OAuth settings are loaded
+  useEffect(() => {
+    const socialOAuthData = socialOAuthResponse?.data;
+    if (socialOAuthData) {
+      socialOAuthForm.reset({
+        facebookAppId: socialOAuthData.facebookAppId || "",
+        facebookAppSecret: socialOAuthData.facebookAppSecret || "",
+        enableFacebookOAuth: socialOAuthData.enableFacebookOAuth || false,
+        zaloAppId: socialOAuthData.zaloAppId || "",
+        zaloAppSecret: socialOAuthData.zaloAppSecret || "",
+        enableZaloOAuth: socialOAuthData.enableZaloOAuth || false,
+      });
+    }
+  }, [socialOAuthResponse, socialOAuthForm]);
 
   // Update general settings mutation
   const updateGeneralSettingsMutation = useMutation({
@@ -873,6 +923,7 @@ export default function AdminSettings() {
         description: "Cài đặt Social OAuth đã được cập nhật",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings/social-oauth"] });
     },
     onError: (error: Error) => {
       toast({
@@ -947,6 +998,28 @@ export default function AdminSettings() {
     },
   });
 
+  // Admin password change mutation
+  const adminPasswordChangeMutation = useMutation({
+    mutationFn: async (data: AdminPasswordValues) => {
+      const res = await apiRequest("PATCH", "/api/admin/change-password", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Thành công",
+        description: "Mật khẩu admin đã được thay đổi thành công",
+      });
+      adminPasswordForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Lỗi",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Form submission handlers
   const onGeneralSubmit = (data: GeneralSettingsValues) => {
     updateGeneralSettingsMutation.mutate(data);
@@ -978,6 +1051,10 @@ export default function AdminSettings() {
 
   const onThemeSubmit = (data: ThemeSettingsValues) => {
     updateThemeSettingsMutation.mutate(data);
+  };
+
+  const onAdminPasswordSubmit = (data: AdminPasswordValues) => {
+    adminPasswordChangeMutation.mutate(data);
   };
 
   const [testEmailAddress, setTestEmailAddress] = useState("");
@@ -1081,6 +1158,10 @@ export default function AdminSettings() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                       {t("admin.settingsPage.credits") || "Cấu hình tín dụng"}
+                    </TabsTrigger>
+                    <TabsTrigger value="admin-account" className="justify-start">
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Tài khoản Admin
                     </TabsTrigger>
                     <TabsTrigger value="system" className="justify-start">
                       <Server className="h-4 w-4 mr-2" />
@@ -2153,8 +2234,14 @@ export default function AdminSettings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...socialOAuthForm}>
-                    <form onSubmit={socialOAuthForm.handleSubmit(onSocialOAuthSubmit)} className="space-y-6">
+                  {isLoadingSocialOAuth ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-8 w-8 animate-spin" />
+                      <span className="ml-2">Đang tải cấu hình...</span>
+                    </div>
+                  ) : (
+                    <Form {...socialOAuthForm}>
+                      <form onSubmit={socialOAuthForm.handleSubmit(onSocialOAuthSubmit)} className="space-y-6">
                       
                       {/* Facebook OAuth Configuration */}
                       <div className="space-y-4">
@@ -2228,17 +2315,100 @@ export default function AdminSettings() {
                           )}
                         />
                       </div>
+
+                      {/* Zalo OAuth Configuration */}
+                      <div className="space-y-4 border-t pt-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                          </svg>
+                          <h3 className="text-lg font-semibold">Zalo OAuth</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={socialOAuthForm.control}
+                            name="zaloAppId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Zalo App ID</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Nhập Zalo App ID..." {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                  App ID từ Zalo Developer Console
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={socialOAuthForm.control}
+                            name="zaloAppSecret"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Zalo App Secret</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="password"
+                                    placeholder="Nhập Zalo App Secret..." 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  App Secret từ Zalo Developer Console (được mã hóa an toàn)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={socialOAuthForm.control}
+                          name="enableZaloOAuth"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">
+                                  Kích hoạt Zalo OAuth
+                                </FormLabel>
+                                <FormDescription>
+                                  Cho phép người dùng đăng nhập thông qua Zalo OAuth
+                                </FormDescription>
+                              </div>
+                              <FormControl>
+                                <Switch
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Hướng dẫn cấu hình</AlertTitle>
                         <AlertDescription>
                           <div className="space-y-2 text-sm">
-                            <p>1. Truy cập <a href="https://developers.facebook.com/" className="text-blue-600 underline" target="_blank">Facebook Developer Console</a></p>
-                            <p>2. Tạo hoặc chọn ứng dụng Facebook</p>
-                            <p>3. Thêm Facebook Login product</p>
-                            <p>4. Trong Valid OAuth Redirect URIs, thêm: <code className="bg-gray-100 px-1 rounded text-xs">{window.location.origin}/api/auth/facebook/callback</code></p>
-                            <p>5. Copy App ID và App Secret từ Settings → Basic</p>
+                            <div className="space-y-1">
+                              <h4 className="font-medium">Facebook OAuth:</h4>
+                              <p>1. Truy cập <a href="https://developers.facebook.com/" className="text-blue-600 underline" target="_blank">Facebook Developer Console</a></p>
+                              <p>2. Tạo hoặc chọn ứng dụng Facebook</p>
+                              <p>3. Thêm Facebook Login product</p>
+                              <p>4. Trong Valid OAuth Redirect URIs, thêm: <code className="bg-gray-100 px-1 rounded text-xs">{window.location.origin}/api/auth/facebook/callback</code></p>
+                              <p>5. Copy App ID và App Secret từ Settings → Basic</p>
+                            </div>
+                            <div className="space-y-1 pt-2 border-t">
+                              <h4 className="font-medium">Zalo OAuth:</h4>
+                              <p>1. Truy cập <a href="https://developers.zalo.me/" className="text-blue-600 underline" target="_blank">Zalo Developer Console</a></p>
+                              <p>2. Tạo hoặc chọn ứng dụng Zalo</p>
+                              <p>3. Trong Callback URL, thêm: <code className="bg-gray-100 px-1 rounded text-xs">https://toolbox.vn/api/auth/zalo/callback</code></p>
+                              <p>4. Copy App ID và App Secret từ cài đặt ứng dụng</p>
+                            </div>
                           </div>
                         </AlertDescription>
                       </Alert>
@@ -2257,6 +2427,7 @@ export default function AdminSettings() {
                       </div>
                     </form>
                   </Form>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -2469,6 +2640,115 @@ export default function AdminSettings() {
                 </CardHeader>
                 <CardContent>
                   <CreditConfigurationForm />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Admin Account Tab */}
+            <TabsContent value="admin-account" className="mt-0 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tài khoản Admin</CardTitle>
+                  <CardDescription>
+                    Thay đổi mật khẩu và quản lý thông tin tài khoản admin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...adminPasswordForm}>
+                    <form onSubmit={adminPasswordForm.handleSubmit(onAdminPasswordSubmit)} className="space-y-6">
+                      <div className="space-y-4">
+                        <FormField
+                          control={adminPasswordForm.control}
+                          name="currentPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mật khẩu hiện tại</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="Nhập mật khẩu hiện tại..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={adminPasswordForm.control}
+                          name="newPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mật khẩu mới</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="Nhập mật khẩu mới..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Mật khẩu phải có ít nhất 8 ký tự
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={adminPasswordForm.control}
+                          name="confirmPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Xác nhận mật khẩu</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="password"
+                                  placeholder="Nhập lại mật khẩu mới..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Lưu ý bảo mật</AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            <li>Sử dụng mật khẩu mạnh với ít nhất 8 ký tự</li>
+                            <li>Kết hợp chữ hoa, chữ thường, số và ký tự đặc biệt</li>
+                            <li>Không chia sẻ mật khẩu admin với bất kỳ ai</li>
+                            <li>Thay đổi mật khẩu định kỳ để đảm bảo bảo mật</li>
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="pt-4 border-t">
+                        <Button 
+                          type="submit" 
+                          className="flex items-center"
+                          disabled={adminPasswordChangeMutation.isPending || !adminPasswordForm.formState.isDirty}
+                        >
+                          {adminPasswordChangeMutation.isPending ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Đang cập nhật...
+                            </>
+                          ) : (
+                            <>
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Thay đổi mật khẩu
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
                 </CardContent>
               </Card>
             </TabsContent>

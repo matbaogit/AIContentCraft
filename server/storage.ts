@@ -757,6 +757,22 @@ class DatabaseStorage implements IStorage {
         };
       }
       
+      if (category === 'zalo_oauth') {
+        return {
+          zaloAppId: '',
+          zaloAppSecret: '',
+          enableZaloOAuth: 'false'
+        };
+      }
+      
+      if (category === 'facebook_oauth') {
+        return {
+          facebookAppId: '',
+          facebookAppSecret: '',
+          enableFacebookOAuth: 'false'
+        };
+      }
+      
       return {};
     }
   }

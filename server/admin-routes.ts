@@ -2253,4 +2253,178 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // Update Social OAuth settings (Combined Facebook and Zalo)
+  app.patch("/api/admin/settings/social-oauth", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { 
+        facebookAppId, 
+        facebookAppSecret, 
+        enableFacebookOAuth,
+        zaloAppId,
+        zaloAppSecret,
+        enableZaloOAuth 
+      } = req.body;
+
+      // Update Facebook settings
+      await storage.setSetting('facebookAppId', facebookAppId || '', 'facebook_oauth');
+      await storage.setSetting('facebookAppSecret', facebookAppSecret || '', 'facebook_oauth');
+      await storage.setSetting('enableFacebookOAuth', enableFacebookOAuth ? 'true' : 'false', 'facebook_oauth');
+
+      // Update Zalo settings
+      await storage.setSetting('zaloAppId', zaloAppId || '', 'zalo_oauth');
+      await storage.setSetting('zaloAppSecret', zaloAppSecret || '', 'zalo_oauth');
+      await storage.setSetting('enableZaloOAuth', enableZaloOAuth ? 'true' : 'false', 'zalo_oauth');
+
+      console.log('Social OAuth settings updated by admin:', {
+        facebookAppId: facebookAppId ? '[SET]' : '[EMPTY]',
+        facebookAppSecret: facebookAppSecret ? '[SET]' : '[EMPTY]',
+        enableFacebookOAuth,
+        zaloAppId: zaloAppId ? '[SET]' : '[EMPTY]',
+        zaloAppSecret: zaloAppSecret ? '[SET]' : '[EMPTY]',
+        enableZaloOAuth,
+        adminId: req.user.id
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Social OAuth settings updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating Social OAuth settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update Social OAuth settings"
+      });
+    }
+  });
+
+  // Admin password change route
+  app.patch("/api/admin/change-password", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          error: "Current password and new password are required"
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          success: false,
+          error: "New password must be at least 8 characters long"
+        });
+      }
+
+      // Get current admin user from database
+      const adminUser = await db.select().from(schema.users).where(
+        eq(schema.users.id, req.user.id)
+      ).limit(1);
+
+      if (!adminUser.length) {
+        return res.status(404).json({
+          success: false,
+          error: "Admin user not found"
+        });
+      }
+
+      // Verify current password using scrypt (since that's what we use now)
+      const [salt, hash] = adminUser[0].passwordHash.split(':');
+      const { scrypt } = await import('crypto');
+      const { promisify } = await import('util');
+      const scryptAsync = promisify(scrypt);
+      
+      const currentHash = await scryptAsync(currentPassword, salt, 64) as Buffer;
+      const currentHashHex = currentHash.toString('hex');
+
+      if (currentHashHex !== hash) {
+        return res.status(400).json({
+          success: false,
+          error: "Current password is incorrect"
+        });
+      }
+
+      // Generate new password hash with scrypt
+      const newSalt = require('crypto').randomBytes(16).toString('hex');
+      const newHashBuffer = await scryptAsync(newPassword, newSalt, 64) as Buffer;
+      const newHashHex = newHashBuffer.toString('hex');
+      const newPasswordHash = `${newSalt}:${newHashHex}`;
+
+      // Update password in database
+      await db.update(schema.users)
+        .set({ 
+          passwordHash: newPasswordHash,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.users.id, req.user.id));
+
+      console.log('Admin password changed successfully:', {
+        adminId: req.user.id,
+        adminUsername: req.user.username,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Password changed successfully"
+      });
+    } catch (error) {
+      console.error("Error changing admin password:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to change password"
+      });
+    }
+  });
+
+  // Get Social OAuth settings (Facebook and Zalo)
+  app.get("/api/admin/settings/social-oauth", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const [facebookSettings, zaloSettings] = await Promise.all([
+        storage.getSettingsByCategory('facebook_oauth'),
+        storage.getSettingsByCategory('zalo_oauth')
+      ]);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          facebookAppId: facebookSettings.facebookAppId || '',
+          facebookAppSecret: facebookSettings.facebookAppSecret || '',
+          enableFacebookOAuth: facebookSettings.enableFacebookOAuth === 'true',
+          zaloAppId: zaloSettings.zaloAppId || '',
+          zaloAppSecret: zaloSettings.zaloAppSecret || '',
+          enableZaloOAuth: zaloSettings.enableZaloOAuth === 'true'
+        }
+      });
+    } catch (error) {
+      console.error("Error getting Social OAuth settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get Social OAuth settings"
+      });
+    }
+  });
 }
