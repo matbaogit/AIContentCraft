@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/dashboard/Layout";
 import { useLanguage } from "@/hooks/use-language";
 import { useDbTranslations } from "@/hooks/use-db-translations";
 import { useAuth } from "@/hooks/use-auth";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCreditCache } from "@/hooks/use-credit-cache";
@@ -116,7 +116,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Định nghĩa kiểu dữ liệu cho mục dàn ý
+// Define outline item type
 type OutlineItem = {
   id: string;
   level: 'h2' | 'h3' | 'h4';
@@ -130,13 +130,15 @@ export default function CreateContent() {
   const { toast } = useToast();
   const { invalidateCreditHistory } = useCreditCache();
   
-  // NEW FLOW: Simplified states for article workflow
+  // Original interface states - keep this UI
+  const [generatedContent, setGeneratedContent] = useState<GenerateContentResponse | null>(null);
+  const [editedTitle, setEditedTitle] = useState<string>("");
+  const [editedContent, setEditedContent] = useState<string>("");
+  const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
+  const [isSavingArticle, setIsSavingArticle] = useState(false);
+  
+  // NEW FLOW: Add article ID tracking for backend logic
   const [currentArticleId, setCurrentArticleId] = useState<number | null>(null);
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [previewData, setPreviewData] = useState<{ title: string; content: string; keywords: string } | null>(null);
-  const [isContentSaved, setIsContentSaved] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   
   // Keep outline functionality
   const [outlineItems, setOutlineItems] = useState<OutlineItem[]>([]);
@@ -198,7 +200,7 @@ export default function CreateContent() {
     };
   }, [initializeLinkItems]);
 
-  // NEW FLOW: Generate content mutation
+  // Generate content mutation - NEW FLOW backend, original UI
   const generateContentMutation = useMutation({
     mutationFn: async (data: GenerateContentRequest) => {
       toast({
@@ -215,7 +217,7 @@ export default function CreateContent() {
     onSuccess: async (data) => {
       console.log("✅ [NEW FLOW] Content generation success, processing data...");
       
-      // Extract content and title
+      // Extract content and title  
       let content, title, keywords;
       
       if (Array.isArray(data) && data.length > 0) {
@@ -238,9 +240,9 @@ export default function CreateContent() {
       
       console.log("📝 [NEW FLOW] Processed data:", { title, content: content.slice(0, 100) + "...", keywords });
       
-      // STEP 1: Save immediately as draft
+      // STEP 1: Save immediately as draft - NEW FLOW LOGIC
       try {
-        console.log("💾 [NEW FLOW] Saving article as draft...");
+        console.log("💾 [NEW FLOW] Auto-saving article as draft...");
         
         const saveResponse = await apiRequest("POST", "/api/dashboard/articles", {
           title,
@@ -257,17 +259,16 @@ export default function CreateContent() {
         const savedArticle = await saveResponse.json();
         
         if (savedArticle.success && savedArticle.data?.id) {
-          console.log("✅ [NEW FLOW] Article saved successfully with ID:", savedArticle.data.id);
+          console.log("✅ [NEW FLOW] Article auto-saved successfully with ID:", savedArticle.data.id);
           
-          // STEP 2: Set article ID and cache preview data
+          // Set article ID for future save operations 
           setCurrentArticleId(savedArticle.data.id);
-          setPreviewData({ title, content, keywords });
-          setIsContentSaved(true);
-          setSaveError(null);
-          setHasUnsavedChanges(false);
           
-          // STEP 3: Open preview dialog
-          setIsPreviewDialogOpen(true);
+          // STEP 2: Setup content for UI display - keep original interface
+          setGeneratedContent(data);
+          setEditedTitle(title);
+          setEditedContent(content);
+          setIsContentDialogOpen(true);
           
           // Refresh credit balance
           invalidateCreditHistory();
@@ -281,16 +282,14 @@ export default function CreateContent() {
         }
         
       } catch (error) {
-        console.error("❌ [NEW FLOW] Save failed:", error);
+        console.error("❌ [NEW FLOW] Auto-save failed:", error);
         
-        // Show preview anyway but mark as unsaved
+        // Show content anyway but mark as unsaved
         setCurrentArticleId(null);
-        setPreviewData({ title, content, keywords });
-        setIsContentSaved(false);
-        setSaveError("Chưa lưu - Có lỗi xảy ra khi lưu tự động");
-        setHasUnsavedChanges(true);
-        
-        setIsPreviewDialogOpen(true);
+        setGeneratedContent(data);
+        setEditedTitle(title);
+        setEditedContent(content);
+        setIsContentDialogOpen(true);
         
         toast({
           title: "Tạo nội dung thành công",
@@ -309,36 +308,51 @@ export default function CreateContent() {
     },
   });
 
-  // NEW FLOW: Save article mutation (for updating existing draft)
+  // Save article mutation for NEW FLOW - using PATCH to update existing draft to published
   const saveArticleMutation = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+    mutationFn: async () => {
       if (!currentArticleId) {
-        throw new Error("No article ID to save");
+        // If no article ID, create new article (fallback)
+        console.log("💾 [NEW FLOW] No article ID, creating new article...");
+        const response = await apiRequest("POST", "/api/dashboard/articles", {
+          title: editedTitle,
+          content: editedContent,
+          keywords: form.getValues().keywords,
+          creditsUsed: 0, // No additional credits for manual save
+          status: 'published'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Create failed: ${response.status}`);
+        }
+        
+        return await response.json();
+      } else {
+        // Update existing draft to published
+        console.log("💾 [NEW FLOW] Updating existing article ID:", currentArticleId);
+        const response = await apiRequest("PATCH", `/api/dashboard/articles/${currentArticleId}`, {
+          title: editedTitle,
+          content: editedContent,
+          status: 'published' // Convert draft to published
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Update failed: ${response.status}`);
+        }
+        
+        return await response.json();
       }
-      
-      console.log("💾 [NEW FLOW] Saving article changes for ID:", currentArticleId);
-      
-      const response = await apiRequest("PATCH", `/api/dashboard/articles/${currentArticleId}`, {
-        title,
-        content,
-        status: 'published' // First save makes it published
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Save failed: ${response.status}`);
-      }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
-      console.log("✅ [NEW FLOW] Article saved successfully:", data);
-      setIsContentSaved(true);
-      setHasUnsavedChanges(false);
-      setSaveError(null);
-      setIsPreviewDialogOpen(false);
+      console.log("✅ [NEW FLOW] Article saved/published successfully:", data);
+      setIsSavingArticle(false);
+      setIsContentDialogOpen(false);
       
-      // Refresh credit balance
-      invalidateCreditHistory();
+      // Reset states
+      setGeneratedContent(null);
+      setEditedTitle("");
+      setEditedContent("");
+      setCurrentArticleId(null);
       
       toast({
         title: "Lưu thành công",
@@ -347,6 +361,7 @@ export default function CreateContent() {
     },
     onError: (error) => {
       console.error("❌ [NEW FLOW] Save failed:", error);
+      setIsSavingArticle(false);
       toast({
         title: "Lỗi lưu bài viết",
         description: error.message || "Có lỗi xảy ra khi lưu bài viết",
@@ -354,29 +369,6 @@ export default function CreateContent() {
       });
     },
   });
-
-  // Load article data when needed
-  const { data: articleData, refetch: refetchArticle } = useQuery({
-    queryKey: ['/api/dashboard/articles', currentArticleId],
-    enabled: !!currentArticleId && isPreviewDialogOpen,
-    staleTime: 30000, // Cache for 30 seconds
-  });
-
-  // Handle form submission with credit confirmation
-  const handleFormSubmit = async (data: FormValues) => {
-    if (!user) {
-      toast({
-        title: "Lỗi",
-        description: "Bạn cần đăng nhập để sử dụng tính năng này",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Show credit confirmation modal
-    setPendingFormData(data);
-    setShowCreditModal(true);
-  };
 
   // Handle credit confirmation
   const handleCreditConfirm = () => {
@@ -387,56 +379,19 @@ export default function CreateContent() {
     }
   };
 
-  // Handle title/content changes in preview
-  const handlePreviewTitleChange = (newTitle: string) => {
-    if (previewData) {
-      setPreviewData({ ...previewData, title: newTitle });
-      setHasUnsavedChanges(true);
-    }
-  };
-
-  const handlePreviewContentChange = (newContent: string) => {
-    if (previewData) {
-      setPreviewData({ ...previewData, content: newContent });
-      setHasUnsavedChanges(true);
-    }
-  };
-
-  // Handle save from preview
-  const handleSaveFromPreview = () => {
-    if (previewData) {
-      saveArticleMutation.mutate({
-        title: previewData.title,
-        content: previewData.content
+  // Handle saving article (for original interface)
+  const handleSaveArticle = async () => {
+    if (!editedTitle.trim() || !editedContent.trim()) {
+      toast({
+        title: "Thông tin không đầy đủ",
+        description: "Vui lòng nhập đầy đủ tiêu đề và nội dung",
+        variant: "destructive",
       });
+      return;
     }
-  };
 
-  // Handle dialog close with warning
-  const handleClosePreview = () => {
-    if (hasUnsavedChanges) {
-      const confirmed = window.confirm("Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng không?");
-      if (!confirmed) return;
-    }
-    
-    setIsPreviewDialogOpen(false);
-    setHasUnsavedChanges(false);
-  };
-
-  // Handle create new article
-  const handleCreateNew = () => {
-    setCurrentArticleId(null);
-    setPreviewData(null);
-    setIsContentSaved(false);
-    setHasUnsavedChanges(false);
-    setSaveError(null);
-    setIsPreviewDialogOpen(false);
-    form.reset();
-    
-    toast({
-      title: "Đã tạo bài viết mới",
-      description: "Form đã được reset để tạo bài viết mới",
-    });
+    setIsSavingArticle(true);
+    saveArticleMutation.mutate();
   };
 
   // Outline management functions
@@ -462,64 +417,93 @@ export default function CreateContent() {
     ).join('\n');
   };
 
-  // Link management functions
+  // Link items management
   const addLinkItem = () => {
     setLinkItems([...linkItems, { keyword: "", url: "" }]);
   };
 
   const removeLinkItem = (index: number) => {
-    const newItems = linkItems.filter((_, i) => i !== index);
-    setLinkItems(newItems);
-    form.setValue("linkItems", newItems);
+    setLinkItems(linkItems.filter((_, i) => i !== index));
   };
 
   const updateLinkItem = (index: number, field: 'keyword' | 'url', value: string) => {
-    const newItems = [...linkItems];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setLinkItems(newItems);
-    form.setValue("linkItems", newItems);
+    const updated = linkItems.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    );
+    setLinkItems(updated);
+  };
+
+  // Form submission
+  const onSubmit = async (values: FormValues) => {
+    if (!user?.credits || user.credits < 10) {
+      toast({
+        title: "Không đủ credit",
+        description: "Bạn cần ít nhất 10 credit để tạo nội dung.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update form data with current link items
+    const formData = {
+      ...values,
+      linkItems: linkItems.filter(item => item.keyword && item.url),
+      outline: generateOutlineHTML()
+    };
+
+    // Show credit confirmation modal
+    setPendingFormData(formData);
+    setShowCreditModal(true);
   };
 
   return (
     <DashboardLayout>
-      <Head title="Tạo nội dung - SEO AI Writer" />
+      <Head
+        title={tDb("dashboard.createContent.title") || "Tạo nội dung SEO"}
+        description={tDb("dashboard.createContent.description") || "Tạo nội dung SEO chất lượng cao với AI"}
+      />
       
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{tDb('dashboard.createContent.title', 'Tạo nội dung')}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {tDb("dashboard.createContent.title") || "Tạo nội dung SEO"}
+            </h1>
             <p className="text-muted-foreground">
-              {tDb('dashboard.createContent.description', 'Tạo nội dung chất lượng cao với AI')}
+              {tDb("dashboard.createContent.description") || "Tạo nội dung SEO chất lượng cao với AI"}
             </p>
           </div>
-          
-          {currentArticleId && (
-            <Button onClick={handleCreateNew} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo bài viết mới
-            </Button>
+          {user && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-sm">
+                {tDb("credit.current") || "Credit hiện tại"}: {user.credits}
+              </Badge>
+            </div>
           )}
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="basic">{t('dashboard.createContent.tabs.basic')}</TabsTrigger>
-                <TabsTrigger value="advanced">{t('dashboard.createContent.tabs.advanced')}</TabsTrigger>
-                <TabsTrigger value="outline">{t('dashboard.createContent.tabs.outline')}</TabsTrigger>
-                <TabsTrigger value="links">{t('dashboard.createContent.tabs.links')}</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="basic">Cơ bản</TabsTrigger>
+                <TabsTrigger value="advanced">Nâng cao</TabsTrigger>
+                <TabsTrigger value="outline">Dàn ý</TabsTrigger>
+                <TabsTrigger value="links">Liên kết</TabsTrigger>
+                <TabsTrigger value="images">Hình ảnh</TabsTrigger>
               </TabsList>
 
-              {/* Basic Tab */}
-              <TabsContent value="basic" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TabsContent value="basic" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="contentType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Loại nội dung</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Loại nội dung
+                        </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -527,10 +511,10 @@ export default function CreateContent() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="blog">Blog</SelectItem>
-                            <SelectItem value="product">Sản phẩm</SelectItem>
+                            <SelectItem value="blog">Bài viết blog</SelectItem>
+                            <SelectItem value="product">Mô tả sản phẩm</SelectItem>
                             <SelectItem value="news">Tin tức</SelectItem>
-                            <SelectItem value="social">Mạng xã hội</SelectItem>
+                            <SelectItem value="social">Social media</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -543,7 +527,10 @@ export default function CreateContent() {
                     name="length"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Độ dài</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <AlignJustify className="h-4 w-4" />
+                          Độ dài
+                        </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -568,12 +555,12 @@ export default function CreateContent() {
                   name="keywords"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Từ khóa chính</FormLabel>
+                      <FormLabel className="flex items-center gap-2">
+                        <KeyRound className="h-4 w-4" />
+                        Từ khóa chính *
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Nhập từ khóa chính..." 
-                          {...field} 
-                        />
+                        <Input placeholder="Nhập từ khóa chính..." {...field} />
                       </FormControl>
                       <FormDescription>
                         Từ khóa chính mà bạn muốn tối ưu SEO
@@ -588,11 +575,14 @@ export default function CreateContent() {
                   name="tone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tone giọng</FormLabel>
+                      <FormLabel className="flex items-center gap-2">
+                        <Paintbrush className="h-4 w-4" />
+                        Phong cách viết
+                      </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Chọn tone giọng" />
+                            <SelectValue placeholder="Chọn phong cách" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -614,16 +604,19 @@ export default function CreateContent() {
                   name="prompt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Yêu cầu bổ sung (tùy chọn)</FormLabel>
+                      <FormLabel className="flex items-center gap-2">
+                        <Pencil className="h-4 w-4" />
+                        Yêu cầu bổ sung (tùy chọn)
+                      </FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Mô tả chi tiết về nội dung bạn muốn tạo..."
-                          rows={3}
+                          placeholder="Nhập yêu cầu cụ thể về nội dung..." 
+                          className="min-h-[100px]"
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Thêm yêu cầu cụ thể để AI hiểu rõ hơn về nội dung bạn cần
+                        Mô tả chi tiết về nội dung bạn muốn tạo
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -631,15 +624,17 @@ export default function CreateContent() {
                 />
               </TabsContent>
 
-              {/* Advanced Tab */}
-              <TabsContent value="advanced" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <TabsContent value="advanced" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Ngôn ngữ</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          <Globe className="h-4 w-4" />
+                          Ngôn ngữ
+                        </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -658,6 +653,99 @@ export default function CreateContent() {
 
                   <FormField
                     control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Thị trường</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn thị trường" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="vietnam">Việt Nam</SelectItem>
+                            <SelectItem value="us">Hoa Kỳ</SelectItem>
+                            <SelectItem value="global">Toàn cầu</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="relatedKeywords"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Từ khóa liên quan</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Nhập các từ khóa liên quan, cách nhau bởi dấu phẩy..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Các từ khóa phụ để tăng độ phong phú cho nội dung
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="perspective"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Góc nhìn</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn góc nhìn" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="auto">Tự động</SelectItem>
+                            <SelectItem value="first">Ngôi thứ nhất</SelectItem>
+                            <SelectItem value="second">Ngôi thứ hai</SelectItem>
+                            <SelectItem value="third">Ngôi thứ ba</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="complexity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Độ phức tạp</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn độ phức tạp" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="auto">Tự động</SelectItem>
+                            <SelectItem value="basic">Cơ bản</SelectItem>
+                            <SelectItem value="intermediate">Trung cấp</SelectItem>
+                            <SelectItem value="advanced">Nâng cao</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="aiModel"
                     render={({ field }) => (
                       <FormItem>
@@ -665,7 +753,7 @@ export default function CreateContent() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Chọn mô hình AI" />
+                              <SelectValue placeholder="Chọn mô hình" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -680,14 +768,36 @@ export default function CreateContent() {
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Định dạng nội dung</Label>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="useWebResearch"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Nghiên cứu web
+                          </FormLabel>
+                          <FormDescription>
+                            Sử dụng thông tin từ internet để làm phong phú nội dung
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <FormField
                       control={form.control}
                       name="addHeadings"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -695,7 +805,9 @@ export default function CreateContent() {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Thêm tiêu đề</FormLabel>
+                            <FormLabel className="text-sm font-normal">
+                              Tiêu đề phụ
+                            </FormLabel>
                           </div>
                         </FormItem>
                       )}
@@ -705,7 +817,7 @@ export default function CreateContent() {
                       control={form.control}
                       name="useBold"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -713,7 +825,9 @@ export default function CreateContent() {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Chữ đậm</FormLabel>
+                            <FormLabel className="text-sm font-normal">
+                              Chữ đậm
+                            </FormLabel>
                           </div>
                         </FormItem>
                       )}
@@ -723,7 +837,7 @@ export default function CreateContent() {
                       control={form.control}
                       name="useItalic"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -731,7 +845,9 @@ export default function CreateContent() {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Chữ nghiêng</FormLabel>
+                            <FormLabel className="text-sm font-normal">
+                              Chữ nghiêng
+                            </FormLabel>
                           </div>
                         </FormItem>
                       )}
@@ -741,7 +857,7 @@ export default function CreateContent() {
                       control={form.control}
                       name="useBullets"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -749,7 +865,9 @@ export default function CreateContent() {
                             />
                           </FormControl>
                           <div className="space-y-1 leading-none">
-                            <FormLabel>Danh sách</FormLabel>
+                            <FormLabel className="text-sm font-normal">
+                              Danh sách
+                            </FormLabel>
                           </div>
                         </FormItem>
                       )}
@@ -759,140 +877,206 @@ export default function CreateContent() {
 
                 <FormField
                   control={form.control}
-                  name="generateImages"
+                  name="refSources"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Tạo hình ảnh</FormLabel>
-                        <FormDescription>
-                          Tự động tạo hình ảnh phù hợp với nội dung
-                        </FormDescription>
-                      </div>
+                    <FormItem>
+                      <FormLabel>Nguồn tham khảo</FormLabel>
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                        <Textarea 
+                          placeholder="Nhập các URL nguồn tham khảo, mỗi URL một dòng..." 
+                          {...field} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        Các nguồn tin cậy để AI tham khảo khi tạo nội dung
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </TabsContent>
 
-              {/* Outline Tab */}
-              <TabsContent value="outline" className="space-y-4">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="heading-text">Dàn ý bài viết</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Tạo dàn ý để AI viết theo cấu trúc bạn mong muốn
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Select value={currentHeadingLevel} onValueChange={(value: 'h2' | 'h3' | 'h4') => setCurrentHeadingLevel(value)}>
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="h2">H2</SelectItem>
-                        <SelectItem value="h3">H3</SelectItem>
-                        <SelectItem value="h4">H4</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Input
-                      id="heading-text"
-                      placeholder="Nhập tiêu đề phần..."
-                      value={currentHeadingText}
-                      onChange={(e) => setCurrentHeadingText(e.target.value)}
-                      className="flex-1"
-                    />
-                    
-                    <Button type="button" onClick={addOutlineItem}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+              <TabsContent value="outline" className="space-y-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <List className="h-5 w-5" />
+                        <h3 className="text-lg font-semibold">Tạo dàn ý</h3>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Select value={currentHeadingLevel} onValueChange={(value: 'h2' | 'h3' | 'h4') => setCurrentHeadingLevel(value)}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="h2">H2</SelectItem>
+                            <SelectItem value="h3">H3</SelectItem>
+                            <SelectItem value="h4">H4</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        <Input
+                          placeholder="Nhập tiêu đề..."
+                          value={currentHeadingText}
+                          onChange={(e) => setCurrentHeadingText(e.target.value)}
+                          className="flex-1"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              addOutlineItem();
+                            }
+                          }}
+                        />
+                        
+                        <Button type="button" onClick={addOutlineItem} size="sm">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
 
-                  {outlineItems.length > 0 && (
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          {outlineItems.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-2 border rounded">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{item.level.toUpperCase()}</Badge>
-                                <span>{item.text}</span>
-                              </div>
+                      <div className="space-y-2">
+                        {outlineItems.map((item) => (
+                          <div key={item.id} className="flex items-center gap-2 p-2 border rounded">
+                            <Badge variant="outline" className="text-xs">
+                              {item.level.toUpperCase()}
+                            </Badge>
+                            <span className="flex-1">{item.text}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeOutlineItem(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {outlineItems.length === 0 && (
+                        <p className="text-muted-foreground text-center py-8">
+                          Chưa có mục nào trong dàn ý. Thêm các tiêu đề để tạo cấu trúc cho bài viết.
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="links" className="space-y-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <LinkIcon className="h-5 w-5" />
+                        <h3 className="text-lg font-semibold">Liên kết trong bài</h3>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {linkItems.map((item, index) => (
+                          <div key={index} className="flex gap-2">
+                            <Input
+                              placeholder="Từ khóa..."
+                              value={item.keyword}
+                              onChange={(e) => updateLinkItem(index, 'keyword', e.target.value)}
+                              className="flex-1"
+                            />
+                            <Input
+                              placeholder="URL..."
+                              value={item.url}
+                              onChange={(e) => updateLinkItem(index, 'url', e.target.value)}
+                              className="flex-1"
+                            />
+                            {linkItems.length > 1 && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => removeOutlineItem(item.id)}
+                                onClick={() => removeLinkItem(index)}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </TabsContent>
+                            )}
+                          </div>
+                        ))}
+                      </div>
 
-              {/* Links Tab */}
-              <TabsContent value="links" className="space-y-4">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Liên kết nội bộ</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Thêm liên kết nội bộ để tối ưu SEO
-                    </p>
-                  </div>
-
-                  {linkItems.map((item, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        placeholder="Từ khóa liên kết"
-                        value={item.keyword}
-                        onChange={(e) => updateLinkItem(index, 'keyword', e.target.value)}
-                        className="flex-1"
-                      />
-                      <Input
-                        placeholder="URL liên kết"
-                        value={item.url}
-                        onChange={(e) => updateLinkItem(index, 'url', e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeLinkItem(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <Button type="button" variant="outline" onClick={addLinkItem} className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Thêm liên kết
                       </Button>
                     </div>
-                  ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                  <Button type="button" variant="outline" onClick={addLinkItem}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Thêm liên kết
-                  </Button>
+              <TabsContent value="images" className="space-y-6">
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="generateImages"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Tạo hình ảnh
+                          </FormLabel>
+                          <FormDescription>
+                            Tự động tạo hình ảnh phù hợp với nội dung bài viết
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="imageSize"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Image className="h-4 w-4" />
+                          Kích thước hình ảnh
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn kích thước" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="small">Nhỏ (512x512)</SelectItem>
+                            <SelectItem value="medium">Trung bình (1024x1024)</SelectItem>
+                            <SelectItem value="large">Lớn (1792x1024)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </TabsContent>
+
             </Tabs>
 
-            <div className="flex justify-center">
-              <Button 
-                type="submit" 
-                size="lg" 
+            <div className="flex gap-4">
+              <Button
+                type="submit"
+                size="lg"
                 disabled={generateContentMutation.isPending}
-                className="min-w-[200px]"
+                className="flex-1"
               >
                 {generateContentMutation.isPending ? (
-                  "Đang tạo..."
+                  <div className="flex items-center">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    "Đang tạo..."
+                  </div>
                 ) : (
                   "Tạo nội dung"
                 )}
@@ -925,69 +1109,62 @@ export default function CreateContent() {
         isLoading={generateContentMutation.isPending}
       />
 
-      {/* Preview Dialog */}
-      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+      {/* Content Dialog - Original Interface */}
+      <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              Xem trước bài viết
-              {saveError && (
-                <Badge variant="destructive" className="text-xs">
-                  {saveError}
-                </Badge>
-              )}
-              {isContentSaved && !hasUnsavedChanges && (
-                <Badge variant="secondary" className="text-xs">
-                  Đã lưu
-                </Badge>
-              )}
-              {hasUnsavedChanges && (
-                <Badge variant="outline" className="text-xs">
-                  Có thay đổi
-                </Badge>
-              )}
-            </DialogTitle>
+            <DialogTitle>Nội dung đã tạo</DialogTitle>
             <DialogDescription>
-              Xem lại và chỉnh sửa nội dung trước khi xuất bản
+              Xem lại và chỉnh sửa nội dung trước khi lưu
             </DialogDescription>
           </DialogHeader>
 
-          {previewData && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="preview-title">Tiêu đề</Label>
-                <Input
-                  id="preview-title"
-                  value={previewData.title}
-                  onChange={(e) => handlePreviewTitleChange(e.target.value)}
-                  className="text-lg font-semibold"
-                />
-              </div>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Tiêu đề</Label>
+              <Input
+                id="title"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="mt-1"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="preview-content">Nội dung</Label>
+            <div>
+              <Label htmlFor="content">Nội dung</Label>
+              <div className="mt-1 border rounded-md">
                 <ReactQuill
-                  value={previewData.content}
-                  onChange={handlePreviewContentChange}
+                  value={editedContent}
+                  onChange={setEditedContent}
                   theme="snow"
-                  className="min-h-[400px]"
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      ['link'],
+                      ['clean']
+                    ],
+                  }}
+                  style={{ minHeight: '300px' }}
                 />
               </div>
             </div>
-          )}
+          </div>
 
-          <DialogFooter className="flex justify-between">
-            <Button variant="outline" onClick={handleClosePreview}>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsContentDialogOpen(false)}
+            >
               Đóng
             </Button>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSaveFromPreview}
-                disabled={saveArticleMutation.isPending || !currentArticleId}
-              >
-                {saveArticleMutation.isPending ? "Đang lưu..." : "Xuất bản"}
-              </Button>
-            </div>
+            <Button
+              onClick={handleSaveArticle}
+              disabled={isSavingArticle}
+            >
+              {isSavingArticle ? "Đang lưu..." : "Lưu bài viết"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
