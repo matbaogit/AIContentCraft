@@ -176,6 +176,18 @@ export default function CreateContent() {
     mode: "onSubmit",
   });
   
+  // Sync edited values when generatedContent changes
+  useEffect(() => {
+    if (generatedContent) {
+      console.log("=== SYNC EDITED VALUES ===");
+      console.log("Setting editedTitle:", generatedContent.title);
+      console.log("Setting editedContent:", generatedContent.content?.substring(0, 100) + "...");
+      
+      setEditedTitle(generatedContent.title || "");
+      setEditedContent(generatedContent.content || "");
+    }
+  }, [generatedContent]);
+
   // Effect para inicializar os itens de link quando carrega o componente
   useEffect(() => {
     const tabs = document.querySelectorAll('[role="tab"]');
