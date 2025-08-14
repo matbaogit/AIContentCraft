@@ -205,11 +205,53 @@ router.get('/callback', async (req: Request, res: Response) => {
       });
     }
 
-    // Set session and redirect
+    // Set session and return success page
     req.login(user[0], (err) => {
       if (err) {
         console.error('Error setting user session after Zalo OAuth:', err);
-        return res.redirect('/?error=session_failed');
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Lỗi đăng nhập</title>
+            <meta charset="utf-8">
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+                color: white;
+              }
+              .container {
+                text-align: center;
+                padding: 2rem;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
+              <div style="font-size: 1.2rem;">Lỗi đăng nhập</div>
+            </div>
+            <script>
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'ZALO_LOGIN_ERROR',
+                  message: 'Lỗi tạo phiên đăng nhập'
+                }, window.location.origin);
+                window.close();
+              }
+            </script>
+          </body>
+          </html>
+        `);
       }
 
       console.log('Zalo OAuth login successful:', {
@@ -217,13 +259,125 @@ router.get('/callback', async (req: Request, res: Response) => {
         username: user[0].username
       });
 
-      // Redirect to dashboard or intended page
-      return res.redirect('/dashboard');
+      // Return success page with postMessage
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Đăng nhập thành công</title>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+            }
+            .container {
+              text-align: center;
+              padding: 2rem;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 10px;
+              backdrop-filter: blur(10px);
+            }
+            .success-icon {
+              font-size: 4rem;
+              margin-bottom: 1rem;
+            }
+            .message {
+              font-size: 1.2rem;
+              margin-bottom: 1rem;
+            }
+            .loading {
+              font-size: 0.9rem;
+              opacity: 0.8;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">✅</div>
+            <div class="message">Đăng nhập Zalo thành công!</div>
+            <div class="loading">Đang chuyển hướng...</div>
+          </div>
+          <script>
+            // Post success message to parent window
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'ZALO_LOGIN_SUCCESS',
+                user: {
+                  id: ${user[0].id},
+                  username: '${user[0].username}',
+                  role: '${user[0].role}'
+                }
+              }, window.location.origin);
+              window.close();
+            } else {
+              // Fallback if no opener
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 2000);
+            }
+          </script>
+        </body>
+        </html>
+      `);
     });
 
   } catch (error) {
     console.error('Error in Zalo OAuth callback:', error);
-    return res.redirect('/?error=zalo_oauth_error');
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Lỗi đăng nhập</title>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+          }
+          .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">❌</div>
+          <div style="font-size: 1.2rem; margin-bottom: 1rem;">Lỗi đăng nhập Zalo</div>
+          <div style="font-size: 0.9rem; opacity: 0.8;">Vui lòng thử lại sau</div>
+        </div>
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'ZALO_LOGIN_ERROR',
+              message: 'Lỗi xử lý OAuth callback'
+            }, window.location.origin);
+            window.close();
+          } else {
+            setTimeout(() => {
+              window.location.href = '/auth?error=zalo_oauth_error';
+            }, 3000);
+          }
+        </script>
+      </body>
+      </html>
+    `);
   }
 });
 

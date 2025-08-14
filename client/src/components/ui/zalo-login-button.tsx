@@ -1,26 +1,96 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface ZaloLoginButtonProps {
   className?: string;
   disabled?: boolean;
   children?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
 export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
   className = '',
   disabled = false,
-  children
+  children,
+  onSuccess
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
   const handleZaloLogin = () => {
-    if (disabled) return;
-    window.location.href = '/api/auth/zalo/login';
+    if (disabled || isLoading) return;
+    
+    setIsLoading(true);
+    
+    // Open popup window for Zalo OAuth
+    const popup = window.open(
+      '/api/auth/zalo/login',
+      'zaloLogin',
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+
+    if (!popup) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể mở popup. Vui lòng cho phép popup cho trang web này.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Listen for messages from popup
+    const messageListener = (event: MessageEvent) => {
+      // Security check - only accept messages from same origin
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'ZALO_LOGIN_SUCCESS') {
+        popup.close();
+        window.removeEventListener('message', messageListener);
+        setIsLoading(false);
+        
+        toast({
+          title: "Thành công",
+          description: "Đăng nhập Zalo thành công!",
+          variant: "default",
+        });
+        
+        // Reload page or call success callback
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.reload();
+        }
+      } else if (event.data.type === 'ZALO_LOGIN_ERROR') {
+        popup.close();
+        window.removeEventListener('message', messageListener);
+        setIsLoading(false);
+        
+        toast({
+          title: "Lỗi đăng nhập",
+          description: event.data.message || "Đăng nhập Zalo thất bại. Vui lòng thử lại.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    window.addEventListener('message', messageListener);
+
+    // Check if popup is closed manually
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        window.removeEventListener('message', messageListener);
+        setIsLoading(false);
+      }
+    }, 1000);
   };
 
   return (
     <Button
       onClick={handleZaloLogin}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors ${className}`}
       type="button"
     >
@@ -35,7 +105,7 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
           <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
           <circle cx="12" cy="12" r="2"/>
         </svg>
-        {children || 'Đăng nhập bằng Zalo'}
+        {isLoading ? 'Đang đăng nhập...' : (children || 'Đăng nhập bằng Zalo')}
       </div>
     </Button>
   );
