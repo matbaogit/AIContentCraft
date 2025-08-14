@@ -2274,14 +2274,19 @@ export function registerAdminRoutes(app: Express) {
       } = req.body;
 
       // Update Facebook settings
-      await storage.setSetting('facebookAppId', facebookAppId || '', 'facebook_oauth');
-      await storage.setSetting('facebookAppSecret', facebookAppSecret || '', 'facebook_oauth');
-      await storage.setSetting('enableFacebookOAuth', enableFacebookOAuth ? 'true' : 'false', 'facebook_oauth');
+      const fbAppIdResult = await storage.setSetting('facebookAppId', facebookAppId || '', 'facebook_oauth');
+      const fbSecretResult = await storage.setSetting('facebookAppSecret', facebookAppSecret || '', 'facebook_oauth');
+      const fbEnableResult = await storage.setSetting('enableFacebookOAuth', enableFacebookOAuth ? 'true' : 'false', 'facebook_oauth');
 
       // Update Zalo settings
-      await storage.setSetting('zaloAppId', zaloAppId || '', 'zalo_oauth');
-      await storage.setSetting('zaloAppSecret', zaloAppSecret || '', 'zalo_oauth');
-      await storage.setSetting('enableZaloOAuth', enableZaloOAuth ? 'true' : 'false', 'zalo_oauth');
+      const zaloAppIdResult = await storage.setSetting('zaloAppId', zaloAppId || '', 'zalo_oauth');
+      const zaloSecretResult = await storage.setSetting('zaloAppSecret', zaloAppSecret || '', 'zalo_oauth');
+      const zaloEnableResult = await storage.setSetting('enableZaloOAuth', enableZaloOAuth ? 'true' : 'false', 'zalo_oauth');
+
+      // Check if all settings were saved successfully
+      if (!fbAppIdResult || !fbSecretResult || !fbEnableResult || !zaloAppIdResult || !zaloSecretResult || !zaloEnableResult) {
+        throw new Error('Failed to save some OAuth settings to database');
+      }
 
       console.log('Social OAuth settings updated by admin:', {
         facebookAppId: facebookAppId ? '[SET]' : '[EMPTY]',
@@ -2293,16 +2298,18 @@ export function registerAdminRoutes(app: Express) {
         adminId: req.user.id
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: "Social OAuth settings updated successfully"
       });
+      return;
     } catch (error) {
       console.error("Error updating Social OAuth settings:", error);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         error: "Failed to update Social OAuth settings"
       });
+      return;
     }
   });
 
