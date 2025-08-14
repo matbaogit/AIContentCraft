@@ -204,184 +204,51 @@ export default function CreateContent() {
       return responseData.data as GenerateContentResponse;
     },
     onSuccess: async (data) => {
-      // Kiểm tra cấu trúc dữ liệu từ webhook và trích xuất đúng cách
-      console.log("Data structure from webhook:", JSON.stringify(data, null, 2));
+      console.log("=== NEW FLOW: Generate Content Success ===");
+      console.log("Response data:", data);
       
-      // Xử lý content
-      let content;
-      if (Array.isArray(data) && data.length > 0 && data[0].articleContent) {
-        // Trường hợp data là array (được trả về từ một số loại webhook)
-        content = data[0].articleContent;
-      } else if (data.articleContent) {
-        // Trường hợp data là object có articleContent
-        content = data.articleContent;
-      } else {
-        // Mặc định sử dụng content
-        content = data.content || "<p>Không có nội dung</p>";
-      }
+      // Extract data based on response structure
+      const title = data.title || "Bài viết mới";
+      const content = data.content || data.articleContent || "<p>Không có nội dung</p>";
+      const articleId = data.articleId; // ID bài viết đã được lưu trong backend
+      const saveError = data.saveError; // Flag báo lỗi khi lưu
       
-      // Xử lý title - làm sạch và định dạng tiêu đề
-      let title;
-      if (Array.isArray(data) && data.length > 0 && data[0].aiTitle) {
-        // Trường hợp data là array
-        title = data[0].aiTitle.replace(/[\r\n\t]+/g, ' ').trim();
-      } else if (data.aiTitle) {
-        // Trường hợp data là object có aiTitle
-        title = data.aiTitle.replace(/[\r\n\t]+/g, ' ').trim();
-      } else {
-        // Sử dụng title nếu không có aiTitle
-        title = data.title || "Bài viết mới";
-      }
+      console.log("Extracted data:", { title, content: content.substring(0, 100) + "...", articleId, saveError });
       
-      console.log("Webhook response data:", data);
-      console.log("Using title from webhook:", title);
+      // Set generatedContent với articleId từ API response
+      const newContentState = {
+        ...data,
+        title,
+        content,
+        articleId, // Đã có sẵn từ backend response
+        saveError // Flag lỗi nếu có
+      };
       
-      // Lưu bài viết ngay khi tạo thành công
-      try {
-        // Lưu nội dung vào database với giá trị từ webhook
-        console.log("Saving article with title:", title);
-        
-        // Xử lý keywords - đảm bảo đúng định dạng
-        let keywords;
-        if (Array.isArray(data.keywords)) {
-          keywords = data.keywords.join(", ");
-        } else if (typeof data.keywords === 'string') {
-          keywords = data.keywords;
-        } else {
-          // Mặc định sử dụng keywords từ form nếu không có
-          keywords = form.getValues().keywords;
-        }
-        
-        // AUTO-SAVE AS DRAFT: Tự động lưu bản nháp
-        console.log("🔄 [AUTO-SAVE DRAFT] Saving article as draft...");
-        
-        // Extract credits used for saving
-        let creditsUsedForSave = 1; // Default fallback
-        if (data.creditsUsed) {
-          creditsUsedForSave = data.creditsUsed;
-        } else if (Array.isArray(data) && data.length > 0 && data[0].creditsUsed) {
-          creditsUsedForSave = data[0].creditsUsed;
-        }
-        
-        const saveResponse = await apiRequest("POST", "/api/dashboard/articles", {
-          title: title,
-          content: content,
-          keywords: keywords,
-          creditsUsed: creditsUsedForSave,
-          status: 'draft' // Lưu làm bản nháp
-        });
-        
-        if (!saveResponse.ok) {
-          throw new Error(`HTTP ${saveResponse.status}: ${saveResponse.statusText}`);
-        }
-        
-        const savedArticle = await saveResponse.json();
-        
-        // Cập nhật trạng thái với ID bài viết đã lưu
-        console.log("Draft auto-save result:", savedArticle);
-        console.log("savedArticle.success:", savedArticle.success);
-        console.log("savedArticle.data:", savedArticle.data);
-        console.log("savedArticle.data.id:", savedArticle.data?.id);
-        
-        if (savedArticle.success && savedArticle.data && savedArticle.data.id) {
-          console.log("✓ Draft auto-save thành công, articleId:", savedArticle.data.id);
-          console.log("🔄 [DRAFT AUTO-SAVE SUCCESS] About to call setGeneratedContent with articleId:", savedArticle.data.id);
-          
-          const newContentState = {
-            ...data,
-            title: title,
-            content: content,
-            articleId: savedArticle.data.id // Lưu ID bài viết để cập nhật sau này
-          };
-          console.log("🔄 [DEBUG] newContentState with articleId:", newContentState);
-          
-                  // Đặt trong setTimeout để đảm bảo không bị overwrite bởi các setGeneratedContent khác
-          setTimeout(() => {
-            console.log("🔄 [DELAYED SET] Setting generatedContent with articleId:", savedArticle.data.id);
-            setGeneratedContent(newContentState);
-            
-            // Backup: Store articleId in localStorage as fallback
-            localStorage.setItem('currentArticleId', savedArticle.data.id.toString());
-            console.log("🔄 [BACKUP] Stored articleId in localStorage:", savedArticle.data.id);
-            
-            // Also store in ref to prevent race conditions
-            currentArticleIdRef.current = savedArticle.data.id;
-            console.log("🔄 [REF STORE] Stored articleId in ref:", savedArticle.data.id);
-          }, 100);
-        } else {
-          console.log("✗ Draft auto-save thất bại, không có articleId");
-          console.log("🔄 [DRAFT AUTO-SAVE FAIL] setGeneratedContent WITHOUT articleId");
-          // Không set state ở đây để tránh overwrite articleId nếu có
-        }
-      } catch (error) {
-        console.error("Không thể lưu bản nháp tự động:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-        console.log("🔄 [DRAFT AUTO-SAVE ERROR] setGeneratedContent WITHOUT articleId due to error");
-        // Chỉ set state với basic content, không overwrite nếu đã có articleId
-        setTimeout(() => {
-          console.log("🔄 [ERROR FALLBACK] Checking existing state before override");
-          setGeneratedContent(prev => {
-            // Nếu đã có articleId từ lần trước, giữ lại
-            if (prev && prev.articleId) {
-              console.log("🔄 [ERROR FALLBACK] Preserving existing articleId:", prev.articleId);
-              return {
-                ...data,
-                title: title,
-                content: content,
-                articleId: prev.articleId // Giữ articleId cũ
-              };
-            } else {
-              console.log("🔄 [ERROR FALLBACK] Setting basic generatedContent without articleId");
-              return {
-                ...data,
-                title: title,
-                content: content
-              };
-            }
-          });
-        }, 200);
-      }
+      setGeneratedContent(newContentState);
       
-      // Hiển thị tiêu đề và nội dung từ webhook trong dialog
-      // Đảm bảo hiển thị aiTitle từ webhook trong trường tiêu đề
-      console.log("Setting edited title to:", title);
-      if (title && title.trim() !== '') {
-        setEditedTitle(title);
-      } else {
-        setEditedTitle("Bài viết mới");
-      }
-      
-      // Cập nhật nội dung từ articleContent hoặc content
-      if (content && content.trim() !== '') {
-        setEditedContent(content);
-      } else {
-        setEditedContent("<p>Nhập nội dung bài viết của bạn ở đây...</p>");
-      }
-      
-      // Hiển thị dialog chỉnh sửa
+      // Hiển thị dialog chỉnh sửa/preview ngay lập tức
       setIsContentDialogOpen(true);
       
-      // Extract credits used from the response structure
-      // Log response structure to debug
-      console.log('Response data structure:', data);
+      // Success toast với thông tin phù hợp
+      const creditsUsed = data.creditsUsed || 1;
       
-      let creditsUsed = 1; // Default fallback
-      if (data.creditsUsed) {
-        creditsUsed = data.creditsUsed;
-      } else if (Array.isArray(data) && data.length > 0 && data[0].creditsUsed) {
-        creditsUsed = data[0].creditsUsed;
+      if (saveError) {
+        toast({
+          title: "Nội dung đã tạo xong",
+          description: `Đã sử dụng ${creditsUsed} tín dụng. Có lỗi khi lưu tự động, bạn có thể thử lưu lại.`,
+          variant: "destructive",
+        });
+      } else if (articleId) {
+        toast({
+          title: "Tạo nội dung thành công",
+          description: `Đã sử dụng ${creditsUsed} tín dụng và lưu bản nháp tự động.`,
+        });
+      } else {
+        toast({
+          title: "Tạo nội dung thành công", 
+          description: `Đã sử dụng ${creditsUsed} tín dụng.`,
+        });
       }
-      
-      console.log('Credits used extracted:', creditsUsed);
-      console.log('Full response data for debugging:', {
-        creditsUsed: data.creditsUsed,
-        actualUsed: creditsUsed
-      });
-      
-      toast({
-        title: "Đã tạo nội dung thành công",
-        description: `Đã sử dụng ${creditsUsed} tín dụng và lưu bản nháp tự động`,
-      });
 
       // Invalidate credit history cache
       invalidateCreditHistory();
@@ -624,141 +491,70 @@ export default function CreateContent() {
   };
 
   const handleSaveArticle = async () => {
-    console.log("=== handleSaveArticle CALLED ===");
-    console.log("- generatedContent:", generatedContent ? "EXISTS" : "NULL");
-    console.log("- isSavingArticle:", isSavingArticle);
+    console.log("=== NEW FLOW: Save Article ===");
+    console.log("generatedContent:", generatedContent ? "EXISTS" : "NULL");
+    console.log("isSavingArticle:", isSavingArticle);
     
     if (generatedContent && !isSavingArticle) {
+      setIsSavingArticle(true);
+      
       try {
-        setIsSavingArticle(true);
+        const articleId = generatedContent.articleId;
+        
+        if (!articleId) {
+          throw new Error("Không có ID bài viết để cập nhật. Vui lòng tạo lại nội dung.");
+        }
         
         toast({
           title: "Đang lưu bài viết",
-          description: "Vui lòng đợi trong khi hệ thống lưu bài viết của bạn...",
+          description: "Đang cập nhật bài viết...",
         });
         
-        // Kiểm tra xem bài viết đã tồn tại chưa
-        const articlePayload = {
-          title: generatedContent.title || '',
+        // Xây dựng payload để update article
+        const updatePayload = {
+          title: editedTitle || generatedContent.title,
           content: editedContent || generatedContent.content,
-          keywords: generatedContent.keywords.join(", "),
-          creditsUsed: generatedContent.creditsUsed,
+          status: 'published' // Chuyển từ 'draft' thành 'published' khi save
         };
         
-        // Nếu đã có ID bài viết, thì gửi lên để cập nhật bài viết cũ
-        let articleId = generatedContent.articleId;
+        console.log("Updating article ID:", articleId, "with payload:", updatePayload);
         
-        // Try to get articleId from ref first (most reliable)
-        if (!articleId && currentArticleIdRef.current) {
-          articleId = currentArticleIdRef.current;
-          console.log("🔄 [REF USED] Retrieved articleId from ref:", articleId);
+        // Update article với status 'published'
+        const response = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, updatePayload);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        // Backup: Try to get articleId from localStorage if still missing
-        if (!articleId) {
-          const backupId = localStorage.getItem('currentArticleId');
-          if (backupId) {
-            articleId = parseInt(backupId);
-            console.log("🔄 [BACKUP USED] Retrieved articleId from localStorage:", articleId);
-          }
-        }
-        
-        console.log("🔍 [FINAL CHECK] Final articleId to use:", articleId);
-        console.log("🔍 [FINAL CHECK] articleId type:", typeof articleId);
-        console.log("🔍 [FINAL CHECK] articleId truthy:", !!articleId);
-        console.log("🔍 [DEBUG] generatedContent.articleId:", generatedContent.articleId);
-        console.log("🔍 [DEBUG] currentArticleIdRef.current:", currentArticleIdRef.current);
-        console.log("🔍 [DEBUG] localStorage value:", localStorage.getItem('currentArticleId'));
-        
-        if (articleId) {
-          (articlePayload as any)['id'] = articleId;
-        } else {
-          // Critical fallback: Last attempt to find any trace of articleId
-          console.error("🚨 [CRITICAL] No articleId found in any source! Attempting emergency recovery...");
-          
-          // Try to find the most recent draft article for this user
-          try {
-            const recentDraftsResponse = await apiRequest("GET", "/api/dashboard/articles?status=draft&limit=1");
-            if (recentDraftsResponse.ok) {
-              const recentDrafts = await recentDraftsResponse.json();
-              if (recentDrafts.success && recentDrafts.data?.length > 0) {
-                const mostRecentDraft = recentDrafts.data[0];
-                console.log("🔄 [EMERGENCY] Found recent draft:", mostRecentDraft);
-                
-                // Use this draft ID if it was created recently (within last 5 minutes)
-                const draftCreatedAt = new Date(mostRecentDraft.createdAt);
-                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                
-                if (draftCreatedAt > fiveMinutesAgo) {
-                  articleId = mostRecentDraft.id;
-                  (articlePayload as any)['id'] = articleId;
-                  console.log("🔄 [EMERGENCY] Using recent draft ID:", articleId);
-                } else {
-                  console.log("🔄 [EMERGENCY] Draft too old, will create new article");
-                }
-              }
-            }
-          } catch (emergencyError) {
-            console.error("🚨 [EMERGENCY] Failed to recover articleId:", emergencyError);
-          }
-        }
-        
-        // Đảm bảo tiêu đề từ form được sử dụng khi lưu bài viết
-        const articlePayloadWithTitle = {
-          ...articlePayload,
-          title: editedTitle // Sử dụng tiêu đề đã chỉnh sửa từ dialog
-        };
-        
-        // Gửi request lưu hoặc cập nhật bài viết
-        console.log("Debug handleSaveArticle:");
-        console.log("- generatedContent full object:", generatedContent);
-        console.log("- generatedContent.articleId:", generatedContent.articleId);
-        console.log("- generatedContent.articleId type:", typeof generatedContent.articleId);
-        console.log("- generatedContent.articleId truthy?:", !!generatedContent.articleId);
-        console.log("- articlePayloadWithTitle:", articlePayloadWithTitle);
-        
-        let response;
-        if (articleId) {
-          // Cập nhật bài viết đã tồn tại (auto-saved draft)
-          console.log("→ Sử dụng PATCH để cập nhật bài viết ID:", articleId);
-          response = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, articlePayloadWithTitle);
-        } else {
-          // Fallback: Tạo bài viết mới nếu thực sự không tìm được ID
-          console.error("⚠️ KHÔNG CÓ ARTICLE ID - Tạo bài viết mới như fallback");
-          response = await apiRequest("POST", "/api/dashboard/articles", articlePayloadWithTitle);
-        }
         const result = await response.json();
+        console.log("Save result:", result);
         
         // Đóng dialog sau khi lưu thành công
         setIsContentDialogOpen(false);
         
-        console.log("🔄 [MANUAL SAVE SUCCESS] Đã cập nhật bài viết ID:", articleId);
-        
-        // Clear backup after successful save
-        localStorage.removeItem('currentArticleId');
-        currentArticleIdRef.current = null;
-        
-        // Thêm button "Tạo bài viết mới" để user có thể reset khi muốn
-        // Không tự động reset form để user có thể tiếp tục chỉnh sửa bài viết hiện tại
+        // Update generatedContent với status mới
+        setGeneratedContent(prev => ({
+          ...prev,
+          status: 'published',
+          title: editedTitle || prev.title,
+          content: editedContent || prev.content
+        }));
         
         toast({
-          title: "Đã cập nhật bài viết",
-          description: "Bản nháp đã được cập nhật thành công.",
+          title: "Đã lưu bài viết",
+          description: "Bài viết đã được lưu và xuất bản thành công.",
         });
+        
       } catch (error) {
         console.error("Lỗi khi lưu bài viết:", error);
         
-        // Hiển thị thông báo lỗi
         toast({
-          title: "Lỗi khi cập nhật", 
-          description: "Có lỗi xảy ra khi cập nhật bản nháp. Vui lòng thử lại.",
+          title: "Lỗi khi lưu bài viết", 
+          description: error.message || "Có lỗi xảy ra khi lưu bài viết. Vui lòng thử lại.",
           variant: "destructive",
         });
         
-        // Đóng dialog nhưng giữ lại state để user có thể thử lại
-        setIsContentDialogOpen(false);
-        console.log("🔄 [MANUAL SAVE ERROR] Keeping generatedContent state for retry");
-        // Không reset state để user có thể thử save lại
+        // Không đóng dialog để user có thể thử lại
       } finally {
         setIsSavingArticle(false);
       }
@@ -2086,10 +1882,17 @@ export default function CreateContent() {
                 disabled={isSavingArticle}
               >
                 {isSavingArticle 
-                  ? (generatedContent?.articleId ? "Đang cập nhật..." : "Đang lưu...") 
-                  : (generatedContent?.articleId ? "Cập nhật bài viết" : "Lưu bài viết")
+                  ? "Đang lưu bài viết..." 
+                  : "Lưu bài viết"
                 }
               </Button>
+              
+              {/* Show error message and retry button if there was a save error */}
+              {generatedContent?.saveError && (
+                <div className="text-sm text-red-600 mt-2">
+                  Có lỗi khi lưu tự động. Bạn có thể thử lưu lại.
+                </div>
+              )}
               
               {/* Tạm ẩn nút xuất bản theo yêu cầu */}
               {/* <Button 

@@ -1092,48 +1092,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Xử lý aiTitle để loại bỏ dấu ngoặc kép thừa
               const cleanedTitle = firstResult.aiTitle.replace(/^"|"$/g, '').replace(/[\r\n\t]+/g, ' ').trim();
               
-              const formattedResponse = {
-                title: cleanedTitle,
-                content: firstResult.articleContent,
-                aiTitle: cleanedTitle,
-                articleContent: firstResult.articleContent,
-                keywords: contentRequest.keywords.split(','),
-                creditsUsed: creditsNeeded,
-                metrics: {
-                  generationTimeMs: 5000,
-                  wordCount: firstResult.articleContent ? firstResult.articleContent.split(/\s+/).length : 0
+              // NGAY LẬP TỨC LỮU BÀI VIẾT VÀO DATABASE với status = 'draft'
+              console.log('=== SAVING ARTICLE TO DATABASE IMMEDIATELY ===');
+              try {
+                // Extract images from content
+                const imageRegex = /<img[^>]+src="([^"]+)"[^>]*>/g;
+                const imageUrls = [];
+                let match;
+                
+                while ((match = imageRegex.exec(firstResult.articleContent)) !== null) {
+                  imageUrls.push(match[1]);
                 }
-              };
-              
-              // Log credit usage history với imageCount đúng
-              const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
-              await logCreditUsage(
-                userId,
-                'content_generation',
-                contentRequest.length,
-                contentRequest.aiModel,
-                contentRequest.generateImages || false,
-                actualImageCount,
-                creditsNeeded,
-                creditsBreakdown,
-                contentRequest,
-                cleanedTitle,
-                formattedResponse.metrics.wordCount,
-                true
-              );
-              
-              console.log('Returning formatted response with cleaned title:', cleanedTitle);
-              return res.json({ success: true, data: formattedResponse });
+                
+                // Remove img tags from content to get text content
+                const textContent = firstResult.articleContent.replace(/<img[^>]*>/g, '').trim();
+                
+                // Create article with separated content and images
+                const article = await storage.createArticle({
+                  userId,
+                  title: cleanedTitle,
+                  content: firstResult.articleContent,
+                  textContent,
+                  imageUrls,
+                  keywords: contentRequest.keywords,
+                  creditsUsed: creditsNeeded,
+                  status: 'draft' // Lưu với status = 'draft'
+                });
+                
+                // Subtract credits
+                await storage.subtractUserCredits(userId, creditsNeeded, `Created article: ${cleanedTitle}`);
+                
+                console.log('✓ Article saved to database with ID:', article.id);
+                
+                const formattedResponse = {
+                  title: cleanedTitle,
+                  content: firstResult.articleContent,
+                  aiTitle: cleanedTitle,
+                  articleContent: firstResult.articleContent,
+                  keywords: contentRequest.keywords.split(','),
+                  creditsUsed: creditsNeeded,
+                  articleId: article.id, // Trả về articleId cho frontend
+                  metrics: {
+                    generationTimeMs: 5000,
+                    wordCount: firstResult.articleContent ? firstResult.articleContent.split(/\s+/).length : 0
+                  }
+                };
+                
+                // Log credit usage history với imageCount đúng
+                const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
+                await logCreditUsage(
+                  userId,
+                  'content_generation',
+                  contentRequest.length,
+                  contentRequest.aiModel,
+                  contentRequest.generateImages || false,
+                  actualImageCount,
+                  creditsNeeded,
+                  creditsBreakdown,
+                  contentRequest,
+                  cleanedTitle,
+                  formattedResponse.metrics.wordCount,
+                  true
+                );
+                
+                console.log('Returning formatted response with cleaned title and articleId:', cleanedTitle, article.id);
+                return res.json({ success: true, data: formattedResponse });
+              } catch (dbError) {
+                console.error('✗ Failed to save article to database:', dbError);
+                // Vẫn trả về content nhưng không có articleId (chưa lưu)
+                const formattedResponse = {
+                  title: cleanedTitle,
+                  content: firstResult.articleContent,
+                  aiTitle: cleanedTitle,
+                  articleContent: firstResult.articleContent,
+                  keywords: contentRequest.keywords.split(','),
+                  creditsUsed: creditsNeeded,
+                  articleId: null, // Không có articleId vì lưu thất bại
+                  saveError: true, // Flag để frontend biết có lỗi khi lưu
+                  metrics: {
+                    generationTimeMs: 5000,
+                    wordCount: firstResult.articleContent ? firstResult.articleContent.split(/\s+/).length : 0
+                  }
+                };
+                
+                // Log credit usage history với imageCount đúng
+                const actualImageCount = contentRequest.generateImages ? 3 : 0;
+                await logCreditUsage(
+                  userId,
+                  'content_generation',
+                  contentRequest.length,
+                  contentRequest.aiModel,
+                  contentRequest.generateImages || false,
+                  actualImageCount,
+                  creditsNeeded,
+                  creditsBreakdown,
+                  contentRequest,
+                  cleanedTitle,
+                  formattedResponse.metrics.wordCount,
+                  true
+                );
+                
+                console.log('Returning response without articleId due to DB error:', cleanedTitle);
+                return res.json({ success: true, data: formattedResponse });
+              }
             }
           }
           
-          // Trừ credits chỉ một lần cho toàn bộ request
-          console.log('=== DEDUCTING CREDITS (SUCCESSFUL RESPONSE) ===');
-          console.log('User ID:', userId);
-          console.log('Credits to deduct:', creditsNeeded);
-          await storage.subtractUserCredits(userId, creditsNeeded, `Content generation`);
-          
-          // Kiểm tra cấu trúc phản hồi
+          // Kiểm tra cấu trúc phản hồi với wrapper
           if (webhookResult && webhookResult.success && Array.isArray(webhookResult.data) && webhookResult.data.length > 0) {
             const firstResult = webhookResult.data[0];
             
@@ -1145,47 +1210,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Xử lý theo cấu trúc phản hồi
             if (firstResult.articleContent && firstResult.aiTitle) {
-              console.log('=== USING FIRST LOGIC BRANCH ===');
-              // Định dạng phản hồi bao gồm cả trường aiTitle và articleContent gốc
-              // để client có thể sử dụng trực tiếp
+              console.log('=== USING WRAPPED LOGIC BRANCH ===');
               // Xử lý aiTitle để loại bỏ các ký tự xuống dòng và dấu cách thừa
               const cleanedTitle = firstResult.aiTitle.replace(/[\r\n\t]+/g, ' ').trim();
               
-              const formattedResponse = {
-                title: cleanedTitle, // Tiêu đề sẽ được hiển thị (đã được làm sạch)
-                content: firstResult.articleContent, // Nội dung sẽ được hiển thị
-                aiTitle: cleanedTitle, // Lưu trữ tiêu đề gốc từ AI (đã được làm sạch)
-                articleContent: firstResult.articleContent, // Lưu trữ nội dung gốc
-                keywords: contentRequest.keywords.split(','),
-                creditsUsed: creditsNeeded,
-                metrics: {
-                  generationTimeMs: 5000,
-                  wordCount: firstResult.articleContent.split(/\s+/).length
+              // NGAY LẬP TỨC LỮU BÀI VIẾT VÀO DATABASE với status = 'draft'
+              console.log('=== SAVING WRAPPED ARTICLE TO DATABASE IMMEDIATELY ===');
+              try {
+                // Extract images from content
+                const imageRegex = /<img[^>]+src="([^"]+)"[^>]*>/g;
+                const imageUrls = [];
+                let match;
+                
+                while ((match = imageRegex.exec(firstResult.articleContent)) !== null) {
+                  imageUrls.push(match[1]);
                 }
-              };
-              
-              // Log credit usage history
-              const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
-              await logCreditUsage(
-                userId,
-                'content_generation',
-                contentRequest.length,
-                contentRequest.aiModel,
-                contentRequest.generateImages || false,
-                actualImageCount,
-                creditsNeeded,
-                creditsBreakdown,
-                contentRequest,
-                cleanedTitle, // Đây là title đã được clean
-                formattedResponse.metrics.wordCount,
-                true
-              );
-              
-              // Log để kiểm tra dữ liệu gửi đi
-              console.log('Sending aiTitle to client:', cleanedTitle);
-              
-              console.log('Trả về phản hồi với aiTitle và articleContent:', formattedResponse);
-              return res.json({ success: true, data: formattedResponse });
+                
+                // Remove img tags from content to get text content
+                const textContent = firstResult.articleContent.replace(/<img[^>]*>/g, '').trim();
+                
+                // Create article with separated content and images
+                const article = await storage.createArticle({
+                  userId,
+                  title: cleanedTitle,
+                  content: firstResult.articleContent,
+                  textContent,
+                  imageUrls,
+                  keywords: contentRequest.keywords,
+                  creditsUsed: creditsNeeded,
+                  status: 'draft' // Lưu với status = 'draft'
+                });
+                
+                // Subtract credits
+                await storage.subtractUserCredits(userId, creditsNeeded, `Created article: ${cleanedTitle}`);
+                
+                console.log('✓ Wrapped Article saved to database with ID:', article.id);
+                
+                const formattedResponse = {
+                  title: cleanedTitle, // Tiêu đề sẽ được hiển thị (đã được làm sạch)
+                  content: firstResult.articleContent, // Nội dung sẽ được hiển thị
+                  aiTitle: cleanedTitle, // Lưu trữ tiêu đề gốc từ AI (đã được làm sạch)
+                  articleContent: firstResult.articleContent, // Lưu trữ nội dung gốc
+                  keywords: contentRequest.keywords.split(','),
+                  creditsUsed: creditsNeeded,
+                  articleId: article.id, // Trả về articleId cho frontend
+                  metrics: {
+                    generationTimeMs: 5000,
+                    wordCount: firstResult.articleContent.split(/\s+/).length
+                  }
+                };
+                
+                // Log credit usage history
+                const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
+                await logCreditUsage(
+                  userId,
+                  'content_generation',
+                  contentRequest.length,
+                  contentRequest.aiModel,
+                  contentRequest.generateImages || false,
+                  actualImageCount,
+                  creditsNeeded,
+                  creditsBreakdown,
+                  contentRequest,
+                  cleanedTitle, // Đây là title đã được clean
+                  formattedResponse.metrics.wordCount,
+                  true
+                );
+                
+                console.log('Returning wrapped response with articleId:', cleanedTitle, article.id);
+                return res.json({ success: true, data: formattedResponse });
+              } catch (dbError) {
+                console.error('✗ Failed to save wrapped article to database:', dbError);
+                // Vẫn trả về content nhưng không có articleId (chưa lưu)
+                // Subtract credits vì content đã được tạo thành công
+                await storage.subtractUserCredits(userId, creditsNeeded, `Content generation`);
+                
+                const formattedResponse = {
+                  title: cleanedTitle, // Tiêu đề sẽ được hiển thị (đã được làm sạch)
+                  content: firstResult.articleContent, // Nội dung sẽ được hiển thị
+                  aiTitle: cleanedTitle, // Lưu trữ tiêu đề gốc từ AI (đã được làm sạch)
+                  articleContent: firstResult.articleContent, // Lưu trữ nội dung gốc
+                  keywords: contentRequest.keywords.split(','),
+                  creditsUsed: creditsNeeded,
+                  articleId: null, // Không có articleId vì lưu thất bại
+                  saveError: true, // Flag để frontend biết có lỗi khi lưu
+                  metrics: {
+                    generationTimeMs: 5000,
+                    wordCount: firstResult.articleContent.split(/\s+/).length
+                  }
+                };
+                
+                // Log credit usage history
+                const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
+                await logCreditUsage(
+                  userId,
+                  'content_generation',
+                  contentRequest.length,
+                  contentRequest.aiModel,
+                  contentRequest.generateImages || false,
+                  actualImageCount,
+                  creditsNeeded,
+                  creditsBreakdown,
+                  contentRequest,
+                  cleanedTitle, // Đây là title đã được clean
+                  formattedResponse.metrics.wordCount,
+                  true
+                );
+                
+                console.log('Returning wrapped response without articleId due to DB error:', cleanedTitle);
+                return res.json({ success: true, data: formattedResponse });
+              }
             }
           }
           
@@ -1330,12 +1464,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Credits to deduct:', creditsNeeded);
         await storage.subtractUserCredits(userId, creditsNeeded, `Content generation (fallback): ${contentRequest.keywords}`);
         
-        // Tạo nội dung fallback
-        const fallbackContent = {
-          success: true,
-          data: {
-            title: `Tìm hiểu về ${contentRequest.keywords}`,
-            content: `<h1>Tìm hiểu về ${contentRequest.keywords}</h1>
+        // Tạo nội dung fallback và lưu ngay vào database
+        const fallbackTitle = `Tìm hiểu về ${contentRequest.keywords}`;
+        const fallbackContent = `<h1>Tìm hiểu về ${contentRequest.keywords}</h1>
             
             <p>Bài viết này sẽ giúp bạn hiểu rõ hơn về <strong>${contentRequest.keywords}</strong>, một chủ đề đang được nhiều người quan tâm.</p>
             
@@ -1361,17 +1492,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <p><em>Hãy bắt đầu từ những bước nhỏ và dần dần nâng cao trình độ. Sự kiên trì và đam mê sẽ giúp bạn thành công trong việc tìm hiểu ${contentRequest.keywords}.</em></p>
             
             <h2>Kết luận</h2>
-            <p>Hy vọng qua bài viết này, bạn đã có cái nhìn tổng quan về ${contentRequest.keywords}. Hãy tiếp tục theo dõi để cập nhật thêm nhiều thông tin hữu ích!</p>`,
-            keywords: contentRequest.keywords.split(',').map(k => k.trim()),
-            creditsUsed: creditsNeeded,
-            metrics: {
-              generationTimeMs: 1500,
-              wordCount: 350
-            }
-          }
-        };
+            <p>Hy vọng qua bài viết này, bạn đã có cái nhìn tổng quan về ${contentRequest.keywords}. Hãy tiếp tục theo dõi để cập nhật thêm nhiều thông tin hữu ích!</p>`;
         
-        return res.json(fallbackContent);
+        // NGAY LẬP TỨC LỮU BÀI VIẾT FALLBACK VÀO DATABASE với status = 'draft'
+        console.log('=== SAVING FALLBACK ARTICLE TO DATABASE IMMEDIATELY ===');
+        try {
+          // Create article with fallback content
+          const article = await storage.createArticle({
+            userId,
+            title: fallbackTitle,
+            content: fallbackContent,
+            textContent: fallbackContent.replace(/<[^>]*>/g, '').trim(), // Remove HTML tags
+            imageUrls: [], // No images in fallback content
+            keywords: contentRequest.keywords,
+            creditsUsed: creditsNeeded,
+            status: 'draft' // Lưu với status = 'draft'
+          });
+          
+          console.log('✓ Fallback Article saved to database with ID:', article.id);
+          
+          const fallbackResponse = {
+            success: true,
+            data: {
+              title: fallbackTitle,
+              content: fallbackContent,
+              keywords: contentRequest.keywords.split(',').map(k => k.trim()),
+              creditsUsed: creditsNeeded,
+              articleId: article.id, // Trả về articleId cho frontend
+              metrics: {
+                generationTimeMs: 1500,
+                wordCount: 350
+              }
+            }
+          };
+          
+          return res.json(fallbackResponse);
+        } catch (dbError) {
+          console.error('✗ Failed to save fallback article to database:', dbError);
+          // Vẫn trả về content nhưng không có articleId (chưa lưu)
+          const fallbackResponse = {
+            success: true,
+            data: {
+              title: fallbackTitle,
+              content: fallbackContent,
+              keywords: contentRequest.keywords.split(',').map(k => k.trim()),
+              creditsUsed: creditsNeeded,
+              articleId: null, // Không có articleId vì lưu thất bại
+              saveError: true, // Flag để frontend biết có lỗi khi lưu
+              metrics: {
+                generationTimeMs: 1500,
+                wordCount: 350
+              }
+            }
+          };
+          
+          return res.json(fallbackResponse);
+        }
       }
     } catch (error) {
       console.error('Error generating content:', error);
