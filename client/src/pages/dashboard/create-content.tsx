@@ -223,17 +223,15 @@ export default function CreateContent() {
       const title = data.title || "Bài viết mới";
       const content = data.content || data.articleContent || "<p>Không có nội dung</p>";
       const articleId = data.articleId; // ID bài viết đã được lưu trong backend
-      const saveError = data.saveError; // Flag báo lỗi khi lưu
       
-      console.log("Extracted data:", { title, content: content.substring(0, 100) + "...", articleId, saveError });
+      console.log("Extracted data:", { title, content: content.substring(0, 100) + "...", articleId });
       
       // Set generatedContent với articleId từ API response
       const newContentState = {
         ...data,
         title,
         content,
-        articleId, // Đã có sẵn từ backend response
-        saveError // Flag lỗi nếu có
+        articleId // Đã có sẵn từ backend response
       };
       
       setGeneratedContent(newContentState);
@@ -244,13 +242,7 @@ export default function CreateContent() {
       // Success toast với thông tin phù hợp
       const creditsUsed = data.creditsUsed || 1;
       
-      if (saveError) {
-        toast({
-          title: "Nội dung đã tạo xong",
-          description: `Đã sử dụng ${creditsUsed} tín dụng. Có lỗi khi lưu tự động, bạn có thể thử lưu lại.`,
-          variant: "destructive",
-        });
-      } else if (articleId) {
+      if (articleId) {
         toast({
           title: "Tạo nội dung thành công",
           description: `Đã sử dụng ${creditsUsed} tín dụng và lưu bản nháp tự động.`,
@@ -532,25 +524,26 @@ export default function CreateContent() {
         console.log("Updating article ID:", articleId, "with payload:", updatePayload);
         
         // Update article với status 'published'
-        const response = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, updatePayload);
+        const result = await apiRequest("PATCH", `/api/dashboard/articles/${articleId}`, updatePayload);
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (!result.success) {
+          throw new Error(result.error || "Lỗi khi cập nhật bài viết");
         }
         
-        const result = await response.json();
         console.log("Save result:", result);
         
         // Đóng dialog sau khi lưu thành công
         setIsContentDialogOpen(false);
         
         // Update generatedContent với status mới
-        setGeneratedContent(prev => ({
-          ...prev,
-          status: 'published',
-          title: editedTitle || prev.title,
-          content: editedContent || prev.content
-        }));
+        setGeneratedContent(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            title: editedTitle || prev.title,
+            content: editedContent || prev.content
+          };
+        });
         
         toast({
           title: "Đã lưu bài viết",
@@ -560,9 +553,11 @@ export default function CreateContent() {
       } catch (error) {
         console.error("Lỗi khi lưu bài viết:", error);
         
+        const errorMessage = error instanceof Error ? error.message : "Có lỗi xảy ra khi lưu bài viết. Vui lòng thử lại.";
+        
         toast({
           title: "Lỗi khi lưu bài viết", 
-          description: error.message || "Có lỗi xảy ra khi lưu bài viết. Vui lòng thử lại.",
+          description: errorMessage,
           variant: "destructive",
         });
         
@@ -1768,7 +1763,7 @@ export default function CreateContent() {
                               form.reset({
                                 contentType: 'blog',
                                 keywords: '',
-                                mainKeyword: '',
+
                                 length: 'medium',
                                 tone: 'conversational',
                                 language: 'vietnamese',
@@ -1899,12 +1894,7 @@ export default function CreateContent() {
                 }
               </Button>
               
-              {/* Show error message and retry button if there was a save error */}
-              {generatedContent?.saveError && (
-                <div className="text-sm text-red-600 mt-2">
-                  Có lỗi khi lưu tự động. Bạn có thể thử lưu lại.
-                </div>
-              )}
+
               
               {/* Tạm ẩn nút xuất bản theo yêu cầu */}
               {/* <Button 
@@ -1927,7 +1917,7 @@ export default function CreateContent() {
               setPendingFormData(null);
             }}
             onConfirm={confirmAndSubmit}
-            title={t('credit.modal.title.content', 'Xác nhận tạo nội dung AI', 'Confirm AI Content Creation')}
+            title="Xác nhận tạo nội dung AI"
             breakdown={calculateCreditBreakdown(pendingFormData).breakdown}
             totalCredits={calculateCreditBreakdown(pendingFormData).totalCredits}
             userCurrentCredits={user?.credits || 0}
