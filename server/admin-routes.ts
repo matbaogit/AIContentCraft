@@ -2369,7 +2369,8 @@ export function registerAdminRoutes(app: Express) {
       }
 
       // Generate new password hash with scrypt
-      const newSalt = require('crypto').randomBytes(16).toString('hex');
+      const crypto = await import('crypto');
+      const newSalt = crypto.randomBytes(16).toString('hex');
       const newHashBuffer = await scryptAsync(newPassword, newSalt, 64) as Buffer;
       const newHashHex = newHashBuffer.toString('hex');
       const newPasswordHash = `${newHashHex}.${newSalt}`;
