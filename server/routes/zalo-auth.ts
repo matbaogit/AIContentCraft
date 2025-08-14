@@ -3,6 +3,7 @@ import { db } from '../../db';
 import * as schema from '@shared/schema';
 import { eq, or } from 'drizzle-orm';
 import { storage } from '../storage';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -27,21 +28,35 @@ router.get('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Build Zalo OAuth URL
-    const redirectUri = `${process.env.APP_BASE_URL || 'https://toolbox.vn'}/api/auth/zalo/callback`;
+    // Build Zalo OAuth URL - use the exact domain from request if available
+    const baseUrl = process.env.APP_BASE_URL || 
+                   (req.get('host') && req.get('host').includes('localhost') ? 
+                    `${req.protocol}://${req.get('host')}` : 
+                    'https://toolbox.vn');
+    const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
+    
+    // Generate PKCE parameters
+    const codeVerifier = crypto.randomBytes(32).toString('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    
     const state = Buffer.from(JSON.stringify({ 
       timestamp: Date.now(),
-      source: 'zalo_login' 
+      source: 'zalo_login',
+      codeVerifier // Store code_verifier in state for callback
     })).toString('base64');
 
     const zaloAuthUrl = `https://oauth.zaloapp.com/v4/permission` +
       `?app_id=${zaloAppId}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      `&code_challenge=${codeChallenge}` +
       `&state=${state}`;
 
-    console.log('Redirecting to Zalo OAuth:', {
+    console.log('Zalo OAuth Debug:', {
       appId: zaloAppId,
       redirectUri,
+      encodedRedirectUri: encodeURIComponent(redirectUri),
+      codeChallenge,
+      fullUrl: zaloAuthUrl,
       state
     });
 
@@ -65,6 +80,15 @@ router.get('/callback', async (req: Request, res: Response) => {
       return res.redirect('/?error=zalo_oauth_failed');
     }
 
+    // Decode state to get code_verifier
+    let stateData;
+    try {
+      stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+    } catch (error) {
+      console.error('Invalid state parameter:', error);
+      return res.redirect('/?error=invalid_state');
+    }
+
     // Get Zalo OAuth settings
     const zaloSettings = await storage.getSettingsByCategory('zalo_oauth');
     const zaloAppId = zaloSettings.zaloAppId;
@@ -78,10 +102,11 @@ router.get('/callback', async (req: Request, res: Response) => {
     console.log('Processing Zalo OAuth callback:', {
       code: typeof code,
       state,
-      appId: zaloAppId
+      appId: zaloAppId,
+      codeVerifier: stateData.codeVerifier ? '[PROVIDED]' : '[MISSING]'
     });
 
-    // Exchange code for access token
+    // Exchange code for access token with PKCE
     const tokenResponse = await fetch('https://oauth.zaloapp.com/v4/access_token', {
       method: 'POST',
       headers: {
@@ -91,7 +116,8 @@ router.get('/callback', async (req: Request, res: Response) => {
       body: new URLSearchParams({
         app_id: zaloAppId,
         grant_type: 'authorization_code',
-        code: code as string
+        code: code as string,
+        code_verifier: stateData.codeVerifier
       })
     });
 
