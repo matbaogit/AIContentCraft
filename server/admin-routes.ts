@@ -2344,8 +2344,16 @@ export function registerAdminRoutes(app: Express) {
         });
       }
 
-      // Verify current password using scrypt (since that's what we use now)
-      const [salt, hash] = adminUser[0].passwordHash.split(':');
+      // Check if password exists
+      if (!adminUser[0].password) {
+        return res.status(500).json({
+          success: false,
+          error: "Admin password not properly configured"
+        });
+      }
+
+      // Verify current password (it appears to be stored as hash.salt format)
+      const [hash, salt] = adminUser[0].password.split('.');
       const { scrypt } = await import('crypto');
       const { promisify } = await import('util');
       const scryptAsync = promisify(scrypt);
@@ -2364,12 +2372,12 @@ export function registerAdminRoutes(app: Express) {
       const newSalt = require('crypto').randomBytes(16).toString('hex');
       const newHashBuffer = await scryptAsync(newPassword, newSalt, 64) as Buffer;
       const newHashHex = newHashBuffer.toString('hex');
-      const newPasswordHash = `${newSalt}:${newHashHex}`;
+      const newPasswordHash = `${newHashHex}.${newSalt}`;
 
       // Update password in database
       await db.update(schema.users)
         .set({ 
-          passwordHash: newPasswordHash,
+          password: newPasswordHash,
           updatedAt: new Date()
         })
         .where(eq(schema.users.id, req.user.id));
