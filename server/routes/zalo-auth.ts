@@ -28,11 +28,8 @@ router.get('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Build Zalo OAuth URL - use the exact domain from request if available
-    const baseUrl = process.env.APP_BASE_URL || 
-                   (req.get('host') && req.get('host').includes('localhost') ? 
-                    `${req.protocol}://${req.get('host')}` : 
-                    'https://toolbox.vn');
+    // Build Zalo OAuth URL - always use toolbox.vn for production Zalo App
+    const baseUrl = 'https://toolbox.vn';
     const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
     
     // Generate PKCE parameters
@@ -53,11 +50,13 @@ router.get('/login', async (req: Request, res: Response) => {
 
     console.log('Zalo OAuth Debug:', {
       appId: zaloAppId,
+      appIdLength: zaloAppId?.length,
       redirectUri,
       encodedRedirectUri: encodeURIComponent(redirectUri),
       codeChallenge,
       fullUrl: zaloAuthUrl,
-      state
+      state,
+      allSettings: JSON.stringify(zaloSettings)
     });
 
     return res.redirect(zaloAuthUrl);
