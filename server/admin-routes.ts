@@ -2389,10 +2389,11 @@ export function registerAdminRoutes(app: Express) {
         timestamp: new Date().toISOString()
       });
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: "Password changed successfully"
       });
+      return;
     } catch (error) {
       console.error("Error changing admin password:", error);
       return res.status(500).json({
