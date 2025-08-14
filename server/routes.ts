@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { setupFacebookAuth } from "./routes/facebook-auth";
-import { setupZaloAuth } from "./routes/zalo-auth";
+import zaloAuthRouter from "./routes/zalo-auth";
 import * as schema from "@shared/schema";
 import { db } from "../db";
 import { sql, eq, desc } from "drizzle-orm";
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupFacebookAuth(app);
   
   // Set up Zalo OAuth routes
-  setupZaloAuth(app);
+  app.use('/api/auth/zalo', zaloAuthRouter);
   
   // Register admin routes
   registerAdminRoutes(app);
