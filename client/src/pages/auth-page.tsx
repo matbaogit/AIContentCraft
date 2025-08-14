@@ -21,6 +21,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
+
+// Zalo icon component (since react-icons doesn't have Zalo)
+const ZaloIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16l-1.762 6.571c-.122.455-.478.747-.915.747-.122 0-.244-.024-.366-.073l-2.073-.854-1.134 1.329c-.146.171-.366.268-.586.268-.122 0-.244-.024-.366-.073-.366-.146-.61-.488-.61-.879v-2.634l4.756-4.39c.195-.171.244-.439.122-.659-.122-.22-.366-.342-.635-.293l-6.829 1.72L4.537 7.5c-.366-.146-.61-.488-.61-.879 0-.439.317-.83.757-.952l8.829-2.537c.073-.024.146-.024.22-.024.512 0 .952.366 1.048.879.024.122.024.244 0 .366-.024.122-.073.244-.146.342l-1.561 1.854 4.366 1.146c.512.122.829.61.707 1.122-.024.122-.073.244-.146.342z"/>
+  </svg>
+);
 import Head from "@/components/head";
 import { signInWithGoogle, signInWithFacebook } from "@/lib/firebase";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -678,67 +685,40 @@ export default function AuthPage() {
                 )}
 
                 <div className="mt-6">
-                  {/* Temporarily hidden social login buttons */}
-                  {false && (
-                    <>
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-slate-700"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-slate-800 text-slate-400">
-                            {t("auth.login.orContinueWith")}
-                          </span>
-                        </div>
-                      </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-slate-800 text-slate-400">
+                        Hoặc đăng nhập bằng
+                      </span>
+                    </div>
+                  </div>
 
-                      <div className="mt-6 grid grid-cols-2 gap-3">
-                        <Button 
-                          variant="outline" 
-                          className="w-full bg-transparent text-slate-200 border-slate-700 hover:bg-slate-700/50"
-                          onClick={handleGoogleLogin}
-                          disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                        >
-                          {isProcessingOAuth ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              {t("common.processing") || "Processing..."}
-                            </span>
-                          ) : (
-                            <>
-                              <FaGoogle className="mr-2 h-4 w-4" />
-                              Google
-                            </>
-                          )}
-                        </Button>
-
-                        <Button 
-                          variant="outline" 
-                          className="w-full bg-transparent text-slate-200 border-slate-700 hover:bg-slate-700/50"
-                          onClick={handleFacebookLogin}
-                          disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                        >
-                          {isProcessingOAuth ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              {t("common.processing") || "Processing..."}
-                            </span>
-                          ) : (
-                            <>
-                              <FaFacebook className="mr-2 h-4 w-4" />
-                              Facebook
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                  <div className="mt-6">
+                    <Button 
+                      variant="outline" 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+                      onClick={() => window.location.href = '/auth/zalo'}
+                      disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
+                    >
+                      {isProcessingOAuth ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Đang xử lý...
+                        </span>
+                      ) : (
+                        <>
+                          <ZaloIcon className="mr-2 h-4 w-4" />
+                          Đăng nhập bằng Zalo
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

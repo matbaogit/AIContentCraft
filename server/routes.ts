@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { setupFacebookAuth } from "./routes/facebook-auth";
+import { setupZaloAuth } from "./routes/zalo-auth";
 import * as schema from "@shared/schema";
 import { db } from "../db";
 import { sql, eq, desc } from "drizzle-orm";
@@ -105,6 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up Facebook OAuth routes
   setupFacebookAuth(app);
+  
+  // Set up Zalo OAuth routes
+  setupZaloAuth(app);
   
   // Register admin routes
   registerAdminRoutes(app);

@@ -2184,4 +2184,73 @@ export function registerAdminRoutes(app: Express) {
       });
     }
   });
+
+  // ========== Zalo OAuth Settings ==========
+  
+  // Get Zalo OAuth settings
+  app.get("/api/admin/settings/zalo", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const zaloSettings = await storage.getSettingsByCategory('zalo_oauth');
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          zaloAppId: zaloSettings.zaloAppId || '',
+          zaloAppSecret: zaloSettings.zaloAppSecret || '',
+          enableZaloOAuth: zaloSettings.enableZaloOAuth === 'true',
+          redirectUri: `https://toolbox.vn/auth/zalo/callback`
+        }
+      });
+    } catch (error) {
+      console.error("Error getting Zalo settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to get Zalo settings"
+      });
+    }
+  });
+
+  // Update Zalo OAuth settings  
+  app.patch("/api/admin/settings/zalo", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ 
+        success: false, 
+        error: "Admin access required" 
+      });
+    }
+
+    try {
+      const { zaloAppId, zaloAppSecret, enableZaloOAuth } = req.body;
+
+      // Update Zalo settings
+      await storage.setSetting('zaloAppId', zaloAppId || '', 'zalo_oauth');
+      await storage.setSetting('zaloAppSecret', zaloAppSecret || '', 'zalo_oauth');
+      await storage.setSetting('enableZaloOAuth', enableZaloOAuth ? 'true' : 'false', 'zalo_oauth');
+
+      console.log('Zalo OAuth settings updated by admin:', {
+        zaloAppId: zaloAppId ? '[SET]' : '[EMPTY]',
+        zaloAppSecret: zaloAppSecret ? '[SET]' : '[EMPTY]',
+        enableZaloOAuth,
+        adminId: req.user.id
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Zalo OAuth settings updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating Zalo settings:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update Zalo settings"
+      });
+    }
+  });
 }

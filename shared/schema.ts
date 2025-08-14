@@ -35,8 +35,8 @@ export const faqs = pgTable('faqs', {
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   username: text('username').notNull().unique(),
-  email: text('email').notNull().unique(),
-  password: text('password').notNull(),
+  email: text('email'), // Nullable for Zalo users
+  password: text('password'), // Nullable for Zalo users
   fullName: text('full_name'),
   role: roleEnum('role').notNull().default('user'),
   credits: integer('credits').notNull().default(0),
@@ -48,6 +48,8 @@ export const users = pgTable('users', {
   resetPasswordTokenExpiry: timestamp('reset_password_token_expiry'),
   referralCode: text('referral_code').unique(), // Mã giới thiệu của user này
   referredBy: integer('referred_by'), // ID người giới thiệu
+  zaloId: text('zalo_id').unique(), // Zalo user ID
+  avatar: text('avatar'), // Avatar URL from Zalo or other sources
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
