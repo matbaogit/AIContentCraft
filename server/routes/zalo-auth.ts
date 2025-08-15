@@ -357,8 +357,10 @@ router.get('/callback', async (req: Request, res: Response) => {
             <body>
               <div class="container">
                 <h2>✅ Đăng nhập Zalo thành công!</h2>
-                <p>Chào mừng bạn đến với hệ thống!</p>
-                <p><small>Lưu ý: Do hạn chế IP, một số thông tin cá nhân có thể chưa được đồng bộ.</small></p>
+                <p>Chào mừng <strong>${user[0].fullName}</strong> đến với hệ thống!</p>
+                <p>Tài khoản: <code>${user[0].username}</code></p>
+                <p>Credits: <strong>${user[0].credits}</strong></p>
+                <p><small>⚠️ Lưu ý: Do IP server không ở Việt Nam, thông tin cá nhân từ Zalo bị hạn chế. Bạn có thể cập nhật thông tin cá nhân trong phần cài đặt tài khoản.</small></p>
               </div>
               <script>
                 if (window.opener) {
