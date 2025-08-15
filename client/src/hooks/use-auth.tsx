@@ -91,10 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (userData: User) => {
       console.log("Login successful, user data:", userData);
       queryClient.setQueryData(["/api/user"], { success: true, data: userData });
+      // Force invalidate to refresh user data across the app
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Đăng nhập thành công",
         description: `Chào mừng ${userData.fullName || userData.username}`,
       });
+      // Navigate to dashboard after successful login
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
     },
     onError: (error: Error) => {
       console.error("Login error in callback:", error);
