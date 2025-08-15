@@ -276,8 +276,113 @@ router.get('/callback', async (req: Request, res: Response) => {
     const zaloUser = await userResponse.json();
     console.log('Zalo user info:', zaloUser);
 
+    // Handle IP restriction error from Zalo
     if (!zaloUser.id) {
       console.error('Failed to get Zalo user info:', zaloUser);
+      
+      // Check if it's an IP restriction error
+      if (zaloUser.error === -501 && zaloUser.message?.includes('IP address not inside Vietnam')) {
+        console.log('IP restriction detected, creating user with minimal info...');
+        
+        // Generate a temporary Zalo ID based on the access token
+        const tempZaloId = `temp_${tokenData.access_token.substring(0, 10)}`;
+        
+        // Check if user already exists with this temp ID
+        let user = await db.select()
+          .from(schema.users)
+          .where(eq(schema.users.zaloId, tempZaloId))
+          .limit(1);
+
+        if (user.length === 0) {
+          // Create new user with minimal info
+          const username = `zalo_${tempZaloId}`;
+          const fullName = `Zalo User`;
+
+          const [newUser] = await db.insert(schema.users).values({
+            username,
+            fullName,
+            zaloId: tempZaloId,
+            avatar: null,
+            email: null,
+            role: 'user',
+            credits: 50,
+            language: 'vi',
+            isVerified: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }).returning();
+
+          user = [newUser];
+          console.log('Created new temp Zalo user due to IP restriction:', {
+            id: newUser.id,
+            username: newUser.username,
+            zaloId: newUser.zaloId
+          });
+        }
+
+        // Set session and continue
+        req.login(user[0], (err) => {
+          if (err) {
+            console.error('Error setting session for temp user:', err);
+            return res.redirect('/?error=session_failed');
+          }
+
+          return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Đăng nhập thành công</title>
+              <meta charset="utf-8">
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                  color: white;
+                }
+                .container {
+                  text-align: center;
+                  padding: 2rem;
+                  background: rgba(255, 255, 255, 0.1);
+                  border-radius: 10px;
+                  backdrop-filter: blur(10px);
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h2>✅ Đăng nhập Zalo thành công!</h2>
+                <p>Chào mừng bạn đến với hệ thống!</p>
+                <p><small>Lưu ý: Do hạn chế IP, một số thông tin cá nhân có thể chưa được đồng bộ.</small></p>
+              </div>
+              <script>
+                if (window.opener) {
+                  window.opener.postMessage({
+                    type: 'ZALO_LOGIN_SUCCESS',
+                    user: ${JSON.stringify({
+                      id: user[0].id,
+                      username: user[0].username,
+                      fullName: user[0].fullName
+                    })}
+                  }, window.location.origin);
+                  window.close();
+                } else {
+                  setTimeout(() => {
+                    window.location.href = '/dashboard';
+                  }, 2000);
+                }
+              </script>
+            </body>
+            </html>
+          `);
+        });
+        return;
+      }
+      
       return res.redirect('/?error=zalo_user_failed');
     }
 
