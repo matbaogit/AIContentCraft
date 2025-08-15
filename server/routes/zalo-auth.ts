@@ -28,10 +28,8 @@ router.get('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Build Zalo OAuth URL - use localhost for development, toolbox.vn for production
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://toolbox.vn' 
-      : `${req.protocol}://${req.get('host')}`;
+    // Build Zalo OAuth URL - always use toolbox.vn since it's configured in Zalo App
+    const baseUrl = 'https://toolbox.vn';
     const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
     
     // Generate PKCE parameters
@@ -73,21 +71,81 @@ router.get('/login', async (req: Request, res: Response) => {
 
 // Zalo OAuth callback - handle response from Zalo
 router.get('/callback', async (req: Request, res: Response) => {
+  console.log('=== Zalo OAuth Callback Received ===');
+  console.log('Query params:', req.query);
+  console.log('Headers:', req.headers);
+  
   try {
     const { code, state } = req.query;
 
     if (!code) {
       console.error('Zalo OAuth callback missing code:', req.query);
-      return res.redirect('/?error=zalo_oauth_failed');
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Lỗi OAuth</title>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+            .error { color: red; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>❌ Lỗi OAuth</h2>
+            <p>Thiếu mã xác thực từ Zalo</p>
+          </div>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'ZALO_LOGIN_ERROR',
+                message: 'Thiếu mã xác thực từ Zalo'
+              }, window.location.origin);
+              window.close();
+            }
+          </script>
+        </body>
+        </html>
+      `);
     }
 
     // Decode state to get code_verifier
     let stateData;
     try {
+      console.log('Decoding state parameter:', state);
       stateData = JSON.parse(Buffer.from(state as string, 'base64').toString());
+      console.log('Decoded state data:', stateData);
     } catch (error) {
-      console.error('Invalid state parameter:', error);
-      return res.redirect('/?error=invalid_state');
+      console.error('Invalid state parameter:', error, 'Raw state:', state);
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Lỗi State</title>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+            .error { color: red; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>❌ Lỗi State Parameter</h2>
+            <p>Tham số state không hợp lệ</p>
+          </div>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'ZALO_LOGIN_ERROR',
+                message: 'Tham số state không hợp lệ'
+              }, window.location.origin);
+              window.close();
+            }
+          </script>
+        </body>
+        </html>
+      `);
     }
 
     // Get Zalo OAuth settings
