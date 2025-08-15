@@ -28,7 +28,13 @@ router.get('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Build Zalo OAuth URL - always use toolbox.vn since it's configured in Zalo App
+    // Build Zalo OAuth URL - always use toolbox.vn for production Zalo App
+    // For development, we need to configure Zalo App to allow localhost callback
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const host = req.get('host');
+    const isLocalhost = host?.includes('localhost') || host?.includes('replit.dev');
+    
+    // Force toolbox.vn for now since Zalo App is configured for it
     const baseUrl = 'https://toolbox.vn';
     const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
     
@@ -56,6 +62,9 @@ router.get('/login', async (req: Request, res: Response) => {
       codeChallenge,
       fullUrl: zaloAuthUrl,
       state,
+      isDevelopment,
+      isLocalhost,
+      requestHost: host,
       allSettings: JSON.stringify(zaloSettings)
     });
 
