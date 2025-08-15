@@ -259,7 +259,11 @@ router.get('/callback', async (req: Request, res: Response) => {
     });
 
     const tokenData = await tokenResponse.json();
-    console.log('Zalo token response:', tokenData);
+    console.log('=== ZALO TOKEN API RESPONSE ===');
+    console.log('Status:', tokenResponse.status);
+    console.log('Raw Token Response:', JSON.stringify(tokenData, null, 2));
+    console.log('Available token fields:', Object.keys(tokenData || {}));
+    console.log('=== END ZALO TOKEN RESPONSE ===');
 
     if (!tokenData.access_token) {
       console.error('Failed to get Zalo access token:', tokenData);
