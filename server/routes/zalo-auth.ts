@@ -270,8 +270,8 @@ router.get('/callback', async (req: Request, res: Response) => {
       return res.redirect('/?error=zalo_token_failed');
     }
 
-    // Get user info from Zalo
-    const userResponse = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
+    // Get user info from Zalo - request more fields
+    const userResponse = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture,gender,birthday,locale', {
       headers: {
         'access_token': tokenData.access_token
       }
