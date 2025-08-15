@@ -10,8 +10,9 @@ import { db } from "../db";
 import { sql, eq, desc } from "drizzle-orm";
 import { ApiResponse, GenerateContentRequest, GenerateContentResponse } from "@shared/types";
 import { systemSettings, creditUsageHistory } from "@shared/schema";
-import { randomBytes, scrypt, timingSafeEqual } from "crypto";
+import crypto, { randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import fetch from "node-fetch";
 
 const scryptAsync = promisify(scrypt);
 
@@ -6502,10 +6503,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ========== ZALO OAUTH ENDPOINTS ==========
+  // ========== ZALO OAUTH ENDPOINTS (use separate router) ==========
+  // Mount the Zalo OAuth router
+  const zaloAuthRouter = await import("./routes/zalo-auth");
+  app.use('/api/auth/zalo', zaloAuthRouter.default);
   // Helper function to generate random string (like PHP randomString)
   function randomString(length = 32) {
-    const crypto = require('crypto');
     return crypto.randomBytes(length / 2).toString('hex');
   }
 
@@ -6541,7 +6544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate PKCE parameters (like PHP code)
-      const crypto = require('crypto');
+      // crypto is already imported at the top
       const codeVerifier = randomString(64); // 64 chars like PHP
       const codeChallenge = crypto.createHash('sha256')
         .update(codeVerifier)
@@ -6619,7 +6622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Exchange authorization code for access token (like PHP curl)
       console.log('Exchanging authorization code for access token...');
       
-      const fetch = require('node-fetch');
+      // fetch is imported at the top
       const tokenResponse = await fetch('https://oauth.zaloapp.com/v4/access_token', {
         method: 'POST',
         headers: {
