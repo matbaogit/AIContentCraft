@@ -9,9 +9,16 @@ const router = Router();
 
 // Zalo OAuth login - redirect to Zalo
 router.get('/login', async (req: Request, res: Response) => {
+  console.log('=== ZALO LOGIN START ===');
+  console.log('Request headers:', req.headers);
+  console.log('Request query:', req.query);
+  console.log('Request host:', req.get('host'));
+  
   try {
     // Get Zalo OAuth settings from database
+    console.log('Fetching Zalo OAuth settings...');
     const zaloSettings = await storage.getSettingsByCategory('zalo_oauth');
+    console.log('Zalo settings retrieved:', zaloSettings);
     
     if (!zaloSettings.enableZaloOAuth || zaloSettings.enableZaloOAuth !== 'true') {
       return res.status(400).json({
@@ -70,7 +77,9 @@ router.get('/login', async (req: Request, res: Response) => {
 
     return res.redirect(zaloAuthUrl);
   } catch (error) {
-    console.error('Error initiating Zalo OAuth:', error);
+    console.error('=== ZALO LOGIN ERROR ===');
+    console.error('Error details:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return res.status(500).json({
       success: false,
       error: 'Failed to initiate Zalo OAuth'
@@ -158,13 +167,51 @@ router.get('/callback', async (req: Request, res: Response) => {
     }
 
     // Get Zalo OAuth settings
+    console.log('Fetching Zalo settings for callback...');
     const zaloSettings = await storage.getSettingsByCategory('zalo_oauth');
+    console.log('Callback settings retrieved:', { 
+      hasAppId: !!zaloSettings.zaloAppId,
+      hasAppSecret: !!zaloSettings.zaloAppSecret,
+      enabled: zaloSettings.enableZaloOAuth 
+    });
     const zaloAppId = zaloSettings.zaloAppId;
     const zaloAppSecret = zaloSettings.zaloAppSecret;
 
     if (!zaloAppId || !zaloAppSecret) {
-      console.error('Zalo OAuth settings not configured');
-      return res.redirect('/?error=zalo_config_missing');
+      console.error('=== ZALO CONFIG MISSING ===');
+      console.error('App ID present:', !!zaloAppId);
+      console.error('App Secret present:', !!zaloAppSecret);
+      console.error('Full settings object:', zaloSettings);
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Lỗi Config</title>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+            .error { color: red; }
+          </style>
+        </head>
+        <body>
+          <div class="error">
+            <h2>❌ Lỗi Config Zalo</h2>
+            <p>App ID hoặc App Secret không được cấu hình</p>
+            <p>App ID: ${zaloAppId ? 'OK' : 'MISSING'}</p>
+            <p>App Secret: ${zaloAppSecret ? 'OK' : 'MISSING'}</p>
+          </div>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'ZALO_LOGIN_ERROR',
+                message: 'Zalo OAuth chưa được cấu hình đầy đủ'
+              }, window.location.origin);
+              window.close();
+            }
+          </script>
+        </body>
+        </html>
+      `);
     }
 
     console.log('Processing Zalo OAuth callback:', {
@@ -175,18 +222,22 @@ router.get('/callback', async (req: Request, res: Response) => {
     });
 
     // Exchange code for access token with PKCE
+    console.log('Making token request to Zalo...');
+    const tokenRequestBody = {
+      app_id: zaloAppId,
+      grant_type: 'authorization_code',
+      code: code as string,
+      code_verifier: stateData.codeVerifier
+    };
+    console.log('Token request body:', { ...tokenRequestBody, code_verifier: '[REDACTED]' });
+    
     const tokenResponse = await fetch('https://oauth.zaloapp.com/v4/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'secret_key': zaloAppSecret
       },
-      body: new URLSearchParams({
-        app_id: zaloAppId,
-        grant_type: 'authorization_code',
-        code: code as string,
-        code_verifier: stateData.codeVerifier
-      })
+      body: new URLSearchParams(tokenRequestBody)
     });
 
     const tokenData = await tokenResponse.json();
