@@ -24,28 +24,44 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
     setIsLoading(true);
     
     // Open popup window for Zalo OAuth
+    console.log('Opening Zalo OAuth popup...');
     const popup = window.open(
       '/api/auth/zalo/login',
       'zaloLogin',
-      'width=500,height=600,scrollbars=yes,resizable=yes'
+      'width=500,height=600,scrollbars=yes,resizable=yes,location=yes,status=yes,menubar=no,toolbar=no'
     );
 
-    if (!popup) {
+    if (!popup || popup.closed) {
       toast({
-        title: "Lỗi",
-        description: "Không thể mở popup. Vui lòng cho phép popup cho trang web này.",
+        title: "Lỗi Popup",
+        description: "Không thể mở popup. Vui lòng cho phép popup cho trang web này hoặc thử đăng nhập trực tiếp.",
         variant: "destructive",
       });
       setIsLoading(false);
+      
+      // Fallback to direct redirect
+      setTimeout(() => {
+        const fallback = confirm("Popup bị chặn. Bạn có muốn chuyển hướng trực tiếp để đăng nhập Zalo không?");
+        if (fallback) {
+          window.location.href = '/api/auth/zalo/login';
+        }
+      }, 1000);
       return;
     }
+
+    console.log('Popup opened successfully, waiting for OAuth...');
 
     // Listen for messages from popup
     const messageListener = (event: MessageEvent) => {
       // Security check - only accept messages from same origin
-      if (event.origin !== window.location.origin) return;
+      console.log('Received message from popup:', event.data, 'from origin:', event.origin);
+      if (event.origin !== window.location.origin) {
+        console.log('Ignoring message from different origin');
+        return;
+      }
 
       if (event.data.type === 'ZALO_LOGIN_SUCCESS') {
+        console.log('Zalo login successful!');
         popup.close();
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
@@ -63,6 +79,7 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
           window.location.reload();
         }
       } else if (event.data.type === 'ZALO_LOGIN_ERROR') {
+        console.error('Zalo login error:', event.data.message);
         popup.close();
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
@@ -80,11 +97,29 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
     // Check if popup is closed manually
     const checkClosed = setInterval(() => {
       if (popup.closed) {
+        console.log('Popup was closed manually');
         clearInterval(checkClosed);
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
       }
     }, 1000);
+
+    // Timeout handler - in case popup hangs
+    const timeout = setTimeout(() => {
+      if (!popup.closed) {
+        console.log('OAuth popup timeout, closing...');
+        popup.close();
+        clearInterval(checkClosed);
+        window.removeEventListener('message', messageListener);
+        setIsLoading(false);
+        
+        toast({
+          title: "Timeout",
+          description: "Đăng nhập Zalo mất quá nhiều thời gian. Vui lòng thử lại.",
+          variant: "destructive",
+        });
+      }
+    }, 60000); // 60 seconds timeout
   };
 
   return (
