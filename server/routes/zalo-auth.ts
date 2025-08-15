@@ -303,7 +303,7 @@ router.get('/callback', async (req: Request, res: Response) => {
             fullName,
             zaloId: tempZaloId,
             avatar: null,
-            email: null,
+            email: `${username}@zalo.temp`, // Temporary email for constraint
             role: 'user',
             credits: 50,
             language: 'vi',
@@ -403,7 +403,7 @@ router.get('/callback', async (req: Request, res: Response) => {
         fullName,
         zaloId: zaloUser.id,
         avatar,
-        email: null, // Zalo might not provide email
+        email: `${username}@zalo.user`, // Temporary email for normal Zalo users
         role: 'user',
         credits: 50, // Default credits
         language: 'vi',
