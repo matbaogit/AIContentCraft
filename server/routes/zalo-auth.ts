@@ -47,14 +47,21 @@ router.get('/login', async (req: Request, res: Response) => {
       });
     }
 
-    // Build Zalo OAuth URL - always use toolbox.vn for production Zalo App
-    // For development, we need to configure Zalo App to allow localhost callback
-    const isDevelopment = process.env.NODE_ENV !== 'production';
+    // Build Zalo OAuth URL - detect correct base URL
     const host = req.get('host');
-    const isLocalhost = host?.includes('localhost') || host?.includes('replit.dev');
+    const isReplit = host?.includes('replit.dev');
     
-    // Force toolbox.vn for now since Zalo App is configured for it
-    const baseUrl = 'https://toolbox.vn';
+    console.log('Host detection:', { host, isReplit });
+    
+    // Auto-detect base URL based on current host
+    let baseUrl;
+    if (isReplit) {
+      baseUrl = `https://${host}`;
+      console.log('Using Replit URL:', baseUrl);
+    } else {
+      baseUrl = 'https://toolbox.vn';
+      console.log('Using production URL:', baseUrl);
+    }
     const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
     
     // Generate PKCE parameters
@@ -81,8 +88,7 @@ router.get('/login', async (req: Request, res: Response) => {
       codeChallenge,
       fullUrl: zaloAuthUrl,
       state,
-      isDevelopment,
-      isLocalhost,
+      isReplit,
       requestHost: host,
       allSettings: JSON.stringify(zaloSettings)
     });
