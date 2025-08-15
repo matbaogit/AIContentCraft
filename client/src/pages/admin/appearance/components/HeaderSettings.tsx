@@ -5,12 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, Upload, Image, Globe, Layout } from "lucide-react";
+import { Loader2, Save, Upload, Image, Globe, Layout, Code } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 const headerFormSchema = z.object({
@@ -18,6 +19,7 @@ const headerFormSchema = z.object({
   logo_height: z.string().optional().default("32"),
   logo_width: z.string().optional().default("auto"),
   site_name: z.string().min(1, "Tên trang là bắt buộc").max(50, "Tên quá dài"),
+  custom_head_tags: z.string().optional(),
 });
 
 type HeaderFormData = z.infer<typeof headerFormSchema>;
@@ -51,6 +53,7 @@ export default function HeaderSettings() {
       logo_height: '32',
       logo_width: 'auto',
       site_name: '',
+      custom_head_tags: '',
     },
   });
 
@@ -66,6 +69,7 @@ export default function HeaderSettings() {
         logo_height: languageSettings.find((s: AppearanceSetting) => s.key === 'logo_height')?.value || '32',
         logo_width: languageSettings.find((s: AppearanceSetting) => s.key === 'logo_width')?.value || 'auto',
         site_name: languageSettings.find((s: AppearanceSetting) => s.key === 'site_name')?.value || '',
+        custom_head_tags: languageSettings.find((s: AppearanceSetting) => s.key === 'custom_head_tags')?.value || '',
       };
       
       form.reset(formData);
@@ -102,6 +106,7 @@ export default function HeaderSettings() {
         { type: 'header', key: 'logo_height', value: data.logo_height || '32', language: activeLanguage },
         { type: 'header', key: 'logo_width', value: data.logo_width || 'auto', language: activeLanguage },
         { type: 'header', key: 'site_name', value: data.site_name, language: activeLanguage },
+        { type: 'header', key: 'custom_head_tags', value: data.custom_head_tags || '', language: activeLanguage },
       ];
 
       // Execute all updates
@@ -277,6 +282,25 @@ export default function HeaderSettings() {
                   </div>
                 </div>
 
+                {/* Custom Head Tags */}
+                <div>
+                  <Label htmlFor="custom_head_tags" className="flex items-center gap-2">
+                    <Code className="h-4 w-4" />
+                    Thẻ Meta & Script tùy chỉnh
+                  </Label>
+                  <Textarea
+                    id="custom_head_tags"
+                    {...form.register('custom_head_tags')}
+                    placeholder="Nhập các thẻ meta hoặc script tùy chỉnh...&#10;&#10;VD:&#10;<meta name=&quot;google-site-verification&quot; content=&quot;your-verification-code&quot; />&#10;<script async src=&quot;https://analytics.google.com/script.js&quot;></script>&#10;<meta property=&quot;og:image&quot; content=&quot;https://yoursite.com/image.jpg&quot; />"
+                    className="mt-1 min-h-[120px] font-mono text-sm"
+                    rows={8}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Các thẻ meta, script hoặc HTML khác sẽ được chèn vào phần &lt;head&gt; của trang. 
+                    Hỗ trợ: Google Analytics, Facebook Pixel, meta tags SEO, v.v.
+                  </p>
+                </div>
+
                 <Button
                   type="submit"
                   disabled={updateMutation.isPending}
@@ -359,6 +383,33 @@ export default function HeaderSettings() {
                     </p>
                   </div>
 
+                  {/* Logo Size Settings */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="logo_height_en">Height (px)</Label>
+                      <Input
+                        id="logo_height_en"
+                        {...form.register('logo_height')}
+                        placeholder="32"
+                        className="mt-1"
+                        type="number"
+                        min="16"
+                        max="200"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">16-200px</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="logo_width_en">Width</Label>
+                      <Input
+                        id="logo_width_en"
+                        {...form.register('logo_width')}
+                        placeholder="auto"
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">auto or px value</p>
+                    </div>
+                  </div>
+
                   {/* Upload Button (placeholder for future file upload) */}
                   <Button 
                     type="button" 
@@ -388,6 +439,25 @@ export default function HeaderSettings() {
                       {form.watch('site_name')?.length || 0}/50 characters
                     </span>
                   </div>
+                </div>
+
+                {/* Custom Head Tags */}
+                <div>
+                  <Label htmlFor="custom_head_tags_en" className="flex items-center gap-2">
+                    <Code className="h-4 w-4" />
+                    Custom Meta Tags & Scripts
+                  </Label>
+                  <Textarea
+                    id="custom_head_tags_en"
+                    {...form.register('custom_head_tags')}
+                    placeholder="Enter custom meta tags or scripts...&#10;&#10;Example:&#10;<meta name=&quot;google-site-verification&quot; content=&quot;your-verification-code&quot; />&#10;<script async src=&quot;https://analytics.google.com/script.js&quot;></script>&#10;<meta property=&quot;og:image&quot; content=&quot;https://yoursite.com/image.jpg&quot; />"
+                    className="mt-1 min-h-[120px] font-mono text-sm"
+                    rows={8}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Meta tags, scripts or other HTML that will be inserted into the &lt;head&gt; section. 
+                    Supports: Google Analytics, Facebook Pixel, SEO meta tags, etc.
+                  </p>
                 </div>
 
                 <Button

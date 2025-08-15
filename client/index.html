@@ -23,6 +23,33 @@
     </style>
     <!-- Script sửa lỗi ResizeObserver - được tải trước tất cả các script khác -->
     <script src="/fix-resize-observer.js"></script>
+    
+    <!-- Custom Head Tags from Admin Settings -->
+    <script>
+      // Load and inject custom head tags from admin settings
+      fetch('/api/appearance/custom-head-tags')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.data && data.data.custom_head_tags) {
+            const headContent = data.data.custom_head_tags;
+            if (headContent.trim()) {
+              // Create a temporary container to parse HTML
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = headContent;
+              
+              // Append each element to head
+              Array.from(tempDiv.children).forEach(element => {
+                document.head.appendChild(element);
+              });
+              
+              console.log('Custom head tags loaded from admin settings');
+            }
+          }
+        })
+        .catch(error => {
+          console.warn('Failed to load custom head tags:', error);
+        });
+    </script>
   </head>
   <body>
     <div id="root"></div>

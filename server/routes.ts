@@ -138,6 +138,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get custom head tags for public use (no auth required)
+  app.get('/api/appearance/custom-head-tags', async (req, res) => {
+    try {
+      const { language = 'vi' } = req.query;
+      const settings = await storage.getAppearanceSettings('header', language as string);
+      
+      // Find custom_head_tags setting
+      const customHeadTags = settings.find(s => s.key === 'custom_head_tags')?.value || '';
+      
+      res.json({
+        success: true,
+        data: {
+          custom_head_tags: customHeadTags
+        }
+      });
+    } catch (error) {
+      console.error('Error getting custom head tags:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get custom head tags'
+      });
+    }
+  });
+
   // ========== Public Theme Settings API ==========
   // Public endpoint for theme settings (không cần authentication)
   app.get("/api/admin/settings/theme-public", async (req, res) => {
@@ -6507,9 +6531,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount the Zalo OAuth router
   const zaloAuthRouter = await import("./routes/zalo-auth");
   app.use('/api/auth/zalo', zaloAuthRouter.default);
-    
-    try {
-      const settings = await storage.getSettingsByCategory('zalo_oauth');
 
   return httpServer;
 }
