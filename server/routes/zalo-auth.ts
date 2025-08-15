@@ -304,6 +304,7 @@ router.get('/callback', async (req: Request, res: Response) => {
             zaloId: tempZaloId,
             avatar: null,
             email: `${username}@zalo.temp`, // Temporary email for constraint
+            password: `zalo_temp_${crypto.randomBytes(8).toString('hex')}`, // Temporary password
             role: 'user',
             credits: 50,
             language: 'vi',
@@ -404,6 +405,7 @@ router.get('/callback', async (req: Request, res: Response) => {
         zaloId: zaloUser.id,
         avatar,
         email: `${username}@zalo.user`, // Temporary email for normal Zalo users
+        password: `zalo_user_${crypto.randomBytes(8).toString('hex')}`, // Temporary password
         role: 'user',
         credits: 50, // Default credits
         language: 'vi',
