@@ -2406,7 +2406,8 @@ export default function AdminSettings() {
                               <h4 className="font-medium">Zalo OAuth:</h4>
                               <p>1. Truy cập <a href="https://developers.zalo.me/" className="text-blue-600 underline" target="_blank">Zalo Developer Console</a></p>
                               <p>2. Tạo hoặc chọn ứng dụng Zalo</p>
-                              <p>3. Trong Callback URL, thêm: <code className="bg-gray-100 px-1 rounded text-xs">https://toolbox.vn/api/auth/zalo/callback</code></p>
+                              <p>3. Trong Callback URL, thêm: <code className="bg-gray-100 px-1 rounded text-xs">https://toolbox.vn/api/zalo-oauth/callback</code></p>
+                              <p className="text-xs text-orange-600 mt-1">⚠️ Đã cập nhật: Sử dụng /api/zalo-oauth/callback thay vì /api/auth/zalo/callback</p>
                               <p>4. Copy App ID và App Secret từ cài đặt ứng dụng</p>
                             </div>
                           </div>

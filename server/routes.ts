@@ -1,10 +1,10 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { setupFacebookAuth } from "./routes/facebook-auth";
-import zaloAuthRouter from "./routes/zalo-auth";
+// // import zaloAuthRouter from "./routes/zalo-auth-working";
 import * as schema from "@shared/schema";
 import { db } from "../db";
 import { sql, eq, desc } from "drizzle-orm";
@@ -92,23 +92,24 @@ const isAuthenticated = (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Debug middleware to log all requests
   app.use((req, res, next) => {
-    if (req.url.includes('/api/social')) {
-      console.log(`=== ALL REQUESTS DEBUG ===`);
+    if (req.url.includes('/api/social') || req.url.includes('/api/auth/zalo')) {
+      console.log(`=== REQUEST DEBUG ===`);
       console.log(`${req.method} ${req.url}`);
       console.log('Headers:', req.headers);
-      console.log('Body:', req.body);
+      console.log('Query:', req.query);
     }
     next();
   });
 
-  // Set up authentication routes
-  setupAuth(app);
+  // Set up OAuth routes BEFORE authentication (to avoid conflicts)
+  
+  // Removed problematic test endpoint
   
   // Set up Facebook OAuth routes
   setupFacebookAuth(app);
-  
-  // Set up Zalo OAuth routes
-  app.use('/api/auth/zalo', zaloAuthRouter);
+
+  // Set up authentication routes
+  setupAuth(app);
   
   // Register admin routes
   registerAdminRoutes(app);
@@ -6499,6 +6500,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error updating referral settings:', error);
       res.status(500).json({ success: false, error: 'Failed to update referral settings' });
     }
+  });
+
+  // ========== ZALO OAUTH ENDPOINTS ==========
+  // Test endpoint
+  app.get('/api/zalo-oauth/test', (req, res) => {
+    console.log('Zalo OAuth test endpoint called');
+    res.json({ 
+      success: true, 
+      message: 'Zalo OAuth endpoints working!',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Login endpoint - starts OAuth flow
+  app.get('/api/zalo-oauth/login', async (req, res) => {
+    console.log('=== ZALO OAUTH LOGIN START ===');
+    
+    try {
+      const settings = await storage.getSettingsByCategory('zalo_oauth');
+      
+      if (!settings.zaloAppId || !settings.zaloAppSecret) {
+        return res.status(400).json({
+          success: false,
+          error: 'Zalo OAuth chưa được cấu hình'
+        });
+      }
+      
+      if (settings.enableZaloOAuth !== 'true') {
+        return res.status(400).json({
+          success: false,
+          error: 'Zalo OAuth đã bị tắt'
+        });
+      }
+      
+      // Generate PKCE and state
+      const crypto = require('crypto');
+      const codeVerifier = crypto.randomBytes(32).toString('base64url');
+      const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+      const state = crypto.randomBytes(16).toString('hex');
+      
+      // Store session
+      global.zaloOAuthSessions = global.zaloOAuthSessions || {};
+      global.zaloOAuthSessions[state] = { codeVerifier, timestamp: Date.now() };
+      
+      // Build auth URL
+      const baseUrl = process.env.NODE_ENV === 'production' ? 'https://toolbox.vn' : 'http://localhost:5000';
+      const redirectUri = `${baseUrl}/api/zalo-oauth/callback`;
+      
+      const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
+      authUrl.searchParams.set('app_id', settings.zaloAppId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('code_challenge', codeChallenge);
+      authUrl.searchParams.set('state', state);
+      
+      console.log('Redirecting to Zalo:', authUrl.toString());
+      res.redirect(authUrl.toString());
+      
+    } catch (error) {
+      console.error('Zalo login error:', error);
+      res.status(500).json({ success: false, error: 'Lỗi khởi tạo Zalo OAuth' });
+    }
+  });
+
+  // Callback endpoint
+  app.get('/api/zalo-oauth/callback', async (req, res) => {
+    console.log('=== ZALO OAUTH CALLBACK ===');
+    console.log('Query:', req.query);
+    
+    const { code, state } = req.query;
+    
+    if (!code || !state) {
+      return res.send(`<!DOCTYPE html>
+        <html><head><title>Lỗi Zalo</title><meta charset="utf-8"></head>
+        <body style="text-align:center; padding:50px; font-family:Arial;">
+          <h1 style="color:#e74c3c;">❌ Thiếu thông tin từ Zalo</h1>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({type: 'ZALO_LOGIN_ERROR', message: 'Thiếu thông tin từ Zalo'}, '*');
+              window.close();
+            }
+          </script>
+        </body></html>`);
+    }
+    
+    // For now, just return success for testing  
+    console.log('Zalo callback received successfully');
+    res.send(`<!DOCTYPE html>
+      <html><head><title>Zalo Success</title><meta charset="utf-8"></head>
+      <body style="text-align:center; padding:50px; font-family:Arial; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white;">
+        <h1>✅ Nhận được callback từ Zalo!</h1>
+        <p>Code: ${String(code).substring(0, 10)}...</p>
+        <p>State: ${state}</p>
+        <p style="opacity:0.8;">Cửa sổ sẽ tự động đóng...</p>
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'ZALO_LOGIN_SUCCESS',
+              message: 'Callback received successfully'
+            }, '*');
+            setTimeout(() => window.close(), 3000);
+          }
+        </script>
+      </body></html>`);
   });
 
   return httpServer;

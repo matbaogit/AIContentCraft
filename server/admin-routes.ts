@@ -2205,7 +2205,7 @@ export function registerAdminRoutes(app: Express) {
           zaloAppId: zaloSettings.zaloAppId || '',
           zaloAppSecret: zaloSettings.zaloAppSecret || '',
           enableZaloOAuth: zaloSettings.enableZaloOAuth === 'true',
-          redirectUri: `https://toolbox.vn/auth/zalo/callback`
+          redirectUri: `https://toolbox.vn/api/auth/zalo/callback`
         }
       });
     } catch (error) {

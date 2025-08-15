@@ -7,6 +7,18 @@ import crypto from 'crypto';
 
 const router = Router();
 
+// Simple test endpoint
+router.get('/test', (req: Request, res: Response) => {
+  console.log('=== ZALO AUTH TEST ENDPOINT HIT ===');
+  res.json({ 
+    success: true, 
+    message: 'Zalo auth router is working!',
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
 // Zalo OAuth login - redirect to Zalo
 router.get('/login', async (req: Request, res: Response) => {
   console.log('=== ZALO LOGIN START ===');
