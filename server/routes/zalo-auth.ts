@@ -274,7 +274,12 @@ router.get('/callback', async (req: Request, res: Response) => {
     });
 
     const zaloUser = await userResponse.json();
-    console.log('Zalo user info:', zaloUser);
+    console.log('=== ZALO USER API RESPONSE ===');
+    console.log('Status:', userResponse.status);
+    console.log('Headers:', Object.fromEntries(userResponse.headers.entries()));
+    console.log('Raw Response:', JSON.stringify(zaloUser, null, 2));
+    console.log('Available fields:', Object.keys(zaloUser || {}));
+    console.log('=== END ZALO USER RESPONSE ===');
 
     // Handle IP restriction error from Zalo
     if (!zaloUser.id) {
