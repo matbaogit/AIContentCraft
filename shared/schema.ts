@@ -38,10 +38,15 @@ export const users = pgTable('users', {
   email: text('email'), // Nullable for Zalo users
   password: text('password'), // Nullable for Zalo users
   fullName: text('full_name'),
+  firstName: text('first_name'), // Add firstName for Zalo integration
+  lastName: text('last_name'), // Add lastName for Zalo integration
+  phone: text('phone'), // Add phone for Zalo integration
+  profileImageUrl: text('profile_image_url'), // Add profileImageUrl for Zalo integration
   role: roleEnum('role').notNull().default('user'),
   credits: integer('credits').notNull().default(0),
   language: text('language').notNull().default('vi'),
   isVerified: boolean('is_verified').notNull().default(false),
+  isEmailVerified: boolean('is_email_verified').notNull().default(false), // Add separate email verification
   verificationToken: text('verification_token'),
   verificationTokenExpiry: timestamp('verification_token_expiry'),
   resetPasswordToken: text('reset_password_token'),
@@ -49,7 +54,7 @@ export const users = pgTable('users', {
   referralCode: text('referral_code').unique(), // Mã giới thiệu của user này
   referredBy: integer('referred_by'), // ID người giới thiệu
   zaloId: text('zalo_id').unique(), // Zalo user ID
-  avatar: text('avatar'), // Avatar URL from Zalo or other sources
+  avatar: text('avatar'), // Avatar URL from Zalo or other sources (keep for backward compatibility)
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

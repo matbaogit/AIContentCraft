@@ -6503,6 +6503,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== ZALO OAUTH ENDPOINTS ==========
+  // Helper function to generate random string (like PHP randomString)
+  function randomString(length = 32) {
+    const crypto = require('crypto');
+    return crypto.randomBytes(length / 2).toString('hex');
+  }
+
   // Test endpoint
   app.get('/api/zalo-oauth/test', (req, res) => {
     console.log('Zalo OAuth test endpoint called');
@@ -6513,8 +6519,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Login endpoint - starts OAuth flow
-  app.get('/api/zalo-oauth/login', async (req, res) => {
+  // Login endpoint - starts OAuth flow (based on login.php)  
+  app.get('/api/auth/zalo/login', async (req, res) => {
     console.log('=== ZALO OAUTH LOGIN START ===');
     
     try {
@@ -6523,87 +6529,335 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!settings.zaloAppId || !settings.zaloAppSecret) {
         return res.status(400).json({
           success: false,
-          error: 'Zalo OAuth chưa được cấu hình'
+          error: 'Zalo OAuth chưa được cấu hình trong admin panel'
         });
       }
       
       if (settings.enableZaloOAuth !== 'true') {
         return res.status(400).json({
           success: false,
-          error: 'Zalo OAuth đã bị tắt'
+          error: 'Tính năng đăng nhập Zalo đang tạm khóa'
         });
       }
       
-      // Generate PKCE and state
+      // Generate PKCE parameters (like PHP code)
       const crypto = require('crypto');
-      const codeVerifier = crypto.randomBytes(32).toString('base64url');
-      const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-      const state = crypto.randomBytes(16).toString('hex');
+      const codeVerifier = randomString(64); // 64 chars like PHP
+      const codeChallenge = crypto.createHash('sha256')
+        .update(codeVerifier)
+        .digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
       
-      // Store session
-      global.zaloOAuthSessions = global.zaloOAuthSessions || {};
-      global.zaloOAuthSessions[state] = { codeVerifier, timestamp: Date.now() };
+      const state = randomString(16); // 16 chars like PHP
       
-      // Build auth URL
-      const baseUrl = process.env.NODE_ENV === 'production' ? 'https://toolbox.vn' : 'http://localhost:5000';
-      const redirectUri = `${baseUrl}/api/zalo-oauth/callback`;
+      // Store in session (PHP equivalent: $_SESSION)  
+      if (req.session) {
+        (req.session as any).zaloOAuth = {
+          codeVerifier,
+          state,
+          timestamp: Date.now()
+        };
+      }
       
+      // Build redirect URI based on environment
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://toolbox.vn' 
+        : 'http://localhost:5000';
+      const redirectUri = `${baseUrl}/api/auth/zalo/callback`;
+      
+      // Build Zalo authorization URL (exactly like PHP)
       const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
       authUrl.searchParams.set('app_id', settings.zaloAppId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('code_challenge', codeChallenge);
       authUrl.searchParams.set('state', state);
+      authUrl.searchParams.set('scope', 'phone'); // Request phone permission like PHP
+      authUrl.searchParams.set('prompt', 'consent'); // Force consent like PHP
       
-      console.log('Redirecting to Zalo:', authUrl.toString());
+      console.log('Generated Zalo OAuth URL:', authUrl.toString());
+      console.log('Code verifier stored in session:', codeVerifier.substring(0, 10) + '...');
+      
+      // Redirect to Zalo (like PHP header("Location: $auth_url"))
       res.redirect(authUrl.toString());
       
     } catch (error) {
-      console.error('Zalo login error:', error);
-      res.status(500).json({ success: false, error: 'Lỗi khởi tạo Zalo OAuth' });
+      console.error('Zalo OAuth login error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Lỗi khởi tạo đăng nhập Zalo. Vui lòng thử lại.'
+      });
     }
   });
 
-  // Callback endpoint
-  app.get('/api/zalo-oauth/callback', async (req, res) => {
+  // Callback endpoint (based on callback.php)
+  app.get('/api/auth/zalo/callback', async (req, res) => {
     console.log('=== ZALO OAUTH CALLBACK ===');
-    console.log('Query:', req.query);
+    console.log('Query parameters:', req.query);
+    console.log('Session data:', req.session?.zaloOAuth);
     
-    const { code, state } = req.query;
-    
-    if (!code || !state) {
-      return res.send(`<!DOCTYPE html>
-        <html><head><title>Lỗi Zalo</title><meta charset="utf-8"></head>
-        <body style="text-align:center; padding:50px; font-family:Arial;">
-          <h1 style="color:#e74c3c;">❌ Thiếu thông tin từ Zalo</h1>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({type: 'ZALO_LOGIN_ERROR', message: 'Thiếu thông tin từ Zalo'}, '*');
-              window.close();
-            }
-          </script>
-        </body></html>`);
+    try {
+      const { code, state } = req.query;
+      
+      // Validate required parameters
+      if (!code || !state) {
+        console.log('Missing required parameters');
+        return res.send(createErrorPage('Thiếu thông tin xác thực từ Zalo'));
+      }
+      
+      // Verify state parameter (CSRF protection like PHP)
+      const sessionData = (req.session as any)?.zaloOAuth;
+      if (!sessionData || sessionData.state !== state) {
+        console.log('Invalid state parameter');
+        return res.send(createErrorPage('Phiên đăng nhập không hợp lệ hoặc đã hết hạn'));
+      }
+      
+      // Get Zalo settings
+      const settings = await storage.getSettingsByCategory('zalo_oauth');
+      
+      // Exchange authorization code for access token (like PHP curl)
+      console.log('Exchanging authorization code for access token...');
+      
+      const fetch = require('node-fetch');
+      const tokenResponse = await fetch('https://oauth.zaloapp.com/v4/access_token', {
+        method: 'POST',
+        headers: {
+          'secret_key': settings.zaloAppSecret,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          app_id: settings.zaloAppId,
+          grant_type: 'authorization_code',
+          code: code as string,
+          code_verifier: sessionData.codeVerifier
+        })
+      });
+      
+      const tokenData = await tokenResponse.json();
+      console.log('Token exchange response:', tokenData);
+      
+      if (!tokenData.access_token) {
+        console.log('Failed to obtain access token:', tokenData);
+        return res.send(createErrorPage('Không thể lấy thông tin xác thực từ Zalo'));
+      }
+      
+      // Get user information from Zalo (including phone like PHP)
+      console.log('Fetching user information from Zalo...');
+      
+      const fields = 'id,name,picture,phone'; // Same fields as PHP
+      const userResponse = await fetch(`https://graph.zalo.me/v2.0/me?fields=${encodeURIComponent(fields)}`, {
+        headers: {
+          'access_token': tokenData.access_token
+        }
+      });
+      
+      const zaloUser = await userResponse.json();
+      console.log('Zalo user information:', zaloUser);
+      
+      if (!zaloUser.id) {
+        console.log('Failed to fetch user information:', zaloUser);
+        return res.send(createErrorPage('Không thể lấy thông tin người dùng từ Zalo'));
+      }
+      
+      // Clean up session data
+      if (req.session) {
+        delete (req.session as any).zaloOAuth;
+      }
+      
+      // SUCCESS: Process user login/registration
+      await processZaloLogin(zaloUser, req, res);
+      
+    } catch (error) {
+      console.error('Zalo OAuth callback error:', error);
+      return res.send(createErrorPage('Có lỗi xảy ra trong quá trình xử lý đăng nhập'));
     }
-    
-    // For now, just return success for testing  
-    console.log('Zalo callback received successfully');
-    res.send(`<!DOCTYPE html>
-      <html><head><title>Zalo Success</title><meta charset="utf-8"></head>
-      <body style="text-align:center; padding:50px; font-family:Arial; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white;">
-        <h1>✅ Nhận được callback từ Zalo!</h1>
-        <p>Code: ${String(code).substring(0, 10)}...</p>
-        <p>State: ${state}</p>
-        <p style="opacity:0.8;">Cửa sổ sẽ tự động đóng...</p>
+  });
+
+  // Helper function to create error pages
+  function createErrorPage(message: string) {
+    return `<!DOCTYPE html>
+      <html>
+      <head>
+        <title>Lỗi đăng nhập Zalo</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .container { 
+            background: rgba(0,0,0,0.2); 
+            padding: 40px; 
+            border-radius: 20px; 
+            max-width: 500px;
+          }
+          h1 { margin-bottom: 20px; font-size: 28px; }
+          p { font-size: 16px; line-height: 1.5; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>❌ Lỗi đăng nhập</h1>
+          <p>${message}</p>
+          <p style="opacity: 0.8; font-size: 14px;">Cửa sổ sẽ tự động đóng sau 3 giây...</p>
+        </div>
         <script>
           if (window.opener) {
             window.opener.postMessage({
-              type: 'ZALO_LOGIN_SUCCESS',
-              message: 'Callback received successfully'
+              type: 'ZALO_LOGIN_ERROR',
+              message: '${message}'
             }, '*');
             setTimeout(() => window.close(), 3000);
           }
         </script>
-      </body></html>`);
-  });
+      </body>
+      </html>`;
+  }
+
+  // Process Zalo login/registration
+  async function processZaloLogin(zaloUser: any, req: any, res: any) {
+    try {
+      console.log('Processing Zalo login for user:', zaloUser.id);
+      
+      // Check if user exists by zaloId
+      const existingUser = await storage.getUserByZaloId(zaloUser.id);
+      
+      let user;
+      if (existingUser) {
+        // Update existing user info
+        user = await storage.updateUserZaloInfo(existingUser.id, {
+          zaloId: zaloUser.id,
+          fullName: zaloUser.name || existingUser.fullName,
+          avatar: zaloUser.picture?.data?.url || existingUser.avatar
+        });
+        console.log('Updated existing user:', user.id);
+      } else {
+        // Create new user account
+        const username = `zalo_${zaloUser.id}`;
+        user = await storage.createUser({
+          username,
+          email: null,
+          password: null,
+          fullName: zaloUser.name || 'Zalo User',
+          zaloId: zaloUser.id,
+          avatar: zaloUser.picture?.data?.url || null,
+          isVerified: true, // Zalo users are considered verified
+          credits: 50 // Default credits
+        });
+        console.log('Created new user:', user.id);
+      }
+      
+      // Create user session (login)
+      if (req.session) {
+        (req.session as any).userId = user.id;
+        (req.session as any).user = user;
+      }
+      
+      // Success page
+      res.send(createSuccessPage(zaloUser, user));
+      
+    } catch (error) {
+      console.error('Error processing Zalo login:', error);
+      res.send(createErrorPage('Lỗi hệ thống khi xử lý đăng nhập'));
+    }
+  }
+
+  // Helper function to create success page
+  function createSuccessPage(zaloUser: any, user: any) {
+    return `<!DOCTYPE html>
+      <html>
+      <head>
+        <title>Đăng nhập thành công</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .container { 
+            background: rgba(255,255,255,0.1); 
+            padding: 40px; 
+            border-radius: 20px; 
+            max-width: 500px;
+          }
+          .user-info { 
+            background: rgba(255,255,255,0.2); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px 0; 
+          }
+          .avatar { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            margin: 10px;
+            border: 3px solid rgba(255,255,255,0.5);
+          }
+          h1 { margin-bottom: 20px; font-size: 28px; }
+          p { margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>✅ Đăng nhập Zalo thành công!</h1>
+          <div class="user-info">
+            ${zaloUser.picture?.data?.url ? `<img src="${zaloUser.picture.data.url}" alt="Avatar" class="avatar">` : ''}
+            <p><strong>Tên:</strong> ${zaloUser.name || 'Chưa cung cấp'}</p>
+            <p><strong>Username:</strong> ${user.username}</p>
+            <p><strong>Zalo ID:</strong> ${zaloUser.id}</p>
+            ${zaloUser.phone ? `<p><strong>Số điện thoại:</strong> ${zaloUser.phone}</p>` : '<p><strong>Số điện thoại:</strong> Người dùng không chia sẻ</p>'}
+            <p><strong>Credits:</strong> ${user.credits}</p>
+          </div>
+          <p style="opacity: 0.8;">Đang chuyển hướng về trang chủ...</p>
+        </div>
+        <script>
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'ZALO_LOGIN_SUCCESS',
+              user: {
+                id: ${user.id},
+                username: '${user.username}',
+                name: '${zaloUser.name || 'Zalo User'}',
+                zaloId: '${zaloUser.id}',
+                picture: '${zaloUser.picture?.data?.url || ''}',
+                phone: '${zaloUser.phone || ''}'
+              }
+            }, '*');
+            
+            // Redirect parent window to dashboard
+            setTimeout(() => {
+              window.opener.location.href = '/dashboard';
+              window.close();
+            }, 2000);
+          } else {
+            // Direct navigation
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 2000);
+          }
+        </script>
+      </body>
+      </html>`;
+  }
 
   return httpServer;
 }

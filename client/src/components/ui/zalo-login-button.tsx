@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 interface ZaloLoginButtonProps {
   className?: string;
@@ -72,11 +73,13 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
           variant: "default",
         });
         
-        // Reload page or call success callback
+        // Refresh auth data and call success callback
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         if (onSuccess) {
           onSuccess();
         } else {
-          window.location.reload();
+          // Redirect to dashboard
+          window.location.href = "/dashboard";
         }
       } else if (event.data.type === 'ZALO_LOGIN_ERROR') {
         console.error('Zalo login error:', event.data.message);

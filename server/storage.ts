@@ -276,6 +276,42 @@ class DatabaseStorage implements IStorage {
       return null;
     }
   }
+
+  // Zalo OAuth methods
+  async getUserByZaloId(zaloId: string): Promise<schema.User | null> {
+    try {
+      const user = await db.query.users.findFirst({
+        where: eq(schema.users.zaloId, zaloId)
+      });
+      return user || null;
+    } catch (error) {
+      console.error("Error retrieving user by Zalo ID:", error);
+      return null;
+    }
+  }
+
+  async updateUserZaloInfo(userId: number, zaloInfo: {
+    zaloId: string;
+    fullName?: string;
+    avatar?: string;
+  }): Promise<schema.User | null> {
+    try {
+      const [updatedUser] = await db.update(schema.users)
+        .set({
+          zaloId: zaloInfo.zaloId,
+          fullName: zaloInfo.fullName,
+          avatar: zaloInfo.avatar,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.users.id, userId))
+        .returning();
+      
+      return updatedUser || null;
+    } catch (error) {
+      console.error("Error updating user Zalo info:", error);
+      return null;
+    }
+  }
   
   async deleteUser(id: number): Promise<boolean> {
     try {
