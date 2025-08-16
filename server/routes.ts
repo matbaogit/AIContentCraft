@@ -6534,7 +6534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount the Zalo confirmation router
   const zaloConfirmRouter = await import("./routes/zalo-confirm");
-  app.use('/api/auth/zalo', zaloConfirmRouter.default);
+  app.use('/api/auth/zalo-confirm', zaloConfirmRouter.default);
 
   return httpServer;
 }

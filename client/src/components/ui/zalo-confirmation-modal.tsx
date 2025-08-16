@@ -112,7 +112,7 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
     setError(null);
 
     try {
-      const response = await apiRequest('/api/auth/zalo/confirm', 'POST', {
+      const response = await apiRequest('/api/auth/zalo-confirm/confirm', 'POST', {
         zaloData,
         userInfo: {
           fullName: formData.fullName.trim(),

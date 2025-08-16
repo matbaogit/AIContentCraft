@@ -1,15 +1,27 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { db } from '../../db';
+import * as schema from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 
 // GET /api/auth/zalo - Start Zalo OAuth
 router.get('/', async (req, res) => {
+  console.log('=== ZALO OAUTH START ===');
+  console.log('Session:', req.session);
+  console.log('Request URL:', req.url);
+  console.log('Request headers:', req.headers);
+  console.log('Request query:', req.query);
+  
   try {
     // Fetch Zalo settings from database
-    const settings = await db.query.adminSettings.findFirst();
-    const zaloAppId = settings?.zaloAppId;
+    const zaloAppIdSetting = await db.select()
+      .from(schema.systemSettings)
+      .where(eq(schema.systemSettings.key, 'zaloAppId'))
+      .limit(1);
+    
+    const zaloAppId = zaloAppIdSetting.length > 0 ? zaloAppIdSetting[0].value : null;
     
     if (!zaloAppId) {
       console.error('Zalo App ID not configured');
@@ -51,9 +63,19 @@ router.get('/callback', async (req, res) => {
     }
 
     // Fetch Zalo settings from database
-    const settings = await db.query.adminSettings.findFirst();
-    const zaloAppId = settings?.zaloAppId;
-    const zaloAppSecret = settings?.zaloAppSecret;
+    const [zaloAppIdSetting, zaloAppSecretSetting] = await Promise.all([
+      db.select()
+        .from(schema.systemSettings)
+        .where(eq(schema.systemSettings.key, 'zaloAppId'))
+        .limit(1),
+      db.select()
+        .from(schema.systemSettings)
+        .where(eq(schema.systemSettings.key, 'zaloAppSecret'))
+        .limit(1)
+    ]);
+    
+    const zaloAppId = zaloAppIdSetting.length > 0 ? zaloAppIdSetting[0].value : null;
+    const zaloAppSecret = zaloAppSecretSetting.length > 0 ? zaloAppSecretSetting[0].value : null;
 
     if (!zaloAppId || !zaloAppSecret) {
       console.error('Zalo App ID or Secret not configured');
