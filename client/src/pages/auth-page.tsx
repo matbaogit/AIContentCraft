@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 import { ZaloLoginButton } from "@/components/ui/zalo-login-button";
+import { ZaloConfirmationModal } from "@/components/ui/zalo-confirmation-modal";
 
 // Zalo icon component (since react-icons doesn't have Zalo)
 const ZaloIcon = ({ className }: { className?: string }) => (
@@ -88,6 +89,7 @@ export default function AuthPage() {
   const [referralCode, setReferralCode] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showZaloConfirmation, setShowZaloConfirmation] = useState(false);
   const { toast } = useToast();
   
   // Fetch appearance settings for login page
@@ -172,9 +174,10 @@ export default function AuthPage() {
     }
   }, [user, navigate]);
   
-  // Kiểm tra xác thực email thành công
+  // Kiểm tra xác thực email thành công và Zalo confirmation
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    
     if (params.get('verified') === 'true') {
       setIsVerified(true);
       
@@ -187,6 +190,14 @@ export default function AuthPage() {
       
       // Tự động chuyển sang tab đăng nhập
       setActiveTab("login");
+    }
+    
+    // Check if needs Zalo confirmation
+    if (params.get('zalo_confirm') === 'true') {
+      setShowZaloConfirmation(true);
+      
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [t, toast, setActiveTab]);
 
@@ -728,6 +739,16 @@ export default function AuthPage() {
                     <ZaloLoginButton 
                       disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
                       className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+                      onSuccess={() => {
+                        toast({
+                          title: "Đăng nhập thành công!",
+                          description: "Chào mừng bạn đến với hệ thống!",
+                        });
+                        navigate("/dashboard");
+                      }}
+                      onNeedsConfirmation={() => {
+                        setShowZaloConfirmation(true);
+                      }}
                     >
                       {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Zalo"}
                     </ZaloLoginButton>
@@ -778,6 +799,21 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+      
+      {/* Zalo Confirmation Modal */}
+      <ZaloConfirmationModal
+        isOpen={showZaloConfirmation}
+        onClose={() => setShowZaloConfirmation(false)}
+        onSuccess={(user) => {
+          setShowZaloConfirmation(false);
+          queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+          toast({
+            title: "Tạo tài khoản thành công!",
+            description: `Chào mừng ${user.fullName} đến với hệ thống!`,
+          });
+          navigate("/dashboard");
+        }}
+      />
     </>
   );
 }

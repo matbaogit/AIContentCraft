@@ -8,15 +8,18 @@ interface ZaloLoginButtonProps {
   disabled?: boolean;
   children?: React.ReactNode;
   onSuccess?: () => void;
+  onNeedsConfirmation?: () => void;
 }
 
 export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
   className = '',
   disabled = false,
   children,
-  onSuccess
+  onSuccess,
+  onNeedsConfirmation
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [popup, setPopup] = useState<Window | null>(null);
   const { toast } = useToast();
 
   const handleZaloLogin = () => {
@@ -26,13 +29,15 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
     
     // Open popup window for Zalo OAuth
     console.log('Opening Zalo OAuth popup...');
-    const popup = window.open(
-      '/api/auth/zalo/login',
+    const newPopup = window.open(
+      '/api/auth/zalo',
       'zaloLogin',
       'width=500,height=600,scrollbars=yes,resizable=yes,location=yes,status=yes,menubar=no,toolbar=no'
     );
+    
+    setPopup(newPopup);
 
-    if (!popup || popup.closed) {
+    if (!newPopup || newPopup.closed) {
       toast({
         title: "Lỗi Popup",
         description: "Không thể mở popup. Vui lòng cho phép popup cho trang web này hoặc thử đăng nhập trực tiếp.",
@@ -44,7 +49,7 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
       setTimeout(() => {
         const fallback = confirm("Popup bị chặn. Bạn có muốn chuyển hướng trực tiếp để đăng nhập Zalo không?");
         if (fallback) {
-          window.location.href = '/api/auth/zalo/login';
+          window.location.href = '/api/auth/zalo';
         }
       }, 1000);
       return;
@@ -63,7 +68,10 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
 
       if (event.data.type === 'ZALO_LOGIN_SUCCESS') {
         console.log('Zalo login successful!');
-        popup.close();
+        if (popup) {
+          popup.close();
+          setPopup(null);
+        }
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
         
@@ -81,9 +89,25 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
           // Redirect to dashboard
           window.location.href = "/dashboard";
         }
+      } else if (event.data.type === 'ZALO_OAUTH_SUCCESS' && event.data.needsConfirmation) {
+        console.log('Zalo OAuth successful, needs confirmation');
+        if (popup) {
+          popup.close();
+          setPopup(null);
+        }
+        window.removeEventListener('message', messageListener);
+        setIsLoading(false);
+        
+        // Trigger confirmation modal
+        if (onNeedsConfirmation) {
+          onNeedsConfirmation();
+        }
       } else if (event.data.type === 'ZALO_LOGIN_ERROR') {
         console.error('Zalo login error:', event.data.message);
-        popup.close();
+        if (popup) {
+          popup.close();
+          setPopup(null);
+        }
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
         
@@ -99,19 +123,21 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
 
     // Check if popup is closed manually
     const checkClosed = setInterval(() => {
-      if (popup.closed) {
+      if (popup && popup.closed) {
         console.log('Popup was closed manually');
         clearInterval(checkClosed);
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
+        setPopup(null);
       }
     }, 1000);
 
     // Timeout handler - in case popup hangs
     const timeout = setTimeout(() => {
-      if (!popup.closed) {
+      if (popup && !popup.closed) {
         console.log('OAuth popup timeout, closing...');
         popup.close();
+        setPopup(null);
         clearInterval(checkClosed);
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
