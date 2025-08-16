@@ -53,14 +53,19 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
   // Load Zalo data from session storage
   useEffect(() => {
     if (isOpen) {
+      console.log('=== ZALO MODAL OPENING ===');
       const sessionData = sessionStorage.getItem('zalo_oauth_data');
+      console.log('Session data from storage:', sessionData);
+      
       if (sessionData) {
         try {
           const data = JSON.parse(sessionData);
+          console.log('Parsed Zalo data:', data);
           
           // Check if data is expired (15 minutes)
           const isExpired = Date.now() - data.timestamp > 15 * 60 * 1000;
           if (isExpired) {
+            console.log('Data expired, removing...');
             sessionStorage.removeItem('zalo_oauth_data');
             setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
             return;
@@ -70,15 +75,21 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
           
           // Pre-fill form with Zalo data if available
           if (data.userInfo?.name) {
+            console.log('Pre-filling form with name:', data.userInfo.name);
             setFormData(prev => ({
               ...prev,
-              fullName: data.userInfo.name
+              fullName: data.userInfo.name,
+              email: data.userInfo.email || ''
             }));
+          } else {
+            console.log('No userInfo.name found in data');
           }
         } catch (err) {
+          console.error('Error parsing session data:', err);
           setError('Lỗi đọc dữ liệu đăng nhập. Vui lòng thử lại.');
         }
       } else {
+        console.log('No session data found');
         setError('Không tìm thấy dữ liệu đăng nhập. Vui lòng đăng nhập lại.');
       }
     }
