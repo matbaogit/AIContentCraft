@@ -22,9 +22,9 @@ router.get('/', async (req, res) => {
     if (isDevelopment()) {
       console.log('Development environment detected, using toolbox.vn proxy...');
       
-      // Redirect to toolbox.vn proxy
+      // Redirect to toolbox.vn proxy with relay callback
       const proxyUrl = new URL(`${getProxyBaseUrl()}/api/zalo-proxy/auth`);
-      proxyUrl.searchParams.set('redirect_uri', `${getCurrentDomain()}/api/auth/zalo/proxy-callback`);
+      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/zalo-proxy/callback-relay?app_domain=${encodeURIComponent(getCurrentDomain())}`);
       
       console.log('Redirecting to proxy:', proxyUrl.toString());
       return res.redirect(proxyUrl.toString());

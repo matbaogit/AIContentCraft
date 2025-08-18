@@ -229,4 +229,122 @@ router.get('/callback', async (req, res) => {
   }
 });
 
+// GET /api/zalo-proxy/callback-relay - Relay callback data to original app
+router.get('/callback-relay', async (req, res) => {
+  console.log('=== ZALO CALLBACK RELAY ===');
+  console.log('Query params:', req.query);
+  
+  try {
+    const { app_domain, code, state, error, error_description } = req.query;
+    
+    if (!app_domain) {
+      return res.status(400).send('Missing app_domain parameter');
+    }
+    
+    // Handle OAuth errors
+    if (error) {
+      console.error('Zalo OAuth error in relay:', error, error_description);
+      const appCallbackUrl = `${app_domain}/api/auth/zalo/proxy-callback?zalo_proxy_error=${encodeURIComponent(error)}&error_details=${encodeURIComponent(error_description || '')}`;
+      return res.redirect(appCallbackUrl);
+    }
+    
+    if (!code) {
+      const appCallbackUrl = `${app_domain}/api/auth/zalo/proxy-callback?zalo_proxy_error=missing_code`;
+      return res.redirect(appCallbackUrl);
+    }
+    
+    // Get Zalo app settings (these should be configured on toolbox.vn)
+    const zaloAppId = process.env.ZALO_APP_ID || '4127841001935001267';
+    const zaloAppSecret = process.env.ZALO_APP_SECRET;
+    
+    if (!zaloAppSecret) {
+      console.error('Zalo App Secret not configured on proxy server');
+      const appCallbackUrl = `${app_domain}/api/auth/zalo/proxy-callback?zalo_proxy_error=config_error&error_details=${encodeURIComponent('Proxy server configuration error')}`;
+      return res.redirect(appCallbackUrl);
+    }
+    
+    // Exchange code for access token
+    const tokenUrl = 'https://oauth.zaloapp.com/v4/access_token';
+    const tokenParams = new URLSearchParams({
+      app_id: zaloAppId,
+      app_secret: zaloAppSecret,
+      code: code as string
+    });
+    
+    console.log('Exchanging code for token...');
+    const tokenResponse = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: tokenParams.toString()
+    });
+    
+    if (!tokenResponse.ok) {
+      throw new Error(`Token exchange failed: ${tokenResponse.status}`);
+    }
+    
+    const tokenData = await tokenResponse.json();
+    console.log('Token response:', tokenData);
+    
+    if (tokenData.error) {
+      throw new Error(`Token error: ${tokenData.error} - ${tokenData.error_description}`);
+    }
+    
+    // Fetch user info from Zalo
+    const userInfoUrl = `https://graph.zalo.me/v2.0/me?fields=id,name,picture&access_token=${tokenData.access_token}`;
+    console.log('Fetching user info from:', userInfoUrl);
+    
+    const userResponse = await fetch(userInfoUrl);
+    
+    if (!userResponse.ok) {
+      throw new Error(`User info fetch failed: ${userResponse.status}`);
+    }
+    
+    const zaloUser = await userResponse.json();
+    console.log('Zalo user info:', zaloUser);
+    
+    if (zaloUser.error) {
+      throw new Error(`User info error: ${zaloUser.error.message}`);
+    }
+    
+    // Prepare data to send to app
+    const sessionData = {
+      tokenData: {
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_in: tokenData.expires_in,
+        refresh_token_expires_in: tokenData.refresh_token_expires_in
+      },
+      userInfo: zaloUser,
+      timestamp: Date.now()
+    };
+    
+    // Get encryption settings from app domain (this needs to be configured)
+    const encryptionKey = process.env.ENCRYPTION_SECRET || 'default-key-for-proxy';
+    
+    // Create encrypted token
+    const encryption = createEncryption(encryptionKey);
+    const encryptedToken = encryption.createToken(sessionData);
+    
+    console.log('Created encrypted token for relay');
+    
+    // Redirect to app with encrypted data
+    const appCallbackUrl = `${app_domain}/api/auth/zalo/proxy-callback?success=true&zalo_proxy_token=${encodeURIComponent(encryptedToken)}`;
+    console.log('Redirecting to app:', appCallbackUrl);
+    
+    return res.redirect(appCallbackUrl);
+    
+  } catch (error) {
+    console.error('Error in callback relay:', error);
+    const { app_domain } = req.query;
+    if (app_domain) {
+      const appCallbackUrl = `${app_domain}/api/auth/zalo/proxy-callback?zalo_proxy_error=relay_error&error_details=${encodeURIComponent(error.message)}`;
+      return res.redirect(appCallbackUrl);
+    } else {
+      return res.status(500).send('Relay error: ' + error.message);
+    }
+  }
+});
+
 export default router;
