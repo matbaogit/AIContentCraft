@@ -24,7 +24,8 @@ router.get('/', async (req, res) => {
       
       // Redirect to toolbox.vn proxy with relay callback
       const proxyUrl = new URL(`${getProxyBaseUrl()}/api/zalo-proxy/auth`);
-      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/zalo-proxy/callback-relay?app_domain=${encodeURIComponent(getCurrentDomain())}`);
+      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/zalo-proxy/callback-relay`);
+      proxyUrl.searchParams.set('app_domain', getCurrentDomain());
       
       console.log('Redirecting to proxy:', proxyUrl.toString());
       return res.redirect(proxyUrl.toString());

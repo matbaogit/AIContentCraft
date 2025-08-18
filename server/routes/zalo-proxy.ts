@@ -20,7 +20,7 @@ router.get('/auth', async (req, res) => {
     console.log('Query params:', req.query);
     console.log('Headers:', req.headers);
 
-    const { redirect_uri, state } = req.query;
+    const { redirect_uri, app_domain, state } = req.query;
 
     if (!redirect_uri) {
       return res.status(400).json({ 
@@ -48,6 +48,7 @@ router.get('/auth', async (req, res) => {
     
     // Store redirect info in session
     (req.session as any).zalo_proxy_redirect = redirect_uri;
+    (req.session as any).zalo_proxy_app_domain = app_domain;
     (req.session as any).zalo_proxy_state = proxyState;
 
     // Build Zalo OAuth URL
@@ -104,10 +105,12 @@ router.get('/callback', async (req, res) => {
     }
 
     const redirectUri = (req.session as any).zalo_proxy_redirect;
-    if (!redirectUri) {
+    const appDomain = (req.session as any).zalo_proxy_app_domain;
+    
+    if (!redirectUri || !appDomain) {
       return res.status(400).json({
         success: false,
-        error: 'Missing redirect URI in session'
+        error: 'Missing redirect URI or app domain in session'
       });
     }
 
@@ -200,14 +203,11 @@ router.get('/callback', async (req, res) => {
     const encryption = createEncryption(encryptionKey);
     const token = encryption.createToken(proxyData, 10); // 10 minutes expiry
 
-    // Build redirect URL with encrypted data
-    const finalRedirectUrl = new URL(redirectUri as string);
-    finalRedirectUrl.searchParams.set('zalo_proxy_token', token);
-    finalRedirectUrl.searchParams.set('success', '1');
+    // Build callback URL to app with encrypted data  
+    const callbackUrl = `${appDomain}/api/auth/zalo/proxy-callback?success=true&zalo_proxy_token=${encodeURIComponent(token)}`;
+    console.log('Redirecting back to app:', callbackUrl);
 
-    console.log('Redirecting back to app:', finalRedirectUrl.toString());
-
-    return res.redirect(finalRedirectUrl.toString());
+    return res.redirect(callbackUrl);
 
   } catch (error) {
     console.error('Error in Zalo proxy callback:', error);
