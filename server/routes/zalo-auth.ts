@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   
   try {
     // Check environment and route accordingly
-    if (isDevelopment()) {
+    if (isDevelopment() && !process.env.FORCE_DIRECT_OAUTH && !req.query.direct) {
       console.log('Development environment detected, using toolbox.vn proxy...');
       
       // Redirect to toolbox.vn proxy with relay callback
@@ -31,8 +31,8 @@ router.get('/', async (req, res) => {
       return res.redirect(proxyUrl.toString());
     }
 
-    // Production flow - direct Zalo OAuth
-    console.log('Production environment, using direct OAuth...');
+    // Production flow (or forced direct OAuth) - direct Zalo OAuth
+    console.log('Using direct OAuth flow...');
     
     // Fetch Zalo settings from database
     const zaloAppIdSetting = await db.select()

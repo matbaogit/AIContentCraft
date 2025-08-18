@@ -1,37 +1,28 @@
-# Zalo OAuth Development Setup
+# Zalo Development Setup Guide
 
-## Vấn đề hiện tại
-Zalo App ID `4127841001935001267` hiện chỉ được config để chấp nhận callback từ domain `https://toolbox.vn`. Khi test development trên localhost, Zalo sẽ reject callback request.
+## Current Issue Analysis:
+- **Error**: -14003 "Invalid redirect_uri" 
+- **Callback URL added**: `https://toolbox.vn/api/zalo-proxy/callback` ✅
+- **Problem**: Proxy endpoints not deployed to toolbox.vn yet
 
-## Cách khắc phục
+## Immediate Solutions:
 
-### Option 1: Config Zalo App để hỗ trợ localhost (Khuyến nghị)
-1. Đăng nhập https://developers.zalo.me/
-2. Vào Zalo App ID `4127841001935001267`
-3. Thêm callback URL: `http://localhost:5000/api/auth/zalo/callback`
-4. Hoặc thêm domain: `localhost:5000`
+### Option 1: Direct Development Setup (Fastest)
+For immediate testing, add your Replit domain directly to Zalo Developer Console:
 
-### Option 2: Test trên toolbox.vn
-Hiện tại có thể test trực tiếp trên production domain `https://toolbox.vn`
+**Add this callback URL:**
+```
+https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev/api/auth/zalo/callback
+```
 
-### Option 3: Tạo Zalo App riêng cho development
-1. Tạo Zalo App mới cho development
-2. Config callback URL: `http://localhost:5000/api/auth/zalo/callback`
-3. Cập nhật App ID/Secret trong admin panel khi development
+**Switch to direct OAuth temporarily:**
+1. Set environment variable: `FORCE_DIRECT_OAUTH=true`
+2. Test OAuth flow directly without proxy
 
-## Lưu ý kỹ thuật
-- Zalo OAuth yêu cầu HTTPS cho production
-- Localhost HTTP được cho phép cho development nếu được config đúng
-- PKCE (Proof Key for Code Exchange) đã được implement để bảo mật
-- Popup approach thay vì redirect để UX tốt hơn
+### Option 2: Deploy Proxy to toolbox.vn (Production Ready)
+1. Upload proxy files to toolbox.vn
+2. Configure environment variables
+3. Test complete proxy flow
 
-## Trạng thái hiện tại
-- ✅ OAuth flow đã implement đầy đủ
-- ✅ PKCE security đã có
-- ✅ Popup approach đã có
-- ✅ Error handling tốt
-- ❌ Zalo App chưa config cho localhost
-
-## Để test:
-1. Cấu hình Zalo App theo Option 1 ở trên
-2. Hoặc test trực tiếp trên https://toolbox.vn
+## Quick Fix Implementation:
+I'll add a development mode that allows direct OAuth while keeping proxy for production.
