@@ -1,30 +1,36 @@
-# Fix Zalo "Invalid redirect_uri" Error (-14003)
+# Zalo Callback URL Fix
 
-## Problem Analysis
-Zalo OAuth returns error -14003 "Invalid redirect uri" because the callback URL used in OAuth request doesn't match the configured URL in Zalo Developer Console.
+## ✅ Updated to Use toolbox.vn Callback
 
-## Current Flow URLs:
-1. **App** → `https://toolbox.vn/api/zalo-proxy/auth`
-2. **Proxy** → `https://oauth.zaloapp.com/v4/permission?redirect_uri=https://toolbox.vn/api/zalo-proxy/callback`
-3. **Zalo** should callback to → `https://toolbox.vn/api/zalo-proxy/callback`
+### Changes Made:
 
-## Required Fix in Zalo Developer Console:
+1. **Frontend Button**: Removed `?direct=true` parameter
+   - Popup URL: `/api/auth/zalo` (back to proxy flow)
+   - Fallback URL: `/api/auth/zalo` (back to proxy flow)
 
-### App Configuration:
-- **App ID**: `4127841001935001267` (confirmed in database)
-- **Callback URL to add**: `https://toolbox.vn/api/zalo-proxy/callback`
+2. **Backend Proxy Logic**: Updated callback URL
+   - Old: `${getProxyBaseUrl()}/api/zalo-proxy/callback-relay`
+   - New: `${getProxyBaseUrl()}/api/auth/zalo/callback`
+   - Result: `https://toolbox.vn/api/auth/zalo/callback`
 
-### Steps to Fix:
-1. **Login to Zalo Developers**: https://developers.zalo.me/
-2. **Select App ID**: `4127841001935001267`
-3. **Go to OAuth Settings**
-4. **Add Callback URL**: `https://toolbox.vn/api/zalo-proxy/callback`
-5. **Save Configuration**
+3. **Flow Logic**: Force proxy unless `?direct=true`
+   - Default flow: Always use toolbox.vn proxy
+   - Direct flow: Only when explicitly requested with `?direct=true`
 
-## Testing URLs:
-- **Development OAuth Start**: `http://localhost:5000/api/auth/zalo`
-- **Expected Zalo Callback**: `https://toolbox.vn/api/zalo-proxy/callback`
-- **Final App Callback**: `[dev_domain]/api/auth/zalo/proxy-callback`
+### Current Callback URL in Zalo Developer Console:
+```
+https://toolbox.vn/api/auth/zalo/callback
+```
 
-## Note:
-Both `callback` and `callback-relay` endpoints are implemented in the proxy system, but Zalo must be configured to call the main `callback` endpoint first.
+### Proxy System Requirements:
+The following endpoints must be deployed on toolbox.vn:
+- `/api/zalo-proxy/auth` - OAuth initiation
+- `/api/auth/zalo/callback` - OAuth callback handler
+
+### Test Flow:
+1. User clicks Zalo button → `/api/auth/zalo`
+2. Redirects to → `https://toolbox.vn/api/zalo-proxy/auth`
+3. Zalo OAuth redirects to → `https://toolbox.vn/api/auth/zalo/callback`
+4. Proxy relays back to → Replit domain with OAuth result
+
+**Ready for deployment to toolbox.vn!**

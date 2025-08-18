@@ -18,13 +18,13 @@ router.get('/', async (req, res) => {
   console.log('Request query:', req.query);
   
   try {
-    // Check environment and route accordingly
-    if (isDevelopment() && !process.env.FORCE_DIRECT_OAUTH && !req.query.direct) {
-      console.log('Development environment detected, using toolbox.vn proxy...');
+    // Always use toolbox.vn proxy unless explicitly requested direct OAuth
+    if (!req.query.direct) {
+      console.log('Using toolbox.vn proxy for OAuth...');
       
       // Redirect to toolbox.vn proxy with relay callback
       const proxyUrl = new URL(`${getProxyBaseUrl()}/api/zalo-proxy/auth`);
-      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/zalo-proxy/callback-relay`);
+      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/auth/zalo/callback`);
       proxyUrl.searchParams.set('app_domain', getCurrentDomain());
       
       console.log('Redirecting to proxy:', proxyUrl.toString());
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
     }
 
     // Production flow (or forced direct OAuth) - direct Zalo OAuth
-    console.log('Using direct OAuth flow...');
+    console.log('Using direct OAuth flow (direct=true parameter)...');
     
     // Fetch Zalo settings from database
     const zaloAppIdSetting = await db.select()
