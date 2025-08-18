@@ -27,10 +27,10 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
     
     setIsLoading(true);
     
-    // Open popup window for Zalo OAuth
+    // Open popup window for Zalo OAuth (using direct OAuth)
     console.log('Opening Zalo OAuth popup...');
     const newPopup = window.open(
-      '/api/auth/zalo',
+      '/api/auth/zalo?direct=true',
       'zaloLogin',
       'width=500,height=600,scrollbars=yes,resizable=yes,location=yes,status=yes,menubar=no,toolbar=no'
     );
@@ -49,7 +49,7 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
       setTimeout(() => {
         const fallback = confirm("Popup bị chặn. Bạn có muốn chuyển hướng trực tiếp để đăng nhập Zalo không?");
         if (fallback) {
-          window.location.href = '/api/auth/zalo';
+          window.location.href = '/api/auth/zalo?direct=true';
         }
       }, 1000);
       return;
