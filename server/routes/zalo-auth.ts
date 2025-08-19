@@ -46,7 +46,7 @@ router.get('/', async (req, res) => {
     // Build Zalo authorization URL
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
     authUrl.searchParams.set('app_id', zaloAppId);
-    authUrl.searchParams.set('redirect_uri', `${getCurrentDomain()}/api/auth/zalo/callback`);
+    authUrl.searchParams.set('redirect_uri', 'https://toolbox.vn/zalo-callback-redirect.html');
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('state', crypto.randomBytes(16).toString('hex'));
 

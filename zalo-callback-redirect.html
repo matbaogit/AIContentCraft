@@ -10,9 +10,9 @@
         const state = urlParams.get('state');
         const error = urlParams.get('error');
         
-        // Get app domain from localStorage or default to current Replit domain
+        // Get app domain from localStorage or default to production domain
         const appDomain = localStorage.getItem('zalo_app_domain') || 
-                         'https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev';
+                         'https://toolbox.vn';
         
         // Build redirect URL back to app
         let redirectUrl = appDomain + '/api/auth/zalo/callback?';
