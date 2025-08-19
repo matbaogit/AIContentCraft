@@ -6540,5 +6540,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const zaloProxyRouter = await import("./routes/zalo-proxy");
   app.use('/api/zalo-proxy', zaloProxyRouter.default);
 
+  // Serve zalo-callback-redirect.html for production OAuth flow
+  app.get('/zalo-callback-redirect.html', (req, res) => {
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Zalo OAuth Redirect</title>
+    <meta charset="utf-8">
+    <script>
+        // Extract OAuth parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        
+        // Get app domain from localStorage or default to production domain
+        const appDomain = localStorage.getItem('zalo_app_domain') || 
+                         'https://toolbox.vn';
+        
+        // Build redirect URL back to app
+        let redirectUrl = appDomain + '/api/auth/zalo/callback?';
+        if (code) redirectUrl += 'code=' + encodeURIComponent(code) + '&';
+        if (state) redirectUrl += 'state=' + encodeURIComponent(state) + '&';
+        if (error) redirectUrl += 'error=' + encodeURIComponent(error) + '&';
+        
+        // Remove trailing &
+        redirectUrl = redirectUrl.replace(/&$/, '');
+        
+        console.log('Redirecting from toolbox.vn to:', redirectUrl);
+        
+        // Redirect back to app
+        window.location.href = redirectUrl;
+    </script>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
+        <h2>🔄 Zalo OAuth Redirect</h2>
+        <p>Đang chuyển hướng về ứng dụng...</p>
+        <p>Redirecting back to app...</p>
+        <div style="margin-top: 20px;">
+            <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>`);
+  });
+
+  const httpServer = createServer(app);
   return httpServer;
 }
