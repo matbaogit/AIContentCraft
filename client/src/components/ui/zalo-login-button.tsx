@@ -27,6 +27,9 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
     
     setIsLoading(true);
     
+    // Store current app domain for redirect back from toolbox.vn
+    localStorage.setItem('zalo_app_domain', window.location.origin);
+    
     // Open popup window for Zalo OAuth
     console.log('Opening Zalo OAuth popup...');
     const newPopup = window.open(

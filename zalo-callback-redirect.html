@@ -1,18 +1,8 @@
-# 🔄 Zalo Direct OAuth - No PHP Solution
-
-## Current Status:
-- ❌ PHP proxy không hoạt động trên toolbox.vn
-- ✅ Chuyển sang Direct OAuth flow
-- ✅ Sử dụng static HTML redirect trên toolbox.vn
-
-## New Approach: Static HTML Redirect
-
-### 1. Upload file `zalo-callback-redirect.html` lên toolbox.vn:
-```html
 <!DOCTYPE html>
 <html>
 <head>
     <title>Zalo OAuth Redirect</title>
+    <meta charset="utf-8">
     <script>
         // Extract OAuth parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -20,7 +10,7 @@
         const state = urlParams.get('state');
         const error = urlParams.get('error');
         
-        // Get app domain from localStorage or default
+        // Get app domain from localStorage or default to current Replit domain
         const appDomain = localStorage.getItem('zalo_app_domain') || 
                          'https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev';
         
@@ -33,36 +23,27 @@
         // Remove trailing &
         redirectUrl = redirectUrl.replace(/&$/, '');
         
+        console.log('Redirecting from toolbox.vn to:', redirectUrl);
+        
         // Redirect back to app
         window.location.href = redirectUrl;
     </script>
 </head>
 <body>
-    <p>Redirecting back to app...</p>
+    <div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">
+        <h2>🔄 Zalo OAuth Redirect</h2>
+        <p>Đang chuyển hướng về ứng dụng...</p>
+        <p>Redirecting back to app...</p>
+        <div style="margin-top: 20px;">
+            <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>
-```
-
-### 2. Zalo Developer Console Setup:
-```
-Callback URL: https://toolbox.vn/zalo-callback-redirect.html
-```
-
-### 3. Update Frontend để store app domain:
-```javascript
-// Before opening Zalo OAuth popup
-localStorage.setItem('zalo_app_domain', window.location.origin);
-```
-
-## Benefits:
-- ✅ Không cần PHP
-- ✅ Static file hosting
-- ✅ JavaScript redirect
-- ✅ Hoạt động với mọi hosting
-
-## Current OAuth Flow:
-1. User clicks Zalo → Direct OAuth với Replit domain
-2. Test với domain hiện tại trước
-3. Nếu cần stable domain → dùng HTML redirect
-
-Ready to implement!

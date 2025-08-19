@@ -18,21 +18,10 @@ router.get('/', async (req, res) => {
   console.log('Request query:', req.query);
   
   try {
-    // Always use toolbox.vn proxy unless explicitly requested direct OAuth
-    if (!req.query.direct) {
-      console.log('Using toolbox.vn proxy for OAuth...');
-      
-      // Redirect to toolbox.vn proxy with relay callback
-      const proxyUrl = new URL(`${getProxyBaseUrl()}/api/zalo-proxy/auth`);
-      proxyUrl.searchParams.set('redirect_uri', `${getProxyBaseUrl()}/api/auth/zalo/callback`);
-      proxyUrl.searchParams.set('app_domain', getCurrentDomain());
-      
-      console.log('Redirecting to proxy:', proxyUrl.toString());
-      return res.redirect(proxyUrl.toString());
-    }
+    // Use direct OAuth flow (toolbox.vn PHP proxy failed)
+    console.log('Using direct OAuth flow...');
 
-    // Production flow (or forced direct OAuth) - direct Zalo OAuth
-    console.log('Using direct OAuth flow (direct=true parameter)...');
+    // Direct Zalo OAuth flow
     
     // Fetch Zalo settings from database
     const zaloAppIdSetting = await db.select()
@@ -52,7 +41,7 @@ router.get('/', async (req, res) => {
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     
     // Store code verifier in session
-    req.session.codeVerifier = codeVerifier;
+    (req.session as any).codeVerifier = codeVerifier;
     
     // Build Zalo authorization URL
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
@@ -74,7 +63,7 @@ router.get('/', async (req, res) => {
 router.get('/callback', async (req, res) => {
   try {
     const { code } = req.query;
-    const codeVerifier = req.session.codeVerifier;
+    const codeVerifier = (req.session as any).codeVerifier;
 
     if (!code || !codeVerifier) {
       console.error('Missing authorization code or code verifier');
@@ -360,7 +349,7 @@ router.get('/proxy-callback', async (req, res) => {
               window.opener.postMessage({
                 type: 'ZALO_OAUTH_ERROR',
                 error: 'callback_error',
-                details: '${error.message}'
+                details: '${(error as Error).message}'
               }, '*');
               window.close();
             } else {
@@ -370,7 +359,7 @@ router.get('/proxy-callback', async (req, res) => {
         </script>
       </head>
       <body>
-        <p>Có lỗi xảy ra khi xử lý callback: ${error.message}</p>
+        <p>Có lỗi xảy ra khi xử lý callback: ${(error as Error).message}</p>
       </body>
       </html>
     `);
