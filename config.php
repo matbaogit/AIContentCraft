@@ -1,7 +1,7 @@
 <?php
 // Zalo OAuth Configuration
 define('ZALO_APP_ID', '4127841001935001267');
-define('ZALO_APP_SECRET', 'YOUR_ZALO_APP_SECRET'); // Get from Zalo Developer Console
+define('ZALO_APP_SECRET', 'GET_FROM_ZALO_DEVELOPER_CONSOLE'); // Replace with actual secret
 define('ZALO_REDIRECT_URI', 'https://toolbox.vn/api/auth/zalo/callback');
 
 // CORS Headers for all API endpoints

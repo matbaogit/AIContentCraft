@@ -1,78 +1,46 @@
-# 🎯 FINAL DEPLOY SUMMARY
+# 🚀 FINAL DEPLOYMENT - Zalo OAuth Proxy
 
-## ✅ HOÀN THÀNH - Facebook Integration
-- **FacebookConnectModal**: Modal với 3 phương thức kết nối (OAuth tự động, nhập thủ công, demo test)
-- **Server-side OAuth Flow**: Giải quyết hoàn toàn CORS issues
-- **Enhanced UX**: Giao diện social connections cải thiện đáng kể
-- **Complete Documentation**: Tài liệu deployment chi tiết
+## ✅ Vấn đề đã được phát hiện:
+Từ curl test cho thấy redirect URI hiện tại là: `https://toolbox.vn/api/zalo-proxy/callback` (SAI)
+Cần phải là: `https://toolbox.vn/api/auth/zalo/callback` (ĐÚNG)
 
-## 📋 FILES ĐÃ TẠO CHO DEPLOY:
+## 📁 Các file cần re-deploy:
 
-### Core Files:
-- `client/src/components/facebook/FacebookConnectModal.tsx` - Modal chọn phương thức kết nối
-- `server/routes/facebook-auth.ts` - Server-side Facebook OAuth flow
-- `client/src/pages/demo/facebook-connect.tsx` - Trang test Facebook SDK
+### 1. **config.php** (ROOT)
+```php
+<?php
+// Zalo OAuth Configuration
+define('ZALO_APP_ID', '4127841001935001267');
+define('ZALO_APP_SECRET', 'GET_FROM_ZALO_DEVELOPER_CONSOLE'); // Replace with actual secret
+define('ZALO_REDIRECT_URI', 'https://toolbox.vn/api/auth/zalo/callback');
 
-### Documentation:
-- `READY_TO_DEPLOY.md` - Hướng dẫn deploy ngay lập tức ⭐
-- `DEPLOY_INSTRUCTIONS.md` - Chi tiết deployment options
-- `FACEBOOK_SETUP_GUIDE.md` - Setup Facebook App từ A-Z
-- `STEP_BY_STEP_DEPLOYMENT.md` - Deployment từng bước chi tiết
-- `vercel.json` - Vercel deployment configuration
-
-## 🚀 ĐỂ DEPLOY NGAY (3 bước đơn giản):
-
-### Bước 1: Git Commands
-```bash
-# Chạy trong Shell/Terminal
-rm -f .git/index.lock .git/refs/heads/*.lock
-git add -A
-git commit -m "feat: Complete Facebook OAuth integration and deployment setup"
-git push origin main
+// ... rest of config functions
+?>
 ```
 
-### Bước 2: Deploy Platform (Chọn 1)
+### 2. **api/zalo-proxy/auth.php** 
+- ✅ Đã đúng, sử dụng `ZALO_REDIRECT_URI` constant
 
-**VERCEL (Khuyến nghị):**
-1. Vào https://vercel.com/signup → Đăng nhập GitHub
-2. Import repository → Auto-detect Node.js
-3. Set environment variables:
-   ```
-   DATABASE_URL=postgresql://...
-   SESSION_SECRET=random-secret-key
-   FACEBOOK_APP_SECRET=your-facebook-secret
-   REPLIT_DOMAINS=your-app.vercel.app
-   ```
-4. Click Deploy → 2-3 phút là xong!
+### 3. **api/auth/zalo/callback.php**
+- ✅ Đã đúng
 
-### Bước 3: Database Setup
-1. Tạo Neon Database (free): https://neon.tech
-2. Copy connection string vào DATABASE_URL
-3. App tự động run migrations khi deploy
+## 🔧 Deployment Steps:
 
-## 📊 FACEBOOK APP SETUP:
-1. https://developers.facebook.com/ → Create App
-2. Facebook Login → Settings:
-   - Valid OAuth Redirect URIs: `https://your-app.vercel.app/api/auth/facebook/callback`
-3. Copy App Secret vào FACEBOOK_APP_SECRET
+1. **Replace config.php** trên toolbox.vn với version mới
+2. **Add ZALO_APP_SECRET** vào config.php
+3. **Ensure callback URL** trong Zalo Console: `https://toolbox.vn/api/auth/zalo/callback`
 
-## 🎯 TEST SAU KHI DEPLOY:
-1. Vào https://your-app.vercel.app/dashboard/social-connections
-2. "Tạo kết nối mới" → Facebook → "Chọn phương thức kết nối"
-3. Test "OAuth tự động" → Redirect đến Facebook → Authorize → Success!
+## 🧪 Test After Deploy:
 
-## ⚠️ LƯU Ý NHỎ:
-- Database có warning về `access_token` column nhưng không ảnh hưởng deployment
-- App vẫn chạy bình thường và Facebook integration hoạt động hoàn hảo
-- Warning sẽ tự biến mất khi deploy production với database mới
+```bash
+curl -I "https://toolbox.vn/api/zalo-proxy/auth?redirect_uri=test&app_domain=test"
+```
 
-## 🏆 KẾT QUẢ:
-- ✅ Multi-platform OAuth system
-- ✅ Production-ready architecture  
-- ✅ Comprehensive error handling
-- ✅ User-friendly interface
-- ✅ Complete documentation
+Should redirect to:
+```
+Location: https://oauth.zaloapp.com/v4/permission?app_id=4127841001935001267&redirect_uri=https%3A%2F%2Ftoolbox.vn%2Fapi%2Fauth%2Fzalo%2Fcallback
+```
 
-**Project 100% sẵn sàng cho production deployment! 🚀**
+**Key point**: `redirect_uri` phải là `/api/auth/zalo/callback` KHÔNG PHẢI `/api/zalo-proxy/callback`
 
-Chỉ cần chạy 3 git commands và chọn hosting platform là xong!
+Ready for re-deployment! 🎯
