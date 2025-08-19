@@ -43,12 +43,20 @@ router.get('/', async (req, res) => {
     // Store code verifier in session
     (req.session as any).codeVerifier = codeVerifier;
     
-    // Build Zalo authorization URL
+    // Build Zalo authorization URL - Use React route instead of static HTML
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
     authUrl.searchParams.set('app_id', zaloAppId);
-    authUrl.searchParams.set('redirect_uri', 'https://toolbox.vn/zalo-callback-redirect.html');
+    
+    // Use React route for both development and production
+    const callbackUrl = isDevelopment() 
+      ? `${getCurrentDomain()}/zalo-callback`
+      : 'https://toolbox.vn/zalo-callback';
+    
+    authUrl.searchParams.set('redirect_uri', callbackUrl);
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('state', crypto.randomBytes(16).toString('hex'));
+    
+    console.log('Using React callback URL:', callbackUrl);
 
     console.log('Redirecting to Zalo OAuth:', authUrl.toString());
     res.redirect(authUrl.toString());

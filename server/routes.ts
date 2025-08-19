@@ -6593,6 +6593,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
 </html>`);
   });
 
-  const httpServer = createServer(app);
   return httpServer;
 }

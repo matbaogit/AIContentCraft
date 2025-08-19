@@ -169,6 +169,10 @@ function Router() {
       {/* Demo routes */}
       <Route path="/demo/facebook-connect" component={FacebookConnect} />
       
+      {/* Zalo OAuth routes */}
+      <Route path="/zalo-callback" component={lazy(() => import("@/pages/ZaloCallback"))} />
+      <Route path="/zalo-test" component={lazy(() => import("@/pages/ZaloTest"))} />
+      
       {/* Public compliance pages */}  
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/data-deletion" component={DataDeletion} />
