@@ -13,7 +13,7 @@ $error = $_GET['error'] ?? '';
 
 // Handle OAuth error
 if ($error) {
-    $appDomain = $_SESSION['app_domain'] ?? 'https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev';
+    $appDomain = $_SESSION['app_domain'] ?? 'https://toolbox.vn';
     $errorUrl = $appDomain . '/auth?zalo_error=' . urlencode($error);
     error_log("Zalo OAuth Error: " . $error);
     header('Location: ' . $errorUrl);
