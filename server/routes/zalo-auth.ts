@@ -47,27 +47,24 @@ router.get('/', async (req, res) => {
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
     authUrl.searchParams.set('app_id', zaloAppId);
     
-    // Force production URL for toolbox.vn deployment
-    // Check if we're accessing through toolbox.vn domain
-    const isToolboxDomain = req.get('host')?.includes('toolbox.vn') || 
-                           req.get('x-forwarded-host')?.includes('toolbox.vn');
+    // CRITICAL FIX: Force production URL for toolbox.vn deployment
+    const callbackUrl = 'https://toolbox.vn/zalo-callback';
     
-    const callbackUrl = isToolboxDomain
-      ? 'https://toolbox.vn/zalo-callback'
-      : `${getCurrentDomain()}/zalo-callback`;
+    console.log('🔥🔥🔥 FORCED PRODUCTION CALLBACK URL 🔥🔥🔥');
+    console.log('CALLBACK URL FORCED TO:', callbackUrl);
+    console.log('🔥🔥🔥 NO ENVIRONMENT DETECTION 🔥🔥🔥');
     
     authUrl.searchParams.set('redirect_uri', callbackUrl);
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('state', crypto.randomBytes(16).toString('hex'));
     
     console.log('Using React callback URL:', callbackUrl);
-    console.log('Environment details:', { 
+    console.log('🎯 PRODUCTION FORCED CALLBACK:', callbackUrl);
+    console.log('Environment info (ignored):', { 
       isDev: isDevelopment(), 
       currentDomain: getCurrentDomain(),
       requestHost: req.get('host'),
-      forwardedHost: req.get('x-forwarded-host'),
-      isToolboxDomain,
-      finalCallbackUrl: callbackUrl
+      note: 'All environment detection bypassed for production'
     });
 
     console.log('Redirecting to Zalo OAuth:', authUrl.toString());

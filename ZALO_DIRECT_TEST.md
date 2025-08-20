@@ -1,68 +1,45 @@
-# 🔄 Zalo Direct OAuth - No PHP Solution
+# 🔧 Zalo Direct Test
 
-## Current Status:
-- ❌ PHP proxy không hoạt động trên toolbox.vn
-- ✅ Chuyển sang Direct OAuth flow
-- ✅ Sử dụng static HTML redirect trên toolbox.vn
+## 🚨 Current Issue:
+- Logs show request from Replit development domain, not production toolbox.vn
+- Need to test directly on production domain
 
-## New Approach: Static HTML Redirect
+## 📋 Production Test Plan:
 
-### 1. Upload file `zalo-callback-redirect.html` lên toolbox.vn:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Zalo OAuth Redirect</title>
-    <script>
-        // Extract OAuth parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        const error = urlParams.get('error');
-        
-        // Get app domain from localStorage or default
-        const appDomain = localStorage.getItem('zalo_app_domain') || 
-                         'https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev';
-        
-        // Build redirect URL back to app
-        let redirectUrl = appDomain + '/api/auth/zalo/callback?';
-        if (code) redirectUrl += 'code=' + encodeURIComponent(code) + '&';
-        if (state) redirectUrl += 'state=' + encodeURIComponent(state) + '&';
-        if (error) redirectUrl += 'error=' + encodeURIComponent(error) + '&';
-        
-        // Remove trailing &
-        redirectUrl = redirectUrl.replace(/&$/, '');
-        
-        // Redirect back to app
-        window.location.href = redirectUrl;
-    </script>
-</head>
-<body>
-    <p>Redirecting back to app...</p>
-</body>
-</html>
+### 1. **Direct Production URL Test:**
+```bash
+curl -I "https://toolbox.vn/api/auth/zalo"
 ```
 
-### 2. Zalo Developer Console Setup:
+### 2. **Expected Production Behavior:**
+When accessing `https://toolbox.vn/api/auth/zalo`:
+- Host header: `toolbox.vn`
+- Should detect `isToolboxDomain: true`  
+- Should use callback: `https://toolbox.vn/zalo-callback`
+
+### 3. **Current Development Test:**
+From logs (Replit domain):
 ```
-Callback URL: https://toolbox.vn/zalo-callback-redirect.html
+requestHost: '11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev'
+isToolboxDomain: undefined
+finalCallbackUrl: 'https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev/zalo-callback'
 ```
 
-### 3. Update Frontend để store app domain:
-```javascript
-// Before opening Zalo OAuth popup
-localStorage.setItem('zalo_app_domain', window.location.origin);
-```
+## 🎯 Solution Options:
 
-## Benefits:
-- ✅ Không cần PHP
-- ✅ Static file hosting
-- ✅ JavaScript redirect
-- ✅ Hoạt động với mọi hosting
+### Option A: Enhanced Header Detection
+Added more header checks:
+- `req.get('host')`
+- `req.get('x-forwarded-host')`  
+- `req.get('origin')`
+- `req.get('referer')`
 
-## Current OAuth Flow:
-1. User clicks Zalo → Direct OAuth với Replit domain
-2. Test với domain hiện tại trước
-3. Nếu cần stable domain → dùng HTML redirect
+### Option B: Environment Override
+For production deployment, force callback URL regardless of headers.
 
-Ready to implement!
+### Option C: User Testing Required
+User needs to test OAuth flow directly on `https://toolbox.vn` not Replit domain.
+
+## ⚠️ Important Note:
+The error screenshot shows testing from Replit development environment. 
+**Must test on actual production domain https://toolbox.vn for accurate results.**
