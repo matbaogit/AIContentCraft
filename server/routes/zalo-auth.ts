@@ -57,6 +57,11 @@ router.get('/', async (req, res) => {
     authUrl.searchParams.set('state', crypto.randomBytes(16).toString('hex'));
     
     console.log('Using React callback URL:', callbackUrl);
+    console.log('Environment details:', { 
+      isDev: isDevelopment(), 
+      currentDomain: getCurrentDomain(),
+      production: 'https://toolbox.vn/zalo-callback'
+    });
 
     console.log('Redirecting to Zalo OAuth:', authUrl.toString());
     res.redirect(authUrl.toString());
