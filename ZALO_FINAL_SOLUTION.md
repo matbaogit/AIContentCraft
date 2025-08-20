@@ -1,55 +1,49 @@
-# 🎯 Zalo OAuth Final Solution - No PHP Required
+# 🎯 Zalo Final Solution - Domain-Based Detection
 
-## ✅ Completed Changes:
+## 🚨 Root Issue Identified:
+- `REPLIT_DOMAINS` environment variable doesn't contain `toolbox.vn` even in production
+- Environment detection was failing to identify production correctly
+- Result: Wrong callback URL causing -14003 error
 
-### 1. **Removed PHP Dependencies**
-- ❌ Loại bỏ hoàn toàn PHP proxy system
-- ✅ Chuyển sang Direct OAuth flow
-- ✅ Fixed TypeScript errors trong zalo-auth.ts
+## ✅ Final Solution Applied:
 
-### 2. **Static HTML Redirect Solution**
-Created `zalo-callback-redirect.html` để upload lên toolbox.vn:
-- ✅ Pure HTML + JavaScript
-- ✅ No server-side requirements
-- ✅ Automatic redirect back to app
+### New Approach: Request-Based Domain Detection
+Instead of relying on environment variables, now using HTTP request headers:
 
-### 3. **Updated Frontend**
-- ✅ Store app domain in localStorage
-- ✅ Support stable redirect từ toolbox.vn
+```typescript
+// Check if we're accessing through toolbox.vn domain  
+const isToolboxDomain = req.get('host')?.includes('toolbox.vn') || 
+                       req.get('x-forwarded-host')?.includes('toolbox.vn');
 
-## 📁 Files to Upload to toolbox.vn:
-
-### Single File Upload:
-```
-toolbox.vn/zalo-callback-redirect.html
+const callbackUrl = isToolboxDomain
+  ? 'https://toolbox.vn/zalo-callback'  // Production
+  : `${getCurrentDomain()}/zalo-callback`; // Development
 ```
 
-## 🔧 Setup Instructions:
+### Why This Works:
+1. **Request Host Header**: `req.get('host')` contains the actual domain user is accessing
+2. **Forwarded Host**: `req.get('x-forwarded-host')` handles proxy scenarios
+3. **Direct Detection**: No dependency on environment variables
+4. **Accurate**: Always uses correct URL for actual domain
 
-### Step 1: Upload HTML File
-Upload `zalo-callback-redirect.html` to root of toolbox.vn
+## 📊 Expected Results:
 
-### Step 2: Update Zalo Developer Console
+### When accessing via `toolbox.vn`:
 ```
-Callback URL: https://toolbox.vn/zalo-callback-redirect.html
+Host: toolbox.vn
+Callback URL: https://toolbox.vn/zalo-callback ✅
 ```
 
-### Step 3: Test Flow
-1. Click Zalo button → Direct OAuth
-2. Zalo redirects to toolbox.vn/zalo-callback-redirect.html
-3. HTML file redirects back to app with OAuth code
+### When accessing via Replit domain:
+```
+Host: xxx.replit.dev  
+Callback URL: https://xxx.replit.dev/zalo-callback ✅
+```
 
-## 🚀 Benefits:
-- ✅ No PHP required
-- ✅ Works with any static hosting
-- ✅ Simple single file upload
-- ✅ Stable production URL
-- ✅ Automatic domain detection
+## 🚀 Test Plan:
+1. Restart application to apply changes
+2. Test OAuth flow on toolbox.vn
+3. Verify logs show correct callback URL
+4. Confirm Zalo accepts the callback
 
-## 🎯 Current Status:
-- ✅ Code ready and tested
-- ✅ HTML redirect file created
-- ⏳ Upload file to toolbox.vn
-- ⏳ Update Zalo callback URL
-
-Ready to go live!
+**This should finally resolve the -14003 error.**

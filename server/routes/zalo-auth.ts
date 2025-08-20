@@ -47,10 +47,14 @@ router.get('/', async (req, res) => {
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
     authUrl.searchParams.set('app_id', zaloAppId);
     
-    // Use React route for both development and production
-    const callbackUrl = isDevelopment() 
-      ? `${getCurrentDomain()}/zalo-callback`
-      : 'https://toolbox.vn/zalo-callback';
+    // Force production URL for toolbox.vn deployment
+    // Check if we're accessing through toolbox.vn domain
+    const isToolboxDomain = req.get('host')?.includes('toolbox.vn') || 
+                           req.get('x-forwarded-host')?.includes('toolbox.vn');
+    
+    const callbackUrl = isToolboxDomain
+      ? 'https://toolbox.vn/zalo-callback'
+      : `${getCurrentDomain()}/zalo-callback`;
     
     authUrl.searchParams.set('redirect_uri', callbackUrl);
     authUrl.searchParams.set('code_challenge', codeChallenge);
@@ -60,7 +64,10 @@ router.get('/', async (req, res) => {
     console.log('Environment details:', { 
       isDev: isDevelopment(), 
       currentDomain: getCurrentDomain(),
-      production: 'https://toolbox.vn/zalo-callback'
+      requestHost: req.get('host'),
+      forwardedHost: req.get('x-forwarded-host'),
+      isToolboxDomain,
+      finalCallbackUrl: callbackUrl
     });
 
     console.log('Redirecting to Zalo OAuth:', authUrl.toString());

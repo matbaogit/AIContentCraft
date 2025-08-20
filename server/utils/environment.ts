@@ -3,7 +3,14 @@
  */
 
 export function isDevelopment(): boolean {
+  // Check if we're running on toolbox.vn (production)
   const hostname = process.env.REPLIT_DOMAINS || 'localhost';
+  
+  // If hostname contains toolbox.vn, it's production
+  if (hostname.includes('toolbox.vn')) {
+    return false;
+  }
+  
   return hostname.includes('replit.dev') || hostname.includes('localhost');
 }
 
@@ -12,14 +19,21 @@ export function isProduction(): boolean {
 }
 
 export function getCurrentDomain(): string {
+  const replitDomains = process.env.REPLIT_DOMAINS;
+  
+  // Check if running on toolbox.vn (production)
+  if (replitDomains && replitDomains.includes('toolbox.vn')) {
+    return 'https://toolbox.vn';
+  }
+  
   if (isDevelopment()) {
-    const replitDomains = process.env.REPLIT_DOMAINS;
     if (replitDomains) {
       return `https://${replitDomains.split(',')[0]}`;
     }
     return 'http://localhost:5000';
   }
-  // Production domain
+  
+  // Fallback production domain
   return 'https://toolbox.vn';
 }
 

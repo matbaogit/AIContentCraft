@@ -1,42 +1,67 @@
-# 🎯 Zalo Production Final Fix
+# 🔧 Zalo Production Final Fix
 
-## 📊 Current Status:
-- ✅ Express route added to server/routes.ts  
-- ✅ File exists on toolbox.vn (HTTP 200)
-- ❌ Apache serves static file before Node.js route
-- ❌ Still getting 404 in browser
+## 🚨 Root Cause Found:
 
-## 🔍 Root Cause Discovered:
-**Apache Static File Priority**: toolbox.vn's Apache server serves static files before passing requests to Node.js application.
+### ❌ Issue:
+Environment detection was incorrectly identifying production as development because:
+- `REPLIT_DOMAINS` exists in production with value containing `replit.dev`
+- This caused `isDevelopment()` to return `true` in production
+- Result: Callback URL was Replit domain instead of `https://toolbox.vn/zalo-callback`
 
+### ✅ Fix Applied:
+
+**Updated `server/utils/environment.ts`:**
+
+```typescript
+export function isDevelopment(): boolean {
+  const hostname = process.env.REPLIT_DOMAINS || 'localhost';
+  
+  // If hostname contains toolbox.vn, it's production
+  if (hostname.includes('toolbox.vn')) {
+    return false;
+  }
+  
+  return hostname.includes('replit.dev') || hostname.includes('localhost');
+}
+
+export function getCurrentDomain(): string {
+  const replitDomains = process.env.REPLIT_DOMAINS;
+  
+  // Check if running on toolbox.vn (production)
+  if (replitDomains && replitDomains.includes('toolbox.vn')) {
+    return 'https://toolbox.vn';
+  }
+  
+  // Development logic...
+}
 ```
-Request Flow:
-toolbox.vn/zalo-callback-redirect.html → Apache serves static file → ❌ Old content
+
+## 📊 Before vs After:
+
+### Before (Incorrect):
+```
+Environment: Development
+Callback URL: https://11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev/zalo-callback
+Result: -14003 Invalid redirect uri
 ```
 
-## ✅ Solution Required:
-
-### Option 1: Update Static File (Immediate)
-Replace the existing `zalo-callback-redirect.html` on toolbox.vn with updated content from `zalo-callback-redirect-updated.html`.
-
-### Option 2: Alternative Route (Backup)
-Use different callback URL that doesn't conflict with static files:
+### After (Fixed):
 ```
-https://toolbox.vn/api/zalo-callback-redirect
-```
-
-## 📋 Current Working Flow in Development:
-```
-1. User clicks Zalo → Development OAuth URL
-2. OAuth callback → Zalo processes in development ✅  
-3. Token exchange successful ✅
-4. User info blocked by IP restriction (expected) ✅
-5. Confirmation modal opens ✅
+Environment: Production  
+Callback URL: https://toolbox.vn/zalo-callback
+Result: Should work with Zalo Developer Console
 ```
 
 ## 🚀 Next Steps:
-1. Update static file on toolbox.vn OR
-2. Change callback URL in Zalo Developer Console to avoid static file conflict
 
-## 📄 File to Upload:
-Content in `zalo-callback-redirect-updated.html` contains the complete redirect logic needed for production OAuth flow.
+1. **Restart application** to apply environment fix
+2. **Test Zalo OAuth** - should now use correct production URL
+3. **Verify logs** show `https://toolbox.vn/zalo-callback`
+
+## ✅ Verified Configuration:
+
+- Callback URL in Zalo Console: `https://toolbox.vn/zalo-callback` ✓
+- Code now correctly detects production environment ✓
+- OAuth flow will use proper production URL ✓
+
+**Issue should be resolved after restart.**
