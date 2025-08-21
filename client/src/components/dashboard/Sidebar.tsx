@@ -72,19 +72,38 @@ export function Sidebar() {
   const [location] = useLocation();
   
   // Fetch dynamic menu items from admin configuration
-  const { data: menuItemsResponse, isLoading: isLoadingMenuItems } = useQuery<{success: boolean, data: SidebarMenuItem[]}>({
+  const { data: menuItemsResponse, isLoading: isLoadingMenuItems, error: menuError } = useQuery<{success: boolean, data: SidebarMenuItem[]}>({
     queryKey: ["/api/sidebar-menu"],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 3, // Retry on failure
+    retryDelay: 1000, // 1 second delay between retries
   });
 
   const menuItems = menuItemsResponse?.data || [];
+  
+  // Debug error logging
+  if (menuError) {
+    console.error('Sidebar menu API error:', menuError);
+  }
   
   // Lấy thông tin người dùng từ user object
   // Phát hiện nếu user là một đối tượng có data trong nó (từ API response)
   const userData = user && typeof user === 'object' && 'data' in user ? user.data : user;
 
+  // Fallback menu items if API fails
+  const fallbackMenuItems: SidebarMenuItem[] = [
+    { id: 1, key: 'dashboard', label: 'Tổng quan', labelEn: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard', isVisible: true, sortOrder: 1, role: 'user' },
+    { id: 2, key: 'create-content', label: 'Tạo nội dung', labelEn: 'Create Content', path: '/dashboard/create-content', icon: 'PenTool', isVisible: true, sortOrder: 2, role: 'user' },
+    { id: 3, key: 'my-articles', label: 'Bài viết của tôi', labelEn: 'My Articles', path: '/dashboard/my-articles', icon: 'FileText', isVisible: true, sortOrder: 3, role: 'user' },
+    { id: 4, key: 'credits', label: 'Credits', labelEn: 'Credits', path: '/dashboard/credits', icon: 'Coins', isVisible: true, sortOrder: 4, role: 'user' },
+    { id: 5, key: 'settings', label: 'Cài đặt', labelEn: 'Settings', path: '/dashboard/settings', icon: 'Settings', isVisible: true, sortOrder: 5, role: 'user' }
+  ];
+
+  // Use API menu items if available, otherwise use fallback
+  const activeMenuItems = menuItems.length > 0 ? menuItems : fallbackMenuItems;
+
   // Convert dynamic menu items to sidebar links
-  const links: SidebarLink[] = menuItems.map(item => ({
+  const links: SidebarLink[] = activeMenuItems.map(item => ({
     href: item.path || "#",
     label: language === "vi" ? item.label : (item.labelEn || item.label),
     icon: getIconComponent(item.icon)
@@ -94,11 +113,11 @@ export function Sidebar() {
     logoutMutation.mutate();
   };
 
-  // Debug logging
-  console.log('Sidebar render:', { userData, menuItems: menuItems.length });
 
+
+  // Always render sidebar even if menu items fail to load
   return (
-    <div className="w-64 bg-sidebar dark:bg-card h-screen flex flex-col fixed left-0 top-0 z-10">
+    <div className="w-64 bg-sidebar dark:bg-card h-screen flex flex-col fixed left-0 top-0 z-10 border-r border-gray-200 dark:border-gray-700">
       <div className="p-4 flex items-center border-b border-sidebar-border dark:border-border">
         <ScrollIcon className="h-8 w-auto text-white dark:text-secondary-100" />
         <span className="ml-2 font-bold dark:text-secondary-100 font-heading text-[28px] text-[#ffffff]">

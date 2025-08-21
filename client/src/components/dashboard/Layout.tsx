@@ -13,8 +13,7 @@ export function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const { t } = useLanguage();
   const isMobile = useMobile();
 
-  // Debug logging
-  console.log('DashboardLayout render:', { isMobile, shouldShowSidebar: !isMobile });
+
 
   return (
     <div className="flex h-screen bg-secondary-50 dark:bg-background">
