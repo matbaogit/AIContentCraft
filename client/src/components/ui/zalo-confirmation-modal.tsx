@@ -171,13 +171,13 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
   const renderZaloInfo = () => {
     if (!zaloData) return null;
 
-    const { userInfo } = zaloData;
+    const { userInfo, token } = zaloData;
     const isIPRestricted = userInfo.error === -501;
 
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-lg">Thông tin từ Zalo</h3>
+          <h3 className="font-semibold text-lg">🔍 Toàn bộ dữ liệu từ Zalo API</h3>
           {isIPRestricted ? (
             <Badge variant="secondary" className="gap-1">
               <AlertTriangle className="w-3 h-3" />
@@ -201,17 +201,65 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 gap-3 text-sm">
-          {Object.entries(userInfo).map(([key, value]) => (
-            <div key={key} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-              <div className="font-medium text-muted-foreground min-w-[80px] capitalize">
-                {key}:
+        {/* Token Information */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-blue-600 dark:text-blue-400">🔑 Token Information</h4>
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            {Object.entries(token || {}).map(([key, value]) => (
+              <div key={`token-${key}`} className="flex items-start gap-3 p-2 rounded-md border bg-blue-50 dark:bg-blue-950/30">
+                <div className="font-medium text-blue-600 dark:text-blue-400 min-w-[120px]">
+                  {key}:
+                </div>
+                <div className="flex-1 break-all text-xs">
+                  {key.includes('token') && typeof value === 'string' && value.length > 20 
+                    ? `${value.substring(0, 20)}...` 
+                    : formatZaloField(key, value)}
+                </div>
               </div>
-              <div className="flex-1 break-all">
-                {formatZaloField(key, value)}
+            ))}
+          </div>
+        </div>
+
+        {/* User Information */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-green-600 dark:text-green-400">👤 User Information</h4>
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            {Object.entries(userInfo || {}).map(([key, value]) => (
+              <div key={`user-${key}`} className="flex items-start gap-3 p-2 rounded-md border bg-green-50 dark:bg-green-950/30">
+                <div className="font-medium text-green-600 dark:text-green-400 min-w-[120px]">
+                  {key}:
+                </div>
+                <div className="flex-1 break-all">
+                  {formatZaloField(key, value)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Session Metadata */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-purple-600 dark:text-purple-400">📊 Session Metadata</h4>
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            <div className="flex items-start gap-3 p-2 rounded-md border bg-purple-50 dark:bg-purple-950/30">
+              <div className="font-medium text-purple-600 dark:text-purple-400 min-w-[120px]">
+                timestamp:
+              </div>
+              <div className="flex-1">
+                {new Date(zaloData.timestamp).toLocaleString('vi-VN')}
               </div>
             </div>
-          ))}
+            <div className="flex items-start gap-3 p-2 rounded-md border bg-purple-50 dark:bg-purple-950/30">
+              <div className="font-medium text-purple-600 dark:text-purple-400 min-w-[120px]">
+                raw_data:
+              </div>
+              <div className="flex-1 text-xs">
+                <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-auto max-h-32 text-xs">
+                  {JSON.stringify(zaloData, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
