@@ -6548,8 +6548,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store in session
       (req.session as any).codeVerifier = codeVerifier;
       
-      // FORCE PRODUCTION CALLBACK URL
-      const callbackUrl = 'https://toolbox.vn/zalo-callback';
+      // FORCE PRODUCTION CALLBACK URL - Use server endpoint not client route
+      const callbackUrl = 'https://toolbox.vn/api/auth/zalo/callback';
       
       const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
       authUrl.searchParams.set('app_id', zaloAppId);

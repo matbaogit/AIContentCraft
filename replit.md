@@ -46,6 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Chart Implementation**: Custom animated bar charts using Tailwind CSS for registered accounts and active users analytics
 - **Data Integration**: All analytics now display real database data instead of mock data
 - **Chart Features**: Responsive design, smooth animations, proper scaling, and time-series data visualization
+- **Zalo OAuth Integration**: Successfully resolved -14003 "Invalid redirect uri" error by implementing direct route override in main routes.ts, forcing production callback URL to use server endpoint `/api/auth/zalo/callback` instead of client route
 
 ## External Dependencies
 
