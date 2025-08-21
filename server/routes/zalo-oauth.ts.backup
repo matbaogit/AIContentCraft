@@ -62,11 +62,8 @@ router.get('/login', async (req: Request, res: Response) => {
       timestamp: Date.now()
     };
     
-    // Build redirect URI based on environment
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://toolbox.vn' 
-      : 'http://localhost:5000';
-    const redirectUri = `${baseUrl}/api/zalo-oauth/callback`;
+    // FORCE PRODUCTION URL - Override environment detection
+    const redirectUri = 'https://toolbox.vn/zalo-callback';
     
     // Build Zalo authorization URL
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');

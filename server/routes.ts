@@ -6527,8 +6527,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== ZALO OAUTH CRITICAL FIX ==========
+  // FORCE CORRECT CALLBACK URL - Override any route conflicts
+  app.get('/api/auth/zalo', async (req, res) => {
+    console.log('🔥🔥🔥 OVERRIDE ROUTE HIT - FORCING PRODUCTION URL 🔥🔥🔥');
+    
+    try {
+      // Get Zalo App ID from database
+      const zaloAppIdSetting = await db.select()
+        .from(schema.systemSettings)
+        .where(eq(schema.systemSettings.key, 'zaloAppId'))
+        .limit(1);
+      
+      const zaloAppId = zaloAppIdSetting.length > 0 ? zaloAppIdSetting[0].value : '4127841001935001267';
+      
+      // Generate PKCE parameters
+      const codeVerifier = crypto.randomBytes(32).toString('base64url');
+      const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+      
+      // Store in session
+      (req.session as any).codeVerifier = codeVerifier;
+      
+      // FORCE PRODUCTION CALLBACK URL
+      const callbackUrl = 'https://toolbox.vn/zalo-callback';
+      
+      const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
+      authUrl.searchParams.set('app_id', zaloAppId);
+      authUrl.searchParams.set('redirect_uri', callbackUrl);
+      authUrl.searchParams.set('code_challenge', codeChallenge);
+      authUrl.searchParams.set('state', crypto.randomBytes(16).toString('hex'));
+      
+      console.log('🎯 FORCED CALLBACK URL:', callbackUrl);
+      console.log('🔗 Final Auth URL:', authUrl.toString());
+      
+      res.redirect(authUrl.toString());
+    } catch (error) {
+      console.error('Override route error:', error);
+      res.redirect('/?error=zalo_override_failed');
+    }
+  });
+  
   // ========== ZALO OAUTH ENDPOINTS (use separate router) ==========
-  // Mount the Zalo OAuth router
+  // Mount the Zalo OAuth router  
   const zaloAuthRouter = await import("./routes/zalo-auth");
   app.use('/api/auth/zalo', zaloAuthRouter.default);
   

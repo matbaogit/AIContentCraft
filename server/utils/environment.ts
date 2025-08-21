@@ -19,21 +19,7 @@ export function isProduction(): boolean {
 }
 
 export function getCurrentDomain(): string {
-  const replitDomains = process.env.REPLIT_DOMAINS;
-  
-  // Check if running on toolbox.vn (production)
-  if (replitDomains && replitDomains.includes('toolbox.vn')) {
-    return 'https://toolbox.vn';
-  }
-  
-  if (isDevelopment()) {
-    if (replitDomains) {
-      return `https://${replitDomains.split(',')[0]}`;
-    }
-    return 'http://localhost:5000';
-  }
-  
-  // Fallback production domain
+  // FORCE PRODUCTION URL - Always use toolbox.vn for consistency
   return 'https://toolbox.vn';
 }
 

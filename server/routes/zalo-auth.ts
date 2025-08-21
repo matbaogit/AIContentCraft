@@ -10,6 +10,7 @@ const router = Router();
 
 // GET /api/auth/zalo - Start Zalo OAuth
 router.get('/', async (req, res) => {
+  console.log('🚨🚨🚨 MAIN ZALO AUTH ROUTE HIT - zalo-auth.ts 🚨🚨🚨');
   console.log('=== ZALO OAUTH START ===');
   console.log('Environment:', { isDev: isDevelopment(), currentDomain: getCurrentDomain() });
   console.log('Session:', req.session);

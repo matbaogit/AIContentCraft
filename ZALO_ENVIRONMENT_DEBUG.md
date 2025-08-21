@@ -1,32 +1,44 @@
-# 🔍 Zalo Environment Debug Results
+# 🔧 Zalo Environment Debug
 
-## 🚨 Current Situation:
+## 🚨 Current Issue:
+Despite multiple fixes, callback URL still returns `localhost:5000` instead of `toolbox.vn`
 
-### Environment Detection Issue:
-- **REPLIT_DOMAINS**: `11a56b9f-4269-48a7-b12d-cde3c89de60d-00-28s4cntgjrwsd.riker.replit.dev`
-- **Expected in Production**: Should contain `toolbox.vn`
-- **Actual Result**: Still detecting as development
+## ✅ Fixes Applied:
+1. **Main Route Fixed**: `server/routes/zalo-auth.ts` → Force production URL
+2. **Environment Utils Fixed**: `server/utils/environment.ts` → Always return `toolbox.vn`
+3. **Backup Files Removed**: Moved conflicting routes to `.backup` files
+4. **OAuth Routes Fixed**: Updated all `zalo-oauth.ts`, `zalo-auth-working.ts` files
 
-## 🔧 Alternative Fix Strategy:
+## 🔍 Debugging Steps:
 
-Since `REPLIT_DOMAINS` may not contain `toolbox.vn` in production, I need to use a different detection method.
-
-### Option 1: Check for Production Flag
-Use explicit environment variable or domain check.
-
-### Option 2: Force Production URL
-Override the callback URL generation for toolbox.vn deployment.
-
-### Option 3: Use Request Host Header
-Check the incoming request host to determine environment.
-
-## 🚀 Immediate Solution:
-
-Force production URL when deployed to avoid environment detection issues.
-
-```typescript
-// Force production URL for toolbox.vn deployment
-const callbackUrl = 'https://toolbox.vn/zalo-callback';
+### 1. Check Route Response:
+```bash
+curl -s "https://toolbox.vn/api/auth/zalo" 2>&1 | head -5
 ```
 
-This bypasses environment detection entirely for toolbox.vn deployment.
+### 2. Expected vs Actual:
+**Expected:**
+```
+redirect_uri=https%3A%2F%2Ftoolbox.vn%2Fzalo-callback
+```
+
+**Actual (Still Wrong):**
+```  
+redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fzalo-callback
+```
+
+## 🎯 Potential Root Causes:
+
+1. **Route Caching**: Server might be caching old route responses
+2. **Multiple Route Handlers**: Could have route conflicts still active
+3. **Environment Variable Override**: Some env var might be forcing localhost
+4. **Production vs Development**: Environment detection logic might be wrong
+
+## 🚀 Next Steps:
+1. Restart application completely
+2. Test immediately after restart
+3. Check logs for environment detection
+4. Verify no route conflicts exist
+5. Manually test production URL generation
+
+**Goal: Get `https://toolbox.vn/zalo-callback` as redirect_uri**

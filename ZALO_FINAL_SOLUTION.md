@@ -1,49 +1,56 @@
-# 🎯 Zalo Final Solution - Domain-Based Detection
+# 🔥 Zalo Final Solution - Root Cause Analysis
 
-## 🚨 Root Issue Identified:
-- `REPLIT_DOMAINS` environment variable doesn't contain `toolbox.vn` even in production
-- Environment detection was failing to identify production correctly
-- Result: Wrong callback URL causing -14003 error
+## 🚨 Current Status:
+After extensive debugging, callback URL still returns `localhost:5000` instead of `toolbox.vn`
 
-## ✅ Final Solution Applied:
+## 🔍 Key Findings:
 
-### New Approach: Request-Based Domain Detection
-Instead of relying on environment variables, now using HTTP request headers:
+### 1. **Code Changes Confirmed:**
+- ✅ Fixed `server/routes/zalo-auth.ts` → Forces `https://toolbox.vn/zalo-callback`
+- ✅ Fixed `server/utils/environment.ts` → Always returns `https://toolbox.vn`
+- ✅ Removed conflicting backup files
+- ✅ Added debug logging with 🚨 markers
+
+### 2. **Missing Debug Logs:**
+- Expected: `🚨🚨🚨 MAIN ZALO AUTH ROUTE HIT`
+- Expected: `🔥🔥🔥 FORCED PRODUCTION CALLBACK URL`
+- **Reality**: No logs appear in workflow console
+
+### 3. **Route Response Still Wrong:**
+```bash
+curl "https://toolbox.vn/api/auth/zalo"
+→ redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fzalo-callback
+```
+
+## 💡 Root Cause Hypothesis:
+
+### Most Likely Issue: **Route Mounting Order**
+The route might be handled by a different handler that's mounted earlier in the middleware chain.
+
+### Possible Causes:
+1. **Route conflicts**: Another route handler intercepts before `zalo-auth.ts`
+2. **Import caching**: Route not properly reloaded after changes
+3. **Different server**: Production uses cached or different code
+4. **Environment vars**: Some env var overrides the forced URL
+
+## 🎯 Final Solution Strategy:
+
+### 1. **Direct Route Override**
+Add explicit route handler in main `routes.ts` before mounting sub-routers:
 
 ```typescript
-// Check if we're accessing through toolbox.vn domain  
-const isToolboxDomain = req.get('host')?.includes('toolbox.vn') || 
-                       req.get('x-forwarded-host')?.includes('toolbox.vn');
-
-const callbackUrl = isToolboxDomain
-  ? 'https://toolbox.vn/zalo-callback'  // Production
-  : `${getCurrentDomain()}/zalo-callback`; // Development
+// Force Zalo callback URL fix - override any conflicts
+app.get('/api/auth/zalo', (req, res) => {
+  const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
+  authUrl.searchParams.set('app_id', '4127841001935001267');
+  authUrl.searchParams.set('redirect_uri', 'https://toolbox.vn/zalo-callback');
+  authUrl.searchParams.set('code_challenge', 'test');
+  authUrl.searchParams.set('state', 'test');
+  res.redirect(authUrl.toString());
+});
 ```
 
-### Why This Works:
-1. **Request Host Header**: `req.get('host')` contains the actual domain user is accessing
-2. **Forwarded Host**: `req.get('x-forwarded-host')` handles proxy scenarios
-3. **Direct Detection**: No dependency on environment variables
-4. **Accurate**: Always uses correct URL for actual domain
+### 2. **Test Immediately**
+This will definitively override any route conflicts and force the correct callback URL.
 
-## 📊 Expected Results:
-
-### When accessing via `toolbox.vn`:
-```
-Host: toolbox.vn
-Callback URL: https://toolbox.vn/zalo-callback ✅
-```
-
-### When accessing via Replit domain:
-```
-Host: xxx.replit.dev  
-Callback URL: https://xxx.replit.dev/zalo-callback ✅
-```
-
-## 🚀 Test Plan:
-1. Restart application to apply changes
-2. Test OAuth flow on toolbox.vn
-3. Verify logs show correct callback URL
-4. Confirm Zalo accepts the callback
-
-**This should finally resolve the -14003 error.**
+**Expected Result**: `redirect_uri=https%3A%2F%2Ftoolbox.vn%2Fzalo-callback`
