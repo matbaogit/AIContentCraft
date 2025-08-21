@@ -421,9 +421,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = req.user.id;
+      console.log('Dashboard stats - userId:', userId);
       
       // Get user's credit balance
       const creditBalance = await storage.getUserCredits(userId);
+      console.log('Dashboard stats - creditBalance:', creditBalance);
       
       // Get user's articles
       const { articles, total: totalArticles } = await storage.getArticlesByUser(userId, 1, 0);

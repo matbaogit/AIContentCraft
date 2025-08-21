@@ -675,7 +675,9 @@ class DatabaseStorage implements IStorage {
   
   // Credit transactions
   async getUserCredits(userId: number): Promise<number> {
+    console.log('getUserCredits - userId:', userId);
     const user = await this.getUser(userId);
+    console.log('getUserCredits - user:', user ? { id: user.id, credits: user.credits } : 'not found');
     return user?.credits || 0;
   }
   
