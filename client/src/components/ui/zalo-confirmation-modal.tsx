@@ -75,11 +75,11 @@ export function ZaloConfirmationModal({ isOpen, onClose, onSuccess }: ZaloConfir
           
           // Pre-fill form with Zalo data if available
           if (data.userInfo?.name) {
-            console.log('Pre-filling form with name:', data.userInfo.name);
+            console.log('Pre-filling form with Zalo name:', data.userInfo.name);
             setFormData(prev => ({
               ...prev,
-              fullName: data.userInfo.name,
-              email: data.userInfo.email || ''
+              fullName: data.userInfo.name, // Use Zalo name directly
+              email: '' // Leave email empty as requested
             }));
           } else {
             console.log('No userInfo.name found in data');

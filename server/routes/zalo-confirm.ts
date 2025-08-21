@@ -61,13 +61,16 @@ router.post('/confirm', async (req, res) => {
       // Full Zalo info available (production Vietnam IP)
       console.log('Creating user with full Zalo info');
       
+      // Use Zalo name as fullName, or fallback to user input
+      const zaloName = zaloData.userInfo.name || userInfo.fullName.trim();
+      
       userData = {
         ...userData,
-        username: `zalo_${zaloData.userInfo.id}`,
-        fullName: userInfo.fullName.trim(),
-        firstName: userInfo.fullName.trim().split(' ')[0] || null,
-        lastName: userInfo.fullName.trim().split(' ').slice(1).join(' ') || null,
-        email: userInfo.email || `zalo_${zaloData.userInfo.id}@zalo.user`,
+        username: zaloData.userInfo.id, // Use Zalo ID directly as username
+        fullName: zaloName,
+        firstName: zaloName.split(' ')[0] || null,
+        lastName: zaloName.split(' ').slice(1).join(' ') || null,
+        email: userInfo.email || null, // Leave email empty if not provided by user
         zaloId: zaloData.userInfo.id,
         avatar: zaloData.userInfo.picture?.data?.url || null,
         profileImageUrl: zaloData.userInfo.picture?.data?.url || null,
@@ -92,10 +95,10 @@ router.post('/confirm', async (req, res) => {
       };
     }
 
-    // Check if user already exists
+    // Check if user already exists by username (Zalo ID)
     const existingUser = await db.select()
       .from(schema.users)
-      .where(eq(schema.users.zaloId, userData.zaloId))
+      .where(eq(schema.users.username, userData.username))
       .limit(1);
 
     if (existingUser.length > 0) {
@@ -128,10 +131,10 @@ router.post('/confirm', async (req, res) => {
 
     // Create new user
     console.log('Creating new Zalo user with data:', {
-      username: userData.username,
-      fullName: userData.fullName,
-      zaloId: userData.zaloId,
-      email: userData.email
+      username: userData.username, // This is the Zalo ID
+      fullName: userData.fullName,  // This is the Zalo name
+      email: userData.email,        // This is user input or null
+      avatar: userData.avatar       // This is the Zalo picture URL
     });
 
     const [newUser] = await db.insert(schema.users).values(userData).returning();
