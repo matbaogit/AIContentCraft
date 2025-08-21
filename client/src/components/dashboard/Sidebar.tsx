@@ -94,6 +94,9 @@ export function Sidebar() {
     logoutMutation.mutate();
   };
 
+  // Debug logging
+  console.log('Sidebar render:', { userData, menuItems: menuItems.length });
+
   return (
     <div className="w-64 bg-sidebar dark:bg-card h-screen flex flex-col fixed left-0 top-0 z-10">
       <div className="p-4 flex items-center border-b border-sidebar-border dark:border-border">

@@ -3,8 +3,8 @@ import * as React from "react";
 const MOBILE_BREAKPOINT = 768;
 
 export function useMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
-    undefined,
+  const [isMobile, setIsMobile] = React.useState<boolean>(
+    false // Default to desktop (not mobile) to ensure sidebar shows initially
   );
 
   React.useEffect(() => {
@@ -17,5 +17,5 @@ export function useMobile() {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  return !!isMobile;
+  return isMobile;
 }
