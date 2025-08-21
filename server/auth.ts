@@ -5,7 +5,9 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import path from "path";
+
 import { storage } from "./storage";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import * as schema from "@shared/schema";
 import { registerUser, verifyEmail, requestPasswordReset, resetPassword } from "./user-service";
 
@@ -426,5 +428,150 @@ export function setupAuth(app: Express) {
     }
     
     next();
+  });
+
+  // Object storage endpoints
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.post("/api/objects/upload", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error generating upload URL:', error);
+      res.status(500).json({ success: false, error: 'Failed to generate upload URL' });
+    }
+  });
+
+  // Avatar update route
+  app.put('/api/dashboard/avatar', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+      const userId = req.user.id.toString();
+      const { avatarUrl } = req.body;
+
+      if (!avatarUrl) {
+        return res.status(400).json({ success: false, error: 'Avatar URL is required' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        avatarUrl,
+        {
+          owner: userId,
+          visibility: "public", // Avatar should be public
+        }
+      );
+
+      // Update user avatar in database
+      await storage.updateUser(req.user.id, {
+        avatar: objectPath,
+        updatedAt: new Date()
+      });
+
+      res.json({ success: true, data: { avatar: objectPath } });
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      res.status(500).json({ success: false, error: 'Failed to update avatar' });
+    }
+  });
+
+  // Dashboard profile update route
+  app.patch('/api/dashboard/profile', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+      const userId = req.user.id;
+      const { fullName, email } = req.body;
+
+      await storage.updateUser(userId, {
+        fullName,
+        email,
+        updatedAt: new Date()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ success: false, error: 'Failed to update profile' });
+    }
+  });
+
+  // Change password route
+  app.post('/api/dashboard/change-password', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
+
+    try {
+      const userId = req.user.id;
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Current password and new password are required' 
+        });
+      }
+
+      // Get user from database to verify current password
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      // Verify current password
+      const currentHash = user.password;
+      const [salt, storedHash] = currentHash.split(':');
+      const currentPasswordBuffer = (await scryptAsync(currentPassword, salt, 64)) as Buffer;
+      const storedHashBuffer = Buffer.from(storedHash, 'hex');
+
+      if (!timingSafeEqual(currentPasswordBuffer, storedHashBuffer)) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Current password is incorrect' 
+        });
+      }
+
+      // Hash new password
+      const newSalt = randomBytes(16).toString('hex');
+      const newHashBuffer = (await scryptAsync(newPassword, newSalt, 64)) as Buffer;
+      const newHashedPassword = `${newSalt}:${newHashBuffer.toString('hex')}`;
+
+      // Update password
+      await storage.updateUser(userId, {
+        password: newHashedPassword,
+        updatedAt: new Date()
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      res.status(500).json({ success: false, error: 'Failed to change password' });
+    }
   });
 }

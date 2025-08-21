@@ -7,6 +7,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 import {
   Card,
   CardContent,
@@ -48,6 +50,8 @@ import {
   Sun,
   Monitor,
   Shield,
+  Upload,
+  Camera,
 } from "lucide-react";
 import { useTheme } from "@/providers/ThemeProvider";
 import Head from "@/components/head";
@@ -97,6 +101,28 @@ export default function Settings() {
     },
   });
 
+  // Avatar upload mutation
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (avatarUrl: string) => {
+      const res = await apiRequest("PUT", "/api/dashboard/avatar", { avatarUrl });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Avatar updated",
+        description: "Your avatar has been updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed", 
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Password form
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
     resolver: zodResolver(passwordSchema),
@@ -127,6 +153,7 @@ export default function Settings() {
         title: "Profile updated",
         description: "Your profile has been updated successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
@@ -211,6 +238,46 @@ export default function Settings() {
               <CardContent>
                 <Form {...profileForm}>
                   <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+                    {/* Avatar Section */}
+                    <div className="flex items-center space-x-6">
+                      <div className="shrink-0">
+                        <img
+                          className="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                          src={user?.avatar || user?.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=6366f1&color=ffffff`}
+                          alt="Avatar"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            onGetUploadParameters={async () => {
+                              const res = await apiRequest("POST", "/api/objects/upload");
+                              const data = await res.json();
+                              return {
+                                method: "PUT" as const,
+                                url: data.uploadURL,
+                              };
+                            }}
+                            onComplete={(result) => {
+                              if (result.successful && result.successful.length > 0) {
+                                const uploadUrl = result.successful[0].uploadURL as string;
+                                uploadAvatarMutation.mutate(uploadUrl);
+                              }
+                            }}
+                            buttonClassName="flex items-center space-x-2"
+                          >
+                            <Camera className="h-4 w-4" />
+                            <span>Change avatar</span>
+                          </ObjectUploader>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            JPG, PNG up to 5MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <FormField
                       control={profileForm.control}
                       name="fullName"
