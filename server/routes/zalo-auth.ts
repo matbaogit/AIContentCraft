@@ -154,55 +154,125 @@ router.get('/callback', async (req, res) => {
     console.log('Available fields:', Object.keys(zaloUser || {}));
     console.log('=== END ZALO USER RESPONSE ===');
 
-    // Store OAuth data in session for confirmation
-    console.log('Storing Zalo OAuth data for user confirmation...');
+    // Check if user already exists before showing confirmation
+    console.log('Checking if Zalo user already exists in database...');
     
-    // Create session data with all available information
-    const sessionData = {
-      token: {
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        expires_in: tokenData.expires_in,
-        refresh_token_expires_in: tokenData.refresh_token_expires_in
-      },
-      userInfo: zaloUser,
-      timestamp: Date.now()
-    };
+    const existingUser = await db.select()
+      .from(schema.users)
+      .where(eq(schema.users.username, zaloUser.id))
+      .limit(1);
 
-    // Store in session (will be read by frontend)
-    (req.session as any).zalo_oauth_data = sessionData;
-    
-    console.log('Zalo OAuth data stored in session, redirecting to confirmation...');
+    if (existingUser.length > 0) {
+      console.log('🔄 Existing Zalo user found, auto-login:', existingUser[0].username);
+      
+      // Auto-login existing user
+      req.login(existingUser[0], (err) => {
+        if (err) {
+          console.error('❌ Error auto-login existing Zalo user:', err);
+          return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head><title>Lỗi đăng nhập</title><meta charset="utf-8"></head>
+            <body>
+              <script>
+                if (window.opener) {
+                  window.opener.postMessage({
+                    type: 'ZALO_LOGIN_ERROR',
+                    error: 'Lỗi đăng nhập'
+                  }, '*');
+                  window.close();
+                } else {
+                  window.location.href = '/?error=login_failed';
+                }
+              </script>
+            </body>
+            </html>
+          `);
+        }
 
-    // Return HTML that will trigger the confirmation modal
-    return res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Xác nhận thông tin Zalo</title>
-        <meta charset="utf-8">
-        <script>
-          // Store data in sessionStorage for frontend access
-          sessionStorage.setItem('zalo_oauth_data', ${JSON.stringify(JSON.stringify(sessionData))});
-          
-          setTimeout(() => {
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'ZALO_OAUTH_SUCCESS',
-                needsConfirmation: true
-              }, '*');
-              window.close();
-            } else {
-              window.location.href = '/?zalo_confirm=true';
-            }
-          }, 100);
-        </script>
-      </head>
-      <body>
-        <p>Đã nhận thông tin từ Zalo. Đang chuyển đến trang xác nhận...</p>
-      </body>
-      </html>
-    `);
+        console.log('✅ Auto-login successful for existing Zalo user');
+        
+        // Return HTML that redirects to dashboard with welcome message
+        return res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Chào mừng trở lại!</title>
+            <meta charset="utf-8">
+            <script>
+              setTimeout(() => {
+                if (window.opener) {
+                  window.opener.postMessage({
+                    type: 'ZALO_LOGIN_SUCCESS',
+                    user: ${JSON.stringify(existingUser[0])},
+                    welcomeMessage: 'Chào mừng ${existingUser[0].fullName} trở lại!'
+                  }, '*');
+                  window.close();
+                } else {
+                  window.location.href = '/dashboard?welcome=true';
+                }
+              }, 100);
+            </script>
+          </head>
+          <body>
+            <p>Chào mừng ${existingUser[0].fullName} trở lại! Đang đăng nhập...</p>
+          </body>
+          </html>
+        `);
+      });
+    } else {
+      console.log('👤 New Zalo user detected, showing confirmation modal');
+      
+      // Store OAuth data in session for confirmation
+      console.log('Storing Zalo OAuth data for user confirmation...');
+      
+      // Create session data with all available information
+      const sessionData = {
+        token: {
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          expires_in: tokenData.expires_in,
+          refresh_token_expires_in: tokenData.refresh_token_expires_in
+        },
+        userInfo: zaloUser,
+        timestamp: Date.now()
+      };
+
+      // Store in session (will be read by frontend)
+      (req.session as any).zalo_oauth_data = sessionData;
+      
+      console.log('Zalo OAuth data stored in session, redirecting to confirmation...');
+
+      // Return HTML that will trigger the confirmation modal
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Xác nhận thông tin Zalo</title>
+          <meta charset="utf-8">
+          <script>
+            // Store data in sessionStorage for frontend access
+            sessionStorage.setItem('zalo_oauth_data', ${JSON.stringify(JSON.stringify(sessionData))});
+            
+            setTimeout(() => {
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'ZALO_OAUTH_SUCCESS',
+                  needsConfirmation: true
+                }, '*');
+                window.close();
+              } else {
+                window.location.href = '/?zalo_confirm=true';
+              }
+            }, 100);
+          </script>
+        </head>
+        <body>
+          <p>Đã nhận thông tin từ Zalo. Đang chuyển đến trang xác nhận...</p>
+        </body>
+        </html>
+      `);
+    }
     
   } catch (error) {
     console.error('Error in Zalo OAuth callback:', error);

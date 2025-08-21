@@ -70,7 +70,7 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
       }
 
       if (event.data.type === 'ZALO_LOGIN_SUCCESS') {
-        console.log('Zalo login successful!');
+        console.log('Zalo login successful - existing user!', event.data);
         if (popup) {
           popup.close();
           setPopup(null);
@@ -78,9 +78,10 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
         window.removeEventListener('message', messageListener);
         setIsLoading(false);
         
+        // Show welcome message from server
         toast({
-          title: "Thành công",
-          description: "Đăng nhập Zalo thành công!",
+          title: "Đăng nhập thành công!",
+          description: event.data.welcomeMessage || "Chào mừng bạn trở lại!",
           variant: "default",
         });
         
@@ -89,8 +90,10 @@ export const ZaloLoginButton: React.FC<ZaloLoginButtonProps> = ({
         if (onSuccess) {
           onSuccess();
         } else {
-          // Redirect to dashboard
-          window.location.href = "/dashboard";
+          // Redirect to dashboard after showing welcome message
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1500);
         }
       } else if (event.data.type === 'ZALO_OAUTH_SUCCESS' && event.data.needsConfirmation) {
         console.log('Zalo OAuth successful, needs confirmation');
