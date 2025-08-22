@@ -179,7 +179,7 @@ export function ZaloConfirmModal({
         throw new Error('Không có dữ liệu Zalo để xử lý');
       }
 
-      return apiRequest('/api/zalo-user/create', 'POST', {
+      return apiRequest('POST', '/api/zalo-user/create', {
         zaloUser: {
           ...zaloData.userInfo,
           name: data.fullName,
