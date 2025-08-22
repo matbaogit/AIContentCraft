@@ -238,6 +238,13 @@ router.get('/callback', async (req, res) => {
         timestamp: Date.now()
       };
 
+      // Check for referral code from session storage (passed via frontend)
+      const referralCode = (req.session as any).referralCode;
+      if (referralCode) {
+        sessionData.referralCode = referralCode;
+        console.log('Found referral code in session:', referralCode);
+      }
+
       // Store in session (will be read by frontend)
       (req.session as any).zalo_oauth_data = sessionData;
       
@@ -258,11 +265,12 @@ router.get('/callback', async (req, res) => {
               if (window.opener) {
                 window.opener.postMessage({
                   type: 'ZALO_OAUTH_SUCCESS',
-                  needsConfirmation: true
+                  needsConfirmation: true,
+                  referralCode: '${referralCode || ''}'
                 }, '*');
                 window.close();
               } else {
-                window.location.href = '/?zalo_confirm=true';
+                window.location.href = '/?zalo_confirm=true${referralCode ? '&ref=' + referralCode : ''}';
               }
             }, 100);
           </script>

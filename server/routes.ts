@@ -103,6 +103,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // Middleware to capture referral code from URL and store in session
+  app.use((req, res, next) => {
+    const referer = req.get('Referer');
+    if (referer && referer.includes('ref=')) {
+      const url = new URL(referer);
+      const refCode = url.searchParams.get('ref');
+      if (refCode && req.session) {
+        (req.session as any).referralCode = refCode;
+        console.log('Captured referral code from referer:', refCode);
+      }
+    }
+    
+    // Also check current URL for ref parameter
+    if (req.query.ref && req.session) {
+      (req.session as any).referralCode = req.query.ref;
+      console.log('Captured referral code from query:', req.query.ref);
+    }
+    
+    next();
+  });
+
   // Set up OAuth routes BEFORE authentication (to avoid conflicts)
   
   // Removed problematic test endpoint
@@ -138,6 +159,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ========== Referral API ==========
+  // Import and use referral routes
+  const referralRouter = (await import('./routes/referral')).default;
+  app.use('/api/referral', referralRouter);
+
+  // ========== Zalo User API ==========
+  // Import and use Zalo user routes
+  const zaloUserRouter = (await import('./routes/zalo-user')).default;
+  app.use('/api/zalo-user', zaloUserRouter);
+
+  // ========== Dashboard API ==========
+  // Import and use dashboard routes
+  const dashboardRouter = (await import('./routes/dashboard')).default;
+  app.use('/api/dashboard', dashboardRouter);
 
   // Get custom head tags for public use (no auth required)
   app.get('/api/appearance/custom-head-tags', async (req, res) => {

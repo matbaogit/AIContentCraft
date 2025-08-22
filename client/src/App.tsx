@@ -74,6 +74,9 @@ import AdminAnalytics from "@/pages/admin/analytics";
 import AppearancePage from "@/pages/admin/appearance";
 import AdminFaq from "@/pages/admin/faq";
 import AdminEmailTemplates from "@/pages/admin/email-templates";
+import RegisterPage from "@/pages/register";
+import ZaloCallbackPage from "@/pages/zalo-callback";
+import ReferralsPage from "@/pages/dashboard/referrals";
 
 // Demo components
 const FacebookConnect = lazy(() => import("@/pages/demo/facebook-connect"));
@@ -100,7 +103,8 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
-      <Route path="/register" component={AuthPage} />
+      <Route path="/register" component={RegisterPage} />
+      <Route path="/zalo-callback" component={ZaloCallbackPage} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
@@ -139,6 +143,7 @@ function Router() {
       <ProtectedRoute path="/dashboard/social-connections" component={SocialConnections} />
       <ProtectedRoute path="/dashboard/theme-demo" component={ThemeDemo} />
       <ProtectedRoute path="/dashboard/referral" component={ReferralPage} />
+      <ProtectedRoute path="/dashboard/referrals" component={ReferralsPage} />
       <ProtectedRoute path="/dashboard/settings" component={Settings} />
       <ProtectedRoute path="/article/:id" component={Article} />
       
