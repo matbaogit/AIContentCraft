@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 import { ZaloLoginButton } from "@/components/ui/zalo-login-button";
-import { ZaloConfirmationModal } from "@/components/ui/zalo-confirmation-modal";
+import { ZaloConfirmModal } from "@/components/ZaloConfirmModal";
 
 // Zalo icon component (since react-icons doesn't have Zalo)
 const ZaloIcon = ({ className }: { className?: string }) => (
@@ -90,6 +90,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showZaloConfirmation, setShowZaloConfirmation] = useState(false);
+  const [zaloData, setZaloData] = useState<any>(null);
   const { toast } = useToast();
   
   // Fetch appearance settings for login page
@@ -194,7 +195,36 @@ export default function AuthPage() {
     
     // Check if needs Zalo confirmation
     if (params.get('zalo_confirm') === 'true') {
-      setShowZaloConfirmation(true);
+      // Try to get Zalo data from storage with retry mechanism
+      const attemptLoadZaloData = () => {
+        const sessionData = sessionStorage.getItem('zalo_oauth_data');
+        if (sessionData) {
+          try {
+            const data = JSON.parse(JSON.parse(sessionData));
+            setZaloData(data);
+            setShowZaloConfirmation(true);
+            return true;
+          } catch (error) {
+            console.error('Error parsing Zalo data:', error);
+          }
+        }
+        return false;
+      };
+
+      // Immediate attempt
+      if (!attemptLoadZaloData()) {
+        // Retry after short delay (handle race condition)
+        setTimeout(() => {
+          if (!attemptLoadZaloData()) {
+            console.error('Failed to load Zalo data after retry');
+            toast({
+              title: "Lỗi đăng nhập",
+              description: "Không tìm thấy dữ liệu Zalo. Vui lòng thử lại.",
+              variant: "destructive",
+            });
+          }
+        }, 500);
+      }
       
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -801,15 +831,17 @@ export default function AuthPage() {
       </div>
       
       {/* Zalo Confirmation Modal */}
-      <ZaloConfirmationModal
+      <ZaloConfirmModal
         isOpen={showZaloConfirmation}
         onClose={() => setShowZaloConfirmation(false)}
-        onSuccess={(user) => {
+        zaloData={zaloData}
+        referralCode={referralCode}
+        onSuccess={() => {
           setShowZaloConfirmation(false);
           queryClient.invalidateQueries({ queryKey: ["/api/user"] });
           toast({
             title: "Tạo tài khoản thành công!",
-            description: `Chào mừng ${user.fullName} đến với hệ thống!`,
+            description: "Chào mừng bạn đến với ToolBox!",
           });
           navigate("/dashboard");
         }}

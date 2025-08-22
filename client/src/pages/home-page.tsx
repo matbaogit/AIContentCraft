@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 export default function HomePage() {
   const { t, language } = useLanguage();
   const [location, navigate] = useLocation();
-  const { user, refetch: refetchUser } = useAuth();
+  const { user } = useAuth();
   const [showZaloModal, setShowZaloModal] = useState(false);
   const [zaloData, setZaloData] = useState<any>(null);
   const [referralCode, setReferralCode] = useState<string>("");
@@ -71,30 +71,59 @@ export default function HomePage() {
     // Listen for messages from popup window
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'ZALO_OAUTH_SUCCESS' && event.data.needsConfirmation) {
-        const storedData = sessionStorage.getItem('zalo_oauth_data');
-        if (storedData) {
-          try {
-            const oauthData = JSON.parse(JSON.parse(storedData));
-            setZaloData(oauthData);
-            setShowZaloModal(true);
-            
-            if (event.data.referralCode) {
-              setReferralCode(event.data.referralCode);
-            }
-          } catch (error) {
-            console.error('Error parsing Zalo OAuth data:', error);
+        // Try multiple data sources with retry
+        const tryLoadData = () => {
+          // Try sessionStorage first
+          let storedData = sessionStorage.getItem('zalo_oauth_data');
+          if (!storedData) {
+            // Try localStorage
+            storedData = localStorage.getItem('zalo_oauth_data');
           }
+          
+          if (storedData) {
+            try {
+              const oauthData = typeof storedData === 'string' && storedData.startsWith('"{') 
+                ? JSON.parse(JSON.parse(storedData))  // Double-parsed format
+                : JSON.parse(storedData);  // Single-parsed format
+              
+              setZaloData(oauthData);
+              setShowZaloModal(true);
+              
+              if (event.data.referralCode) {
+                setReferralCode(event.data.referralCode);
+              }
+              return true;
+            } catch (error) {
+              console.error('Error parsing Zalo OAuth data:', error);
+            }
+          }
+          return false;
+        };
+
+        // Immediate attempt
+        if (!tryLoadData()) {
+          // Retry after delay for race condition
+          setTimeout(() => {
+            if (!tryLoadData()) {
+              console.error('Failed to load Zalo data after retry');
+              // Still show modal, it will handle data loading internally
+              setShowZaloModal(true);
+              if (event.data.referralCode) {
+                setReferralCode(event.data.referralCode);
+              }
+            }
+          }, 300);
         }
       } else if (event.data.type === 'ZALO_LOGIN_SUCCESS') {
         // Existing user logged in
-        refetchUser();
+        window.location.reload(); // Refresh to update auth state
         navigate('/dashboard');
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [navigate, refetchUser]);
+  }, [navigate]);
 
   return (
     <>
@@ -120,7 +149,7 @@ export default function HomePage() {
         zaloData={zaloData}
         referralCode={referralCode}
         onSuccess={() => {
-          refetchUser();
+          window.location.reload(); // Refresh to update auth state
           navigate('/dashboard');
         }}
       />

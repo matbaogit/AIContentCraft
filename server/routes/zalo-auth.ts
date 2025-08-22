@@ -241,12 +241,18 @@ router.get('/callback', async (req, res) => {
       // Check for referral code from session storage (passed via frontend)
       const referralCode = (req.session as any).referralCode;
       if (referralCode) {
-        sessionData.referralCode = referralCode;
+        (sessionData as any).referralCode = referralCode;
         console.log('Found referral code in session:', referralCode);
       }
 
       // Store in session (will be read by frontend)
       (req.session as any).zalo_oauth_data = sessionData;
+      
+      // Also store in more persistent way for better reliability
+      (req.session as any).zalo_user_temp = {
+        ...sessionData,
+        referralCode: referralCode || null
+      };
       
       console.log('Zalo OAuth data stored in session, redirecting to confirmation...');
 
@@ -258,8 +264,9 @@ router.get('/callback', async (req, res) => {
           <title>Xác nhận thông tin Zalo</title>
           <meta charset="utf-8">
           <script>
-            // Store data in sessionStorage for frontend access
+            // Store data in multiple storage methods for reliability
             sessionStorage.setItem('zalo_oauth_data', ${JSON.stringify(JSON.stringify(sessionData))});
+            localStorage.setItem('zalo_oauth_data', ${JSON.stringify(sessionData)});
             
             setTimeout(() => {
               if (window.opener) {
@@ -459,6 +466,51 @@ router.get('/proxy-callback', async (req, res) => {
       </body>
       </html>
     `);
+  }
+});
+
+// GET /api/auth/zalo/session-data - Get stored Zalo data from server session
+router.get('/session-data', (req, res) => {
+  console.log('=== GET ZALO SESSION DATA ===');
+  
+  try {
+    const sessionData = (req.session as any).zalo_oauth_data;
+    const tempData = (req.session as any).zalo_user_temp;
+    
+    console.log('Session zalo_oauth_data:', sessionData ? 'exists' : 'not found');
+    console.log('Session zalo_user_temp:', tempData ? 'exists' : 'not found');
+    
+    if (sessionData || tempData) {
+      const data = sessionData || tempData;
+      
+      // Check if data is expired (15 minutes)
+      const isExpired = data.timestamp && (Date.now() - data.timestamp > 15 * 60 * 1000);
+      if (isExpired) {
+        console.log('Session data expired, clearing...');
+        delete (req.session as any).zalo_oauth_data;
+        delete (req.session as any).zalo_user_temp;
+        return res.status(410).json({
+          success: false,
+          error: 'Session data expired'
+        });
+      }
+      
+      return res.json({
+        success: true,
+        data: data
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        error: 'No session data found'
+      });
+    }
+  } catch (error) {
+    console.error('Error retrieving session data:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve session data'
+    });
   }
 });
 
