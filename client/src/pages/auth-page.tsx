@@ -739,31 +739,35 @@ export default function AuthPage() {
                   </div>
 
                   <div className="mt-6 space-y-3">
-                    {/* Google Login Button */}
-                    <Button
-                      onClick={handleGoogleLogin}
-                      disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                      type="button"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <FaGoogle className="w-5 h-5" />
-                        {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Google"}
-                      </div>
-                    </Button>
+                    {/* Google Login Button - Temporarily Hidden */}
+                    {false && (
+                      <Button
+                        onClick={handleGoogleLogin}
+                        disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                        type="button"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <FaGoogle className="w-5 h-5" />
+                          {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Google"}
+                        </div>
+                      </Button>
+                    )}
 
-                    {/* Facebook Login Button */}
-                    <Button
-                      onClick={handleFacebookLogin}
-                      disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                      type="button"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <FaFacebook className="w-5 h-5" />
-                        {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Facebook"}
-                      </div>
-                    </Button>
+                    {/* Facebook Login Button - Temporarily Hidden */}
+                    {false && (
+                      <Button
+                        onClick={handleFacebookLogin}
+                        disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                        type="button"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <FaFacebook className="w-5 h-5" />
+                          {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Facebook"}
+                        </div>
+                      </Button>
+                    )}
 
                     {/* Zalo Login Button */}
                     <ZaloLoginButton 
