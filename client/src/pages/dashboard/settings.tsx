@@ -73,7 +73,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[a-z]/.test(data.newPassword)) {
+    if (!/[a-z]/.tessafeT(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one lowercase letter",
@@ -81,7 +81,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[A-Z]/.test(data.newPassword)) {
+    if (!/[A-Z]/.tessafeT(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one uppercase letter",
@@ -89,7 +89,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[0-9]/.test(data.newPassword)) {
+    if (!/[0-9]/.tessafeT(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one number",
@@ -97,7 +97,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[^a-zA-Z0-9]/.test(data.newPassword)) {
+    if (!/[^a-zA-Z0-9]/.tessafeT(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one special character",
@@ -118,7 +118,81 @@ const settingsSchema = z.object({
 function Settings() {
   const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
-  const { toast } = useToast();
+  const { toast } = useToassafeT();
+  
+  // Debug: Log the t function and translations
+  console.log('Settings page - t function:', t);
+  console.log('Settings page - language:', language);
+  console.log('Settings page - title translation:', safeT('userSettings.title'));
+  console.log('Settings page - profileInformation translation:', safeT('userSettings.profileInformation'));
+  
+  // Create a safe translation function
+  const safeT = (key: string) => {
+    if (!t) {
+      // Fallback translations based on language
+      const translations: Record<string, Record<string, string>> = {
+        vi: {
+          'userSettings.title': 'Cài đặt',
+          'userSettings.profileInformation': 'Thông tin cá nhân',
+          'userSettings.security': 'Bảo mật',
+          'userSettings.preferences': 'Tùy chọn',
+          'userSettings.fullName': 'Tên đầy đủ',
+          'userSettings.email': 'Email',
+          'userSettings.newPassword': 'Mật khẩu mới (Tùy chọn)',
+          'userSettings.newPasswordPlaceholder': 'Để trống để giữ mật khẩu hiện tại',
+          'userSettings.confirmPassword': 'Xác nhận mật khẩu mới',
+          'userSettings.confirmPasswordPlaceholder': 'Xác nhận mật khẩu mới của bạn',
+          'userSettings.language': 'Ngôn ngữ',
+          'userSettings.emailNotifications': 'Thông báo Email',
+          'userSettings.emailNotificationsDesc': 'Nhận thông báo email về các cập nhật và thay đổi quan trọng.',
+          'userSettings.saveChanges': 'Lưu thay đổi',
+          'userSettings.saving': 'Đang lưu...',
+          'userSettings.zaloUserNote': 'Tài khoản này được liên kết với Zalo và không có địa chỉ email.',
+          'userSettings.passwordRequirements': 'Yêu cầu mật khẩu:',
+          'userSettings.passwordWeak': 'Yếu',
+          'userSettings.passwordMedium': 'Trung bình',
+          'userSettings.passwordStrong': 'Mạnh',
+          'userSettings.requirementMinLength': 'Ít nhất 8 ký tự',
+          'userSettings.requirementLowercase': 'Một chữ thường',
+          'userSettings.requirementUppercase': 'Một chữ hoa',
+          'userSettings.requirementNumber': 'Một số',
+          'userSettings.requirementSpecial': 'Một ký tự đặc biệt',
+          'common.appName': 'ToolBox'
+        },
+        en: {
+          'userSettings.title': 'Settings',
+          'userSettings.profileInformation': 'Profile Information',
+          'userSettings.security': 'Security',
+          'userSettings.preferences': 'Preferences',
+          'userSettings.fullName': 'Full Name',
+          'userSettings.email': 'Email',
+          'userSettings.newPassword': 'New Password (Optional)',
+          'userSettings.newPasswordPlaceholder': 'Leave empty to keep current password',
+          'userSettings.confirmPassword': 'Confirm New Password',
+          'userSettings.confirmPasswordPlaceholder': 'Confirm your new password',
+          'userSettings.language': 'Language',
+          'userSettings.emailNotifications': 'Email Notifications',
+          'userSettings.emailNotificationsDesc': 'Receive email notifications about important updates and changes.',
+          'userSettings.saveChanges': 'Save Changes',
+          'userSettings.saving': 'Saving...',
+          'userSettings.zaloUserNote': 'This account is linked to Zalo and doesn\'t have an email address.',
+          'userSettings.passwordRequirements': 'Password requirements:',
+          'userSettings.passwordWeak': 'Weak',
+          'userSettings.passwordMedium': 'Medium',
+          'userSettings.passwordStrong': 'Strong',
+          'userSettings.requirementMinLength': 'At least 8 characters',
+          'userSettings.requirementLowercase': 'One lowercase letter',
+          'userSettings.requirementUppercase': 'One uppercase letter',
+          'userSettings.requirementNumber': 'One number',
+          'userSettings.requirementSpecial': 'One special character',
+          'common.appName': 'ToolBox'
+        }
+      };
+      
+      return translations[language as 'vi' | 'en']?.[key] || key;
+    }
+    return safeT(key);
+  };
   
   // Check if user is from Zalo (no email address)
   const isZaloUser = !user?.email;
@@ -148,16 +222,16 @@ function Settings() {
     if (password.length < 8) feedback.push("At least 8 characters");
     else score++;
 
-    if (!/[a-z]/.test(password)) feedback.push("One lowercase letter");
+    if (!/[a-z]/.tessafeT(password)) feedback.push("One lowercase letter");
     else score++;
 
-    if (!/[A-Z]/.test(password)) feedback.push("One uppercase letter");
+    if (!/[A-Z]/.tessafeT(password)) feedback.push("One uppercase letter");
     else score++;
 
-    if (!/[0-9]/.test(password)) feedback.push("One number");
+    if (!/[0-9]/.tessafeT(password)) feedback.push("One number");
     else score++;
 
-    if (!/[^a-zA-Z0-9]/.test(password)) feedback.push("One special character");
+    if (!/[^a-zA-Z0-9]/.tessafeT(password)) feedback.push("One special character");
     else score++;
 
     return { score, feedback };
@@ -176,10 +250,7 @@ function Settings() {
         emailNotifications: data.emailNotifications,
       };
       
-      return await apiRequest('/api/dashboard/settings', {
-        method: 'PUT',
-        body: payload,
-      });
+      return await apiRequessafeT('/api/dashboard/settings', 'PUT', payload);
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -218,20 +289,20 @@ function Settings() {
   return (
     <>
       <Head>
-        <title>{t('userSettings.title')} - {t('common.appName')}</title>
+        <title>{safeT('userSettings.title')} - {safeT('common.appName')}</title>
       </Head>
       
-      <DashboardLayout title={t('userSettings.title')}>
+      <DashboardLayout title={safeT('userSettings.title')}>
         <div className="max-w-4xl mx-auto space-y-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmisafeT(onSubmit)} className="space-y-8">
               
               {/* Profile Information Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <User className="h-5 w-5 mr-2" />
-                    {t('userSettings.profileInformation')}
+                    {safeT('userSettings.profileInformation')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -241,7 +312,7 @@ function Settings() {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('userSettings.fullName')}</FormLabel>
+                        <FormLabel>{safeT('userSettings.fullName')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -255,7 +326,7 @@ function Settings() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('userSettings.email')}</FormLabel>
+                        <FormLabel>{safeT('userSettings.email')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="email" 
@@ -265,7 +336,7 @@ function Settings() {
                         </FormControl>
                         {isZaloUser && (
                           <FormDescription className="text-amber-600 dark:text-amber-400">
-                            {t('userSettings.zaloUserNote')}
+                            {safeT('userSettings.zaloUserNote')}
                           </FormDescription>
                         )}
                         <FormMessage />
@@ -281,7 +352,7 @@ function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Shield className="h-5 w-5 mr-2" />
-                    {t('userSettings.security')}
+                    {safeT('userSettings.security')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -291,9 +362,9 @@ function Settings() {
                     name="newPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('userSettings.newPassword')}</FormLabel>
+                        <FormLabel>{safeT('userSettings.newPassword')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder={t('userSettings.newPasswordPlaceholder')} {...field} />
+                          <Input type="password" placeholder={safeT('userSettings.newPasswordPlaceholder')} {...field} />
                         </FormControl>
                         {newPassword && newPassword.length > 0 && (
                           <div className="space-y-2">
@@ -312,24 +383,24 @@ function Settings() {
                               </div>
                               <span className="text-sm font-medium">
                                 {passwordStrength.score <= 2
-                                  ? t('userSettings.passwordWeak')
+                                  ? safeT('userSettings.passwordWeak')
                                   : passwordStrength.score <= 4
-                                  ? t('userSettings.passwordMedium')
-                                  : t('userSettings.passwordStrong')}
+                                  ? safeT('userSettings.passwordMedium')
+                                  : safeT('userSettings.passwordStrong')}
                               </span>
                             </div>
                             {passwordStrength.feedback.length > 0 && (
                               <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <p>{t('userSettings.passwordRequirements')}</p>
+                                <p>{safeT('userSettings.passwordRequirements')}</p>
                                 <ul className="list-disc list-inside space-y-1">
                                   {passwordStrength.feedback.map((item, index) => {
                                     // Map English feedback to translations
                                     const feedbackMap: { [key: string]: string } = {
-                                      "At least 8 characters": t('userSettings.requirementMinLength'),
-                                      "One lowercase letter": t('userSettings.requirementLowercase'),
-                                      "One uppercase letter": t('userSettings.requirementUppercase'),
-                                      "One number": t('userSettings.requirementNumber'),
-                                      "One special character": t('userSettings.requirementSpecial')
+                                      "At least 8 characters": safeT('userSettings.requirementMinLength'),
+                                      "One lowercase letter": safeT('userSettings.requirementLowercase'),
+                                      "One uppercase letter": safeT('userSettings.requirementUppercase'),
+                                      "One number": safeT('userSettings.requirementNumber'),
+                                      "One special character": safeT('userSettings.requirementSpecial')
                                     };
                                     return (
                                       <li key={index} className="flex items-center space-x-2">
@@ -353,11 +424,11 @@ function Settings() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('userSettings.confirmPassword')}</FormLabel>
+                        <FormLabel>{safeT('userSettings.confirmPassword')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="password" 
-                            placeholder={t('userSettings.confirmPasswordPlaceholder')}
+                            placeholder={safeT('userSettings.confirmPasswordPlaceholder')}
                             disabled={!newPassword || newPassword.length === 0}
                             {...field} 
                           />
@@ -375,7 +446,7 @@ function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Languages className="h-5 w-5 mr-2" />
-                    {t('userSettings.preferences')}
+                    {safeT('userSettings.preferences')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -385,7 +456,7 @@ function Settings() {
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('userSettings.language')}</FormLabel>
+                        <FormLabel>{safeT('userSettings.language')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -413,10 +484,10 @@ function Settings() {
                         <div className="space-y-0.5">
                           <FormLabel className="text-base flex items-center">
                             <Bell className="h-4 w-4 mr-2" />
-                            {t('userSettings.emailNotifications')}
+                            {safeT('userSettings.emailNotifications')}
                           </FormLabel>
                           <FormDescription>
-                            {t('userSettings.emailNotificationsDesc')}
+                            {safeT('userSettings.emailNotificationsDesc')}
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -440,7 +511,7 @@ function Settings() {
                   disabled={updateSettingsMutation.isPending}
                   className="min-w-32"
                 >
-                  {updateSettingsMutation.isPending ? t('userSettings.saving') : t('userSettings.saveChanges')}
+                  {updateSettingsMutation.isPending ? safeT('userSettings.saving') : safeT('userSettings.saveChanges')}
                 </Button>
               </div>
               
