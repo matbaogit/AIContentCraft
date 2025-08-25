@@ -994,13 +994,41 @@ export default function AuthPage() {
                   ))
                 ) && (
                 <div className="mt-6">
+                  {/* Registration Introduction Text */}
+                  {activeTab === "register" && authMethodsSettings.registration.allowZaloRegistration && !authMethodsSettings.registration.allowUsernamePasswordRegistration && (
+                    <div className="mb-6 text-center">
+                      <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 mb-4">
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                          🚀 Tham gia cộng đồng ToolBox
+                        </h3>
+                        <p className="text-slate-300 text-sm mb-3">
+                          Tạo tài khoản để trải nghiệm đầy đủ các tính năng AI viết SEO chuyên nghiệp
+                        </p>
+                        <div className="space-y-2 text-left text-sm text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">✓</span>
+                            <span>Tạo nội dung SEO chất lượng cao với AI</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">✓</span>
+                            <span>Quản lý và lưu trữ bài viết cá nhân</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">✓</span>
+                            <span>Tích hợp mạng xã hội và WordPress</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-slate-700"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
                       <span className="px-2 bg-slate-800 text-slate-400">
-                        Hoặc đăng nhập bằng
+                        {activeTab === "register" ? "Đăng ký nhanh chóng bằng" : "Hoặc đăng nhập bằng"}
                       </span>
                     </div>
                   </div>
