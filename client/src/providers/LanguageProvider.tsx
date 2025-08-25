@@ -388,6 +388,11 @@ const translations: TranslationsType = {
         subtitle: "Sử dụng trí tuệ nhân tạo để tạo ra nội dung hấp dẫn, tối ưu cho SEO một cách nhanh chóng và hiệu quả.",
         tryFree: "Dùng thử miễn phí",
         viewDemo: "Xem các tính năng",
+        stats: {
+          users: "người dùng",
+          reviews: "đánh giá", 
+          articlesCreated: "bài viết đã tạo"
+        },
         features: {
           aiContent: {
             title: "Nội dung AI",

@@ -71,17 +71,17 @@ export function Hero() {
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-blue-500" />
               <span className="font-semibold text-gray-900 dark:text-gray-100">1,000+</span>
-              <span>người dùng</span>
+              <span>{t("landing.hero.stats.users")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-purple-500" />
               <span className="font-semibold text-gray-900 dark:text-gray-100">4.9/5</span>
-              <span>đánh giá</span>
+              <span>{t("landing.hero.stats.reviews")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-indigo-500" />
               <span className="font-semibold text-gray-900 dark:text-gray-100">50,000+</span>
-              <span>bài viết đã tạo</span>
+              <span>{t("landing.hero.stats.articlesCreated")}</span>
             </div>
           </div>
           
