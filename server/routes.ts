@@ -219,6 +219,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Public Authentication Methods API ==========
+  // Public endpoint for registration methods (không cần authentication)
+  app.get("/api/auth/registration-methods", async (req, res) => {
+    try {
+      const authSettings = await storage.getSettingsByCategory('authentication');
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          allowUsernamePasswordRegistration: authSettings.allowUsernamePasswordRegistration === "true",
+          allowZaloRegistration: authSettings.allowZaloRegistration === "true"
+        }
+      });
+    } catch (error) {
+      console.error("Error getting registration methods:", error);
+      // Return default settings on error - allow both methods
+      return res.status(200).json({
+        success: true,
+        data: {
+          allowUsernamePasswordRegistration: true,
+          allowZaloRegistration: true
+        }
+      });
+    }
+  });
+
+  // Public endpoint for login methods (không cần authentication)  
+  app.get("/api/auth/login-methods", async (req, res) => {
+    try {
+      const authSettings = await storage.getSettingsByCategory('authentication');
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          allowUsernamePasswordLogin: authSettings.allowUsernamePasswordLogin === "true",
+          allowZaloLogin: authSettings.allowZaloLogin === "true"
+        }
+      });
+    } catch (error) {
+      console.error("Error getting login methods:", error);
+      // Return default settings on error - allow both methods
+      return res.status(200).json({
+        success: true,
+        data: {
+          allowUsernamePasswordLogin: true,
+          allowZaloLogin: true
+        }
+      });
+    }
+  });
+
   // ========== Legal Pages API ==========
   // Get all legal pages
   app.get('/api/admin/legal-pages', isAuthenticated, async (req, res) => {

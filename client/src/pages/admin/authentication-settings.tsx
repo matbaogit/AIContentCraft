@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, Key, Mail, UserCheck, Settings } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Shield, Users, Key, Mail, UserCheck, Settings, UserPlus, LogIn } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import Layout from "@/components/admin/Layout";
 
@@ -17,6 +18,11 @@ interface AuthSettings {
   defaultAuthMethod: 'username_password' | 'zalo' | 'both';
   requireEmailVerification: boolean;
   allowGuestAccess: boolean;
+  // New registration method settings
+  allowUsernamePasswordRegistration: boolean;
+  allowZaloRegistration: boolean;
+  allowUsernamePasswordLogin: boolean;
+  allowZaloLogin: boolean;
 }
 
 export default function AuthenticationSettings() {
@@ -27,6 +33,11 @@ export default function AuthenticationSettings() {
     defaultAuthMethod: 'both',
     requireEmailVerification: false,
     allowGuestAccess: false,
+    // New settings with defaults
+    allowUsernamePasswordRegistration: true,
+    allowZaloRegistration: true,
+    allowUsernamePasswordLogin: true,
+    allowZaloLogin: true,
   });
 
   // Fetch current authentication settings
@@ -58,6 +69,18 @@ export default function AuthenticationSettings() {
           case 'allowGuestAccess':
             newSettings.allowGuestAccess = setting.value === 'true';
             break;
+          case 'allowUsernamePasswordRegistration':
+            newSettings.allowUsernamePasswordRegistration = setting.value === 'true';
+            break;
+          case 'allowZaloRegistration':
+            newSettings.allowZaloRegistration = setting.value === 'true';
+            break;
+          case 'allowUsernamePasswordLogin':
+            newSettings.allowUsernamePasswordLogin = setting.value === 'true';
+            break;
+          case 'allowZaloLogin':
+            newSettings.allowZaloLogin = setting.value === 'true';
+            break;
         }
       });
       
@@ -74,6 +97,10 @@ export default function AuthenticationSettings() {
         { key: 'defaultAuthMethod', value: settings.defaultAuthMethod, category: 'authentication' },
         { key: 'requireEmailVerification', value: settings.requireEmailVerification.toString(), category: 'authentication' },
         { key: 'allowGuestAccess', value: settings.allowGuestAccess.toString(), category: 'authentication' },
+        { key: 'allowUsernamePasswordRegistration', value: settings.allowUsernamePasswordRegistration.toString(), category: 'authentication' },
+        { key: 'allowZaloRegistration', value: settings.allowZaloRegistration.toString(), category: 'authentication' },
+        { key: 'allowUsernamePasswordLogin', value: settings.allowUsernamePasswordLogin.toString(), category: 'authentication' },
+        { key: 'allowZaloLogin', value: settings.allowZaloLogin.toString(), category: 'authentication' },
       ];
 
       return await apiRequest('PUT', '/api/admin/system-settings/batch', payload);
@@ -98,8 +125,24 @@ export default function AuthenticationSettings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  // Validation function
+  const validateSettings = () => {
+    // Must have at least one login method enabled
+    if (!settings.allowUsernamePasswordLogin && !settings.allowZaloLogin) {
+      toast({
+        title: "Lỗi validation",
+        description: "Phải có ít nhất một phương thức đăng nhập được bật để tránh bị khóa tài khoản admin.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSave = () => {
-    saveSettingsMutation.mutate();
+    if (validateSettings()) {
+      saveSettingsMutation.mutate();
+    }
   };
 
   if (isLoading) {
@@ -193,6 +236,94 @@ export default function AuthenticationSettings() {
               </Select>
             </div>
             
+          </CardContent>
+        </Card>
+
+        {/* Registration Methods */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <UserPlus className="h-5 w-5 mr-2" />
+              Phương thức đăng ký được phép
+            </CardTitle>
+            <CardDescription>
+              Chọn các phương thức mà người dùng mới có thể sử dụng để đăng ký tài khoản
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="allowUsernamePasswordRegistration"
+                checked={settings.allowUsernamePasswordRegistration}
+                onCheckedChange={(value) => handleSettingChange('allowUsernamePasswordRegistration', value)}
+              />
+              <Label htmlFor="allowUsernamePasswordRegistration" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Cho phép đăng ký bằng Username/Password
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="allowZaloRegistration"
+                checked={settings.allowZaloRegistration}
+                onCheckedChange={(value) => handleSettingChange('allowZaloRegistration', value)}
+              />
+              <Label htmlFor="allowZaloRegistration" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Cho phép đăng ký bằng Zalo OAuth
+              </Label>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Login Methods */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <LogIn className="h-5 w-5 mr-2" />
+              Phương thức đăng nhập được phép
+            </CardTitle>
+            <CardDescription>
+              Chọn các phương thức mà người dùng có thể sử dụng để đăng nhập (tài khoản cũ vẫn đăng nhập được bình thường)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="allowUsernamePasswordLogin"
+                checked={settings.allowUsernamePasswordLogin}
+                onCheckedChange={(value) => handleSettingChange('allowUsernamePasswordLogin', value)}
+              />
+              <Label htmlFor="allowUsernamePasswordLogin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Cho phép đăng nhập bằng Username/Password
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="allowZaloLogin"
+                checked={settings.allowZaloLogin}
+                onCheckedChange={(value) => handleSettingChange('allowZaloLogin', value)}
+              />
+              <Label htmlFor="allowZaloLogin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Cho phép đăng nhập bằng Zalo OAuth
+              </Label>
+            </div>
+            
+            {/* Warning if no login methods enabled */}
+            {!settings.allowUsernamePasswordLogin && !settings.allowZaloLogin && (
+              <div className="rounded-md bg-yellow-50 p-4 border border-yellow-200">
+                <div className="flex">
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-yellow-800">
+                      Cảnh báo
+                    </h3>
+                    <div className="mt-2 text-sm text-yellow-700">
+                      <p>
+                        Bạn phải bật ít nhất một phương thức đăng nhập để tránh bị khóa tài khoản admin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
