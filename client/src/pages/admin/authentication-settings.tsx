@@ -31,7 +31,7 @@ export default function AuthenticationSettings() {
 
   // Fetch current authentication settings
   const { data: settingsData, isLoading } = useQuery({
-    queryKey: ['/api/admin/system-settings', 'authentication'],
+    queryKey: ['/api/admin/system-settings?category=authentication'],
     refetchOnWindowFocus: false,
   });
 
@@ -83,7 +83,7 @@ export default function AuthenticationSettings() {
         title: "Thành công",
         description: "Cài đặt xác thực đã được cập nhật.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/system-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/system-settings?category=authentication'] });
     },
     onError: (error: any) => {
       toast({

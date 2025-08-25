@@ -4127,12 +4127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (category) {
         settings = await storage.getSettingsByCategory(category);
       } else {
-        // Get all system settings
-        const [allSettings] = await db.select().from(systemSettings);
-        settings = allSettings || [];
+        // Get all system settings - select all records, not just first one
+        settings = await db.select().from(systemSettings);
       }
       
-      res.json({ success: true, data: settings });
+      res.json({ success: true, data: settings || [] });
     } catch (error) {
       console.error('Error fetching system settings:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch system settings' });
