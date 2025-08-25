@@ -120,12 +120,6 @@ function Settings() {
   const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
   
-  // Debug: Log the t function and translations
-  console.log('Settings page - t function:', t);
-  console.log('Settings page - language:', language);
-  console.log('Settings page - title translation:', safeT('userSettings.title'));
-  console.log('Settings page - profileInformation translation:', safeT('userSettings.profileInformation'));
-  
   // Create a safe translation function
   const safeT = (key: string) => {
     if (!t) {
@@ -191,8 +185,14 @@ function Settings() {
       
       return translations[language as 'vi' | 'en']?.[key] || key;
     }
-    return safeT(key);
+    return t(key);
   };
+
+  // Debug: Log the t function and translations
+  console.log('Settings page - t function:', t);
+  console.log('Settings page - language:', language);
+  console.log('Settings page - title translation:', safeT('userSettings.title'));
+  console.log('Settings page - profileInformation translation:', safeT('userSettings.profileInformation'));
   
   // Check if user is from Zalo (no email address)
   const isZaloUser = !user?.email;
