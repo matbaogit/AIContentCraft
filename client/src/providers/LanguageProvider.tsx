@@ -1368,7 +1368,12 @@ const translations: TranslationsType = {
         title: "Create High-Quality SEO Content Instantly",
         subtitle: "Use artificial intelligence to create engaging, SEO-optimized content quickly and efficiently.",
         tryFree: "Try for Free",
-        viewDemo: "View Demo",
+        viewDemo: "View Features",
+        stats: {
+          users: "users",
+          reviews: "rating",
+          articlesCreated: "articles created"
+        },
         features: {
           aiContent: {
             title: "AI Content",
