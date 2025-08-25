@@ -4125,12 +4125,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let settings;
       
       if (category) {
-        settings = await storage.getSettingsByCategory(category);
+        console.log('Fetching settings by category:', category);
+        // Get settings from storage (returns object) and convert to array format
+        const settingsObj = await storage.getSettingsByCategory(category);
+        console.log('Settings from storage.getSettingsByCategory:', settingsObj);
+        
+        // Convert object to array format that frontend expects
+        settings = Object.entries(settingsObj).map(([key, value]) => ({
+          id: `${category}-${key}`,
+          category,
+          key,
+          value
+        }));
+        console.log('Converted to array format:', settings);
       } else {
-        // Get all system settings - select all records, not just first one
+        console.log('Fetching all system settings');
         settings = await db.select().from(systemSettings);
+        console.log('Settings from db.select:', settings);
       }
       
+      console.log('Final settings to return:', settings, 'Type:', Array.isArray(settings) ? 'Array' : typeof settings);
       res.json({ success: true, data: settings || [] });
     } catch (error) {
       console.error('Error fetching system settings:', error);
