@@ -198,7 +198,7 @@ export const en = {
       title: "Create SEO-optimized content automatically with AI",
       subtitle: "High-quality content generation service, SEO optimized for your website and social media in just minutes.",
       tryFree: "Try for free",
-      viewDemo: "View demo"
+      viewDemo: "View Features"
     }
   },
 
