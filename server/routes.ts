@@ -4114,6 +4114,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // System settings API endpoints
+  app.get('/api/admin/system-settings', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+      
+      const category = req.query.category as string;
+      let settings;
+      
+      if (category) {
+        settings = await storage.getSettingsByCategory(category);
+      } else {
+        // Get all system settings
+        const [allSettings] = await db.select().from(systemSettings);
+        settings = allSettings || [];
+      }
+      
+      res.json({ success: true, data: settings });
+    } catch (error) {
+      console.error('Error fetching system settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch system settings' });
+    }
+  });
+
+  app.put('/api/admin/system-settings/batch', async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Admin access required' });
+      }
+      
+      const settingsArray = req.body;
+      if (!Array.isArray(settingsArray)) {
+        return res.status(400).json({ success: false, error: 'Expected an array of settings' });
+      }
+
+      // Update each setting
+      const updatePromises = settingsArray.map(async (setting) => {
+        const { key, value, category } = setting;
+        return await storage.setSetting(key, value, category || 'general');
+      });
+
+      await Promise.all(updatePromises);
+
+      res.json({ 
+        success: true, 
+        data: { message: 'Settings updated successfully' }
+      });
+    } catch (error) {
+      console.error('Error updating system settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to update system settings' });
+    }
+  });
+
   // ========== Feedback API ==========
   // Submit feedback
   app.post('/api/feedback', async (req, res) => {

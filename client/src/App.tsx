@@ -74,6 +74,7 @@ import AdminAnalytics from "@/pages/admin/analytics";
 import AppearancePage from "@/pages/admin/appearance";
 import AdminFaq from "@/pages/admin/faq";
 import AdminEmailTemplates from "@/pages/admin/email-templates";
+import AuthenticationSettings from "@/pages/admin/authentication-settings";
 import RegisterPage from "@/pages/register";
 import ZaloCallbackPage from "@/pages/zalo-callback";
 import ReferralsPage from "@/pages/dashboard/referrals";
@@ -164,6 +165,7 @@ function Router() {
       <ProtectedRoute path="/admin/appearance" component={AppearancePage} adminOnly={true} />
       <ProtectedRoute path="/admin/faq" component={AdminFaq} adminOnly={true} />
       <ProtectedRoute path="/admin/email-templates" component={AdminEmailTemplates} adminOnly={true} />
+      <ProtectedRoute path="/admin/authentication" component={AuthenticationSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/history" component={AdminHistory} adminOnly={true} />
       <ProtectedRoute path="/admin/settings" component={AdminSettings} adminOnly={true} />
       <ProtectedRoute path="/admin/performance" component={AdminPerformance} adminOnly={true} />

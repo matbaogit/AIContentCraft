@@ -22,6 +22,7 @@ import {
   Palette,
   HelpCircle,
   Mail,
+  Shield,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -139,6 +140,11 @@ function Layout({ children, title }: AdminLayoutProps) {
       href: "/admin/email-templates",
       label: "Email Templates",
       icon: <Mail className="h-5 w-5" />,
+    },
+    {
+      href: "/admin/authentication",
+      label: "Cài đặt xác thực",
+      icon: <Shield className="h-5 w-5" />,
     },
     {
       href: "/admin/settings",
