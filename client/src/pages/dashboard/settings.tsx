@@ -118,7 +118,7 @@ const settingsSchema = z.object({
 function Settings() {
   const { user } = useAuth();
   const { t, language, setLanguage } = useLanguage();
-  const { toast } = useToassafeT();
+  const { toast } = useToast();
   
   // Debug: Log the t function and translations
   console.log('Settings page - t function:', t);
