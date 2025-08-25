@@ -122,9 +122,8 @@ function Settings() {
   
   // Create a safe translation function
   const safeT = (key: string) => {
-    if (!t) {
-      // Fallback translations based on language
-      const translations: Record<string, Record<string, string>> = {
+    // Always use fallback translations since t function is null
+    const translations: Record<string, Record<string, string>> = {
         vi: {
           'userSettings.title': 'Cài đặt',
           'userSettings.profileInformation': 'Thông tin cá nhân',
@@ -184,8 +183,6 @@ function Settings() {
       };
       
       return translations[language as 'vi' | 'en']?.[key] || key;
-    }
-    return t(key);
   };
 
   // Debug: Log the t function and translations
