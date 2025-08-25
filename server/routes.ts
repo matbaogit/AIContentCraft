@@ -2406,6 +2406,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unified Settings Update (Profile, Password, Preferences)
+  app.patch('/api/dashboard/settings', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+
+      const userId = req.user.id;
+      const { fullName, email, newPassword, language, emailNotifications } = req.body;
+      
+      // Get user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      const updateData: any = {};
+      
+      // Profile updates
+      if (fullName !== undefined) updateData.fullName = fullName;
+      if (email !== undefined && email !== '' && !user.zaloId) {
+        // Only allow email changes for non-Zalo users
+        updateData.email = email;
+      }
+      
+      // Preferences
+      if (language !== undefined) updateData.language = language;
+      if (emailNotifications !== undefined) updateData.emailNotifications = emailNotifications;
+      
+      // Password update (optional)
+      if (newPassword && newPassword.trim().length > 0) {
+        const scryptAsync = promisify(scrypt);
+        const salt = randomBytes(16).toString("hex");
+        const hashedBuf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
+        const hashedPassword = `${hashedBuf.toString("hex")}.${salt}`;
+        updateData.password = hashedPassword;
+      }
+      
+      // Update user
+      const updatedUser = await storage.updateUser(userId, updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+      
+      // Don't include password in response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json({ 
+        success: true, 
+        data: userWithoutPassword,
+        language: updatedUser.language // Send back language for frontend update
+      });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      res.status(500).json({ success: false, error: 'Failed to update settings' });
+    }
+  });
+
   // ========== Workspace API ==========
   // Get user's workspaces
   app.get('/api/workspaces', async (req, res) => {
