@@ -99,6 +99,19 @@ export default function AuthPage() {
     queryFn: () => apiRequest("GET", `/api/appearance/settings?type=login_page&language=${language}`),
     retry: false,
   });
+
+  // Fetch authentication methods settings
+  const { data: registrationMethods } = useQuery({
+    queryKey: ["/api/auth/registration-methods"],
+    queryFn: () => apiRequest("GET", "/api/auth/registration-methods"),
+    retry: false,
+  });
+
+  const { data: loginMethods } = useQuery({
+    queryKey: ["/api/auth/login-methods"],
+    queryFn: () => apiRequest("GET", "/api/auth/login-methods"),
+    retry: false,
+  });
   
   // Parse appearance settings into usable object
   const loginPageSettings = React.useMemo(() => {
@@ -150,6 +163,43 @@ export default function AuthPage() {
       button_color: settings.button_color || "#3b82f6",
     };
   }, [appearanceSettings]);
+
+  // Parse authentication methods settings
+  const authMethodsSettings = React.useMemo(() => {
+    const regMethods = registrationMethods?.success ? registrationMethods.data : {
+      allowUsernamePasswordRegistration: true,
+      allowZaloRegistration: true
+    };
+    const loginMethods_ = loginMethods?.success ? loginMethods.data : {
+      allowUsernamePasswordLogin: true,
+      allowZaloLogin: true
+    };
+    
+    return {
+      registration: regMethods,
+      login: loginMethods_
+    };
+  }, [registrationMethods, loginMethods]);
+
+  // Check if any registration method is available
+  const hasRegistrationMethods = authMethodsSettings.registration.allowUsernamePasswordRegistration || authMethodsSettings.registration.allowZaloRegistration;
+  
+  // Check if any login method is available  
+  const hasLoginMethods = authMethodsSettings.login.allowUsernamePasswordLogin || authMethodsSettings.login.allowZaloLogin;
+
+  // Determine if tabs should be shown (both login and registration methods available)
+  const showTabs = hasRegistrationMethods && hasLoginMethods;
+  
+  // Auto-set tab if only one method is available
+  useEffect(() => {
+    if (!showTabs) {
+      if (!hasRegistrationMethods && hasLoginMethods) {
+        setActiveTab("login");
+      } else if (hasRegistrationMethods && !hasLoginMethods) {
+        setActiveTab("register");
+      }
+    }
+  }, [showTabs, hasRegistrationMethods, hasLoginMethods]);
   
   // Check URL params to set default tab and referral code
   useEffect(() => {
@@ -158,15 +208,17 @@ export default function AuthPage() {
     const refCode = params.get('ref');
     
     // If on /register route or has ?ref= parameter, switch to register tab
-    if (location === '/register' || refCode || tab === 'register') {
+    if ((location === '/register' || refCode || tab === 'register') && hasRegistrationMethods) {
       setActiveTab('register');
+    } else if (hasLoginMethods) {
+      setActiveTab('login');
     }
     
     // Set referral code if present
     if (refCode) {
       setReferralCode(refCode);
     }
-  }, [location]);
+  }, [location, hasRegistrationMethods, hasLoginMethods]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -472,15 +524,24 @@ export default function AuthPage() {
                     </div>
                   </div>
                 ) : (
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="w-full flex mb-6 border-b border-slate-700">
-                    <TabsTrigger value="login" className="flex-1 text-slate-300">{t("nav.login")}</TabsTrigger>
-                    <TabsTrigger value="register" className="flex-1 text-slate-300">{t("nav.register")}</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="login" className="mt-0">
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                  <>
+                    {showTabs ? (
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="w-full flex mb-6 border-b border-slate-700">
+                      {hasLoginMethods && (
+                        <TabsTrigger value="login" className="flex-1 text-slate-300">{t("nav.login")}</TabsTrigger>
+                      )}
+                      {hasRegistrationMethods && (
+                        <TabsTrigger value="register" className="flex-1 text-slate-300">{t("nav.register")}</TabsTrigger>
+                      )}
+                    </TabsList>
+
+                    {/* Login Tab Content */}
+                    {hasLoginMethods && (
+                      <TabsContent value="login" className="mt-0">
+                        {authMethodsSettings.login.allowUsernamePasswordLogin && (
+                          <Form {...loginForm}>
+                            <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                         <FormField
                           control={loginForm.control}
                           name="username"
@@ -564,15 +625,20 @@ export default function AuthPage() {
                           className="w-full bg-primary hover:bg-primary/90 button-hover-effect"
                           disabled={loginMutation.isPending}
                         >
-                          {loginMutation.isPending ? t("common.loading") : loginPageSettings.login_button_text}
-                        </Button>
-                      </form>
-                    </Form>
-                  </TabsContent>
-                  
-                  <TabsContent value="register" className="mt-0">
-                    <Form {...registerForm}>
-                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
+                              {loginMutation.isPending ? t("common.loading") : loginPageSettings.login_button_text}
+                            </Button>
+                          </form>
+                        </Form>
+                        )}
+                      </TabsContent>
+                    )}
+
+                    {/* Register Tab Content */}
+                    {hasRegistrationMethods && (
+                      <TabsContent value="register" className="mt-0">
+                        {authMethodsSettings.registration.allowUsernamePasswordRegistration && (
+                          <Form {...registerForm}>
+                            <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
                         <FormField
                           control={registerForm.control}
                           name="fullName"
@@ -722,10 +788,211 @@ export default function AuthPage() {
                         </Button>
                       </form>
                     </Form>
-                  </TabsContent>
-                </Tabs>
+                        )}
+                      </TabsContent>
+                    )}
+                  </Tabs>
+                ) : (
+                  // Single method display when tabs are not needed
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-white text-center mb-6">
+                      {!hasRegistrationMethods && hasLoginMethods ? loginPageSettings.login_title : loginPageSettings.register_title}
+                    </h3>
+                    
+                    {/* Show login form if only login is allowed */}
+                    {!hasRegistrationMethods && hasLoginMethods && authMethodsSettings.login.allowUsernamePasswordLogin && (
+                      <Form {...loginForm}>
+                        <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                          <FormField
+                            control={loginForm.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{loginPageSettings.username_label}</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="text" 
+                                    placeholder={loginPageSettings.username_placeholder}
+                                    className="bg-slate-700/50 border-slate-600" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={loginForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{loginPageSettings.password_label}</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input 
+                                      type={showPassword ? "text" : "password"} 
+                                      placeholder={loginPageSettings.password_placeholder}
+                                      className="bg-slate-700/50 border-slate-600 pr-10" 
+                                      {...field} 
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="submit"
+                            className="w-full bg-primary hover:bg-primary/90"
+                            disabled={loginMutation.isPending}
+                          >
+                            {loginMutation.isPending ? t("common.loading") : loginPageSettings.login_button_text}
+                          </Button>
+                        </form>
+                      </Form>
+                    )}
+                    
+                    {/* Show register form if only registration is allowed */}
+                    {hasRegistrationMethods && !hasLoginMethods && authMethodsSettings.registration.allowUsernamePasswordRegistration && (
+                      <Form {...registerForm}>
+                        <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
+                          <FormField
+                            control={registerForm.control}
+                            name="fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{t("auth.register.name")}</FormLabel>
+                                <FormControl>
+                                  <Input className="bg-slate-700/50 border-slate-600" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={registerForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{t("auth.register.email")}</FormLabel>
+                                <FormControl>
+                                  <Input type="email" className="bg-slate-700/50 border-slate-600" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={registerForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{t("auth.register.password")}</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input 
+                                      type={showPassword ? "text" : "password"} 
+                                      className="bg-slate-700/50 border-slate-600 pr-10" 
+                                      {...field} 
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={registerForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">{t("auth.register.confirmPassword")}</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input 
+                                      type={showConfirmPassword ? "text" : "password"} 
+                                      className="bg-slate-700/50 border-slate-600 pr-10" 
+                                      {...field} 
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={registerForm.control}
+                            name="terms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="flex flex-row items-start space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                      className="border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-1"
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel className="text-sm font-normal text-slate-300">
+                                      {t("auth.register.termsAgree")}{" "}
+                                      <a href="#" className="text-primary hover:text-primary/80">
+                                        {t("auth.register.terms")}
+                                      </a>{" "}
+                                      {t("auth.register.and")}{" "}
+                                      <a href="#" className="text-primary hover:text-primary/80">
+                                        {t("auth.register.privacy")}
+                                      </a>
+                                    </FormLabel>
+                                  </div>
+                                </div>
+                                <FormMessage className="text-sm mt-2" />
+                              </FormItem>
+                            )}
+                          />
+                          <Button
+                            type="submit"
+                            className="w-full bg-primary hover:bg-primary/90"
+                            disabled={registerMutation.isPending}
+                          >
+                            {registerMutation.isPending ? t("common.loading") : t("auth.register.submit")}
+                          </Button>
+                        </form>
+                      </Form>
+                    )}
+                  </div>
+                )}
+                </>
                 )}
 
+                {/* Social Login Section */}
+                {((showTabs && (hasLoginMethods || hasRegistrationMethods)) || 
+                  (!showTabs && (
+                    (activeTab === "login" && authMethodsSettings.login.allowZaloLogin) ||
+                    (activeTab === "register" && authMethodsSettings.registration.allowZaloRegistration)
+                  ))
+                ) && (
                 <div className="mt-6">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -769,25 +1036,38 @@ export default function AuthPage() {
                       </Button>
                     )}
 
-                    {/* Zalo Login Button */}
-                    <ZaloLoginButton 
-                      disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                      className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
-                      onSuccess={() => {
-                        toast({
-                          title: "Đăng nhập thành công!",
-                          description: "Chào mừng bạn đến với hệ thống!",
-                        });
-                        navigate("/dashboard");
-                      }}
-                      onNeedsConfirmation={() => {
-                        setShowZaloConfirmation(true);
-                      }}
-                    >
-                      {isProcessingOAuth ? "Đang xử lý..." : "Đăng nhập bằng Zalo"}
-                    </ZaloLoginButton>
+                    {/* Zalo Login Button - Show based on current tab and settings */}
+                    {((activeTab === "login" && authMethodsSettings.login.allowZaloLogin) ||
+                      (activeTab === "register" && authMethodsSettings.registration.allowZaloRegistration) ||
+                      (!showTabs && (
+                        (!hasRegistrationMethods && hasLoginMethods && authMethodsSettings.login.allowZaloLogin) ||
+                        (hasRegistrationMethods && !hasLoginMethods && authMethodsSettings.registration.allowZaloRegistration)
+                      ))
+                    ) && (
+                      <ZaloLoginButton 
+                        disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
+                        className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+                        onSuccess={() => {
+                          toast({
+                            title: "Đăng nhập thành công!",
+                            description: "Chào mừng bạn đến với hệ thống!",
+                          });
+                          navigate("/dashboard");
+                        }}
+                        onNeedsConfirmation={() => {
+                          setShowZaloConfirmation(true);
+                        }}
+                      >
+                        {isProcessingOAuth ? "Đang xử lý..." : (
+                          activeTab === "register" || (hasRegistrationMethods && !hasLoginMethods) 
+                            ? "Đăng ký bằng Zalo" 
+                            : "Đăng nhập bằng Zalo"
+                        )}
+                      </ZaloLoginButton>
+                    )}
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </div>
