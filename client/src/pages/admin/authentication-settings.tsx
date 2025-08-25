@@ -76,7 +76,7 @@ export default function AuthenticationSettings() {
         { key: 'allowGuestAccess', value: settings.allowGuestAccess.toString(), category: 'authentication' },
       ];
 
-      return await apiRequest('/api/admin/system-settings/batch', 'PUT', payload);
+      return await apiRequest('PUT', '/api/admin/system-settings/batch', payload);
     },
     onSuccess: () => {
       toast({
