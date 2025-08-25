@@ -73,7 +73,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/(?=.*[a-z])/.test(data.newPassword)) {
+    if (!/[a-z]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one lowercase letter",
@@ -81,7 +81,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/(?=.*[A-Z])/.test(data.newPassword)) {
+    if (!/[A-Z]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one uppercase letter",
@@ -89,7 +89,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/(?=.*\d)/.test(data.newPassword)) {
+    if (!/[0-9]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one number",
@@ -97,15 +97,14 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/(?=.*[@$!%*?&])/.test(data.newPassword)) {
+    if (!/[^a-zA-Z0-9]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password must contain at least one special character (@$!%*?&)",
+        message: "Password must contain at least one special character",
         path: ["newPassword"],
       });
     }
     
-    // Confirm password match
     if (data.newPassword !== data.confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -116,91 +115,97 @@ const settingsSchema = z.object({
   }
 });
 
-export default function Settings() {
-  const { t, language, setLanguage } = useLanguage();
+function Settings() {
   const { user } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
-  const [passwordStrength, setPasswordStrength] = useState<{ score: number; feedback: string[] }>({ score: 0, feedback: [] });
+  
+  // Check if user is from Zalo (no email address)
+  const isZaloUser = !user?.email;
 
-  // Check if user is from Zalo (has zaloId but no email)
-  const isZaloUser = user?.zaloId && !user?.email;
-
-  // Unified form
   const form = useForm<z.infer<typeof settingsSchema>>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      fullName: user?.fullName || user?.firstName || "",
+      fullName: user?.fullName || user?.username || "",
       email: user?.email || "",
       newPassword: "",
       confirmPassword: "",
       language: language as "vi" | "en",
-      emailNotifications: true, // Default value
+      emailNotifications: user?.emailNotifications ?? false,
     },
   });
 
   // Watch password field for strength validation
   const newPassword = form.watch("newPassword");
 
-  // Password strength checker
-  const checkPasswordStrength = (password: string) => {
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string) => {
+    if (!password) return { score: 0, feedback: [] };
+    
     const feedback = [];
     let score = 0;
 
-    if (password.length >= 8) score += 1;
-    else feedback.push("At least 8 characters");
+    if (password.length < 8) feedback.push("At least 8 characters");
+    else score++;
 
-    if (/(?=.*[a-z])/.test(password)) score += 1;
-    else feedback.push("One lowercase letter");
+    if (!/[a-z]/.test(password)) feedback.push("One lowercase letter");
+    else score++;
 
-    if (/(?=.*[A-Z])/.test(password)) score += 1;
-    else feedback.push("One uppercase letter");
+    if (!/[A-Z]/.test(password)) feedback.push("One uppercase letter");
+    else score++;
 
-    if (/(?=.*\d)/.test(password)) score += 1;
-    else feedback.push("One number");
+    if (!/[0-9]/.test(password)) feedback.push("One number");
+    else score++;
 
-    if (/(?=.*[@$!%*?&])/.test(password)) score += 1;
-    else feedback.push("One special character");
+    if (!/[^a-zA-Z0-9]/.test(password)) feedback.push("One special character");
+    else score++;
 
     return { score, feedback };
   };
 
-  // Update password strength when password changes
-  useEffect(() => {
-    if (newPassword && newPassword.length > 0) {
-      const strength = checkPasswordStrength(newPassword);
-      setPasswordStrength(strength);
-    } else {
-      setPasswordStrength({ score: 0, feedback: [] });
-    }
-  }, [newPassword]);
+  const passwordStrength = calculatePasswordStrength(newPassword || "");
 
-  // Unified settings update mutation
+  // Update settings mutation
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: z.infer<typeof settingsSchema>) => {
-      const res = await apiRequest("PATCH", "/api/dashboard/settings", data);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      // Update language if changed
-      if (data.language && data.language !== language) {
-        setLanguage(data.language);
-      }
+      const payload = {
+        fullName: data.fullName,
+        email: isZaloUser ? undefined : data.email,
+        newPassword: data.newPassword || undefined,
+        language: data.language,
+        emailNotifications: data.emailNotifications,
+      };
       
-      toast({
-        title: "Settings updated",
-        description: "Your settings have been updated successfully",
+      return await apiRequest('/api/dashboard/settings', {
+        method: 'PUT',
+        body: payload,
       });
-      
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Reset password fields after successful update
-      form.setValue("newPassword", "");
-      form.setValue("confirmPassword", "");
     },
-    onError: (error: Error) => {
+    onSuccess: (response) => {
+      if (response.success) {
+        toast({
+          title: "Success!",
+          description: "Settings updated successfully.",
+        });
+        
+        // Update language if changed
+        if (form.getValues('language') !== language) {
+          setLanguage(form.getValues('language'));
+        }
+        
+        // Invalidate and refetch user data
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+        
+        // Clear password fields
+        form.setValue('newPassword', '');
+        form.setValue('confirmPassword', '');
+      }
+    },
+    onError: (error: any) => {
+      console.error('Settings update error:', error);
       toast({
-        title: "Update failed",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to update settings. Please try again.",
         variant: "destructive",
       });
     },
@@ -213,10 +218,10 @@ export default function Settings() {
   return (
     <>
       <Head>
-        <title>Settings - ToolBox</title>
+        <title>{t('userSettings.title')} - {t('common.appName')}</title>
       </Head>
       
-      <DashboardLayout title="Settings">
+      <DashboardLayout title={t('userSettings.title')}>
         <div className="max-w-4xl mx-auto space-y-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -226,7 +231,7 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <User className="h-5 w-5 mr-2" />
-                    Profile Information
+                    {t('userSettings.profileInformation')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -236,7 +241,7 @@ export default function Settings() {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>{t('userSettings.fullName')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -250,7 +255,7 @@ export default function Settings() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>{t('userSettings.email')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="email" 
@@ -260,7 +265,7 @@ export default function Settings() {
                         </FormControl>
                         {isZaloUser && (
                           <FormDescription className="text-amber-600 dark:text-amber-400">
-                            This account is linked to Zalo and doesn't have an email address.
+                            {t('userSettings.zaloUserNote')}
                           </FormDescription>
                         )}
                         <FormMessage />
@@ -276,7 +281,7 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Shield className="h-5 w-5 mr-2" />
-                    Security
+                    {t('userSettings.security')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -286,9 +291,9 @@ export default function Settings() {
                     name="newPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New Password (Optional)</FormLabel>
+                        <FormLabel>{t('userSettings.newPassword')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Leave empty to keep current password" {...field} />
+                          <Input type="password" placeholder={t('userSettings.newPasswordPlaceholder')} {...field} />
                         </FormControl>
                         {newPassword && newPassword.length > 0 && (
                           <div className="space-y-2">
@@ -307,22 +312,32 @@ export default function Settings() {
                               </div>
                               <span className="text-sm font-medium">
                                 {passwordStrength.score <= 2
-                                  ? "Weak"
+                                  ? t('userSettings.passwordWeak')
                                   : passwordStrength.score <= 4
-                                  ? "Medium"
-                                  : "Strong"}
+                                  ? t('userSettings.passwordMedium')
+                                  : t('userSettings.passwordStrong')}
                               </span>
                             </div>
                             {passwordStrength.feedback.length > 0 && (
                               <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <p>Password requirements:</p>
+                                <p>{t('userSettings.passwordRequirements')}</p>
                                 <ul className="list-disc list-inside space-y-1">
-                                  {passwordStrength.feedback.map((item, index) => (
-                                    <li key={index} className="flex items-center space-x-2">
-                                      <AlertCircle className="h-3 w-3 text-orange-500" />
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
+                                  {passwordStrength.feedback.map((item, index) => {
+                                    // Map English feedback to translations
+                                    const feedbackMap: { [key: string]: string } = {
+                                      "At least 8 characters": t('userSettings.requirementMinLength'),
+                                      "One lowercase letter": t('userSettings.requirementLowercase'),
+                                      "One uppercase letter": t('userSettings.requirementUppercase'),
+                                      "One number": t('userSettings.requirementNumber'),
+                                      "One special character": t('userSettings.requirementSpecial')
+                                    };
+                                    return (
+                                      <li key={index} className="flex items-center space-x-2">
+                                        <AlertCircle className="h-3 w-3 text-orange-500" />
+                                        <span>{feedbackMap[item] || item}</span>
+                                      </li>
+                                    )
+                                  })}
                                 </ul>
                               </div>
                             )}
@@ -338,11 +353,11 @@ export default function Settings() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
+                        <FormLabel>{t('userSettings.confirmPassword')}</FormLabel>
                         <FormControl>
                           <Input 
                             type="password" 
-                            placeholder="Confirm your new password"
+                            placeholder={t('userSettings.confirmPasswordPlaceholder')}
                             disabled={!newPassword || newPassword.length === 0}
                             {...field} 
                           />
@@ -360,7 +375,7 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Languages className="h-5 w-5 mr-2" />
-                    Preferences
+                    {t('userSettings.preferences')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -370,7 +385,7 @@ export default function Settings() {
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Language</FormLabel>
+                        <FormLabel>{t('userSettings.language')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -398,10 +413,10 @@ export default function Settings() {
                         <div className="space-y-0.5">
                           <FormLabel className="text-base flex items-center">
                             <Bell className="h-4 w-4 mr-2" />
-                            Email Notifications
+                            {t('userSettings.emailNotifications')}
                           </FormLabel>
                           <FormDescription>
-                            Receive email notifications about important updates and changes.
+                            {t('userSettings.emailNotificationsDesc')}
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -425,7 +440,7 @@ export default function Settings() {
                   disabled={updateSettingsMutation.isPending}
                   className="min-w-32"
                 >
-                  {updateSettingsMutation.isPending ? "Saving..." : "Save Changes"}
+                  {updateSettingsMutation.isPending ? t('userSettings.saving') : t('userSettings.saveChanges')}
                 </Button>
               </div>
               
@@ -436,3 +451,5 @@ export default function Settings() {
     </>
   );
 }
+
+export default Settings;

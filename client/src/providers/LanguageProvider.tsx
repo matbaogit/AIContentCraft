@@ -175,6 +175,34 @@ const translations: TranslationsType = {
         availableWebhookEvents: "Sự kiện webhook có sẵn"
       },
       
+      userSettings: {
+        title: "Cài đặt",
+        profileInformation: "Thông tin cá nhân",
+        security: "Bảo mật",
+        preferences: "Tùy chọn",
+        fullName: "Tên đầy đủ",
+        email: "Email",
+        newPassword: "Mật khẩu mới (Tùy chọn)",
+        newPasswordPlaceholder: "Để trống để giữ mật khẩu hiện tại",
+        confirmPassword: "Xác nhận mật khẩu mới",
+        confirmPasswordPlaceholder: "Xác nhận mật khẩu mới của bạn",
+        language: "Ngôn ngữ",
+        emailNotifications: "Thông báo Email",
+        emailNotificationsDesc: "Nhận thông báo email về các cập nhật và thay đổi quan trọng.",
+        saveChanges: "Lưu thay đổi",
+        saving: "Đang lưu...",
+        zaloUserNote: "Tài khoản này được liên kết với Zalo và không có địa chỉ email.",
+        passwordRequirements: "Yêu cầu mật khẩu:",
+        passwordWeak: "Yếu",
+        passwordMedium: "Trung bình",
+        passwordStrong: "Mạnh",
+        requirementMinLength: "Ít nhất 8 ký tự",
+        requirementLowercase: "Một chữ thường",
+        requirementUppercase: "Một chữ hoa",
+        requirementNumber: "Một số",
+        requirementSpecial: "Một ký tự đặc biệt"
+      },
+      
       performanceMetrics: {
         title: "Số liệu hiệu suất",
         responseTime: "Thời gian phản hồi",
@@ -1120,6 +1148,34 @@ const translations: TranslationsType = {
         notificationWebhook: "n8n Notification Webhook",
         notificationWebhookDescription: "Webhook URL to receive system events notifications",
         availableWebhookEvents: "Available Webhook Events"
+      },
+      
+      userSettings: {
+        title: "Settings",
+        profileInformation: "Profile Information",
+        security: "Security",
+        preferences: "Preferences",
+        fullName: "Full Name",
+        email: "Email",
+        newPassword: "New Password (Optional)",
+        newPasswordPlaceholder: "Leave empty to keep current password",
+        confirmPassword: "Confirm New Password",
+        confirmPasswordPlaceholder: "Confirm your new password",
+        language: "Language",
+        emailNotifications: "Email Notifications",
+        emailNotificationsDesc: "Receive email notifications about important updates and changes.",
+        saveChanges: "Save Changes",
+        saving: "Saving...",
+        zaloUserNote: "This account is linked to Zalo and doesn't have an email address.",
+        passwordRequirements: "Password requirements:",
+        passwordWeak: "Weak",
+        passwordMedium: "Medium",
+        passwordStrong: "Strong",
+        requirementMinLength: "At least 8 characters",
+        requirementLowercase: "One lowercase letter",
+        requirementUppercase: "One uppercase letter",
+        requirementNumber: "One number",
+        requirementSpecial: "One special character"
       },
       
       performanceMetrics: {
