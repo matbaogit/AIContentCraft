@@ -73,7 +73,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[a-z]/.tessafeT(data.newPassword)) {
+    if (!/[a-z]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one lowercase letter",
@@ -81,7 +81,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[A-Z]/.tessafeT(data.newPassword)) {
+    if (!/[A-Z]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one uppercase letter",
@@ -89,7 +89,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[0-9]/.tessafeT(data.newPassword)) {
+    if (!/[0-9]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one number",
@@ -97,7 +97,7 @@ const settingsSchema = z.object({
       });
     }
     
-    if (!/[^a-zA-Z0-9]/.tessafeT(data.newPassword)) {
+    if (!/[^a-zA-Z0-9]/.test(data.newPassword)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Password must contain at least one special character",
@@ -222,16 +222,16 @@ function Settings() {
     if (password.length < 8) feedback.push("At least 8 characters");
     else score++;
 
-    if (!/[a-z]/.tessafeT(password)) feedback.push("One lowercase letter");
+    if (!/[a-z]/.test(password)) feedback.push("One lowercase letter");
     else score++;
 
-    if (!/[A-Z]/.tessafeT(password)) feedback.push("One uppercase letter");
+    if (!/[A-Z]/.test(password)) feedback.push("One uppercase letter");
     else score++;
 
-    if (!/[0-9]/.tessafeT(password)) feedback.push("One number");
+    if (!/[0-9]/.test(password)) feedback.push("One number");
     else score++;
 
-    if (!/[^a-zA-Z0-9]/.tessafeT(password)) feedback.push("One special character");
+    if (!/[^a-zA-Z0-9]/.test(password)) feedback.push("One special character");
     else score++;
 
     return { score, feedback };
@@ -250,7 +250,7 @@ function Settings() {
         emailNotifications: data.emailNotifications,
       };
       
-      return await apiRequessafeT('/api/dashboard/settings', 'PUT', payload);
+      return await apiRequest('/api/dashboard/settings', 'PUT', payload);
     },
     onSuccess: (response) => {
       if (response.success) {
@@ -295,7 +295,7 @@ function Settings() {
       <DashboardLayout title={safeT('userSettings.title')}>
         <div className="max-w-4xl mx-auto space-y-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmisafeT(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               
               {/* Profile Information Section */}
               <Card>

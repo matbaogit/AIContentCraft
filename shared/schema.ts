@@ -55,6 +55,7 @@ export const users = pgTable('users', {
   referredBy: integer('referred_by'), // ID người giới thiệu
   zaloId: text('zalo_id').unique(), // Zalo user ID
   avatar: text('avatar'), // Avatar URL from Zalo or other sources (keep for backward compatibility)
+  emailNotifications: boolean('email_notifications').notNull().default(true), // Email notification preference
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
