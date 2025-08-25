@@ -387,7 +387,7 @@ const translations: TranslationsType = {
         title: "Tạo bài viết SEO chất lượng cao tức thì",
         subtitle: "Sử dụng trí tuệ nhân tạo để tạo ra nội dung hấp dẫn, tối ưu cho SEO một cách nhanh chóng và hiệu quả.",
         tryFree: "Dùng thử miễn phí",
-        viewDemo: "Xem demo",
+        viewDemo: "Xem các tính năng",
         features: {
           aiContent: {
             title: "Nội dung AI",
