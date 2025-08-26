@@ -73,7 +73,28 @@ export default function AdminCreditConfig() {
   // Update local state when data loads
   useEffect(() => {
     if (creditConfigData) {
-      setConfig(creditConfigData);
+      // Merge with default config to ensure all fields exist
+      const mergedConfig = {
+        ...defaultConfig,
+        ...creditConfigData,
+        contentGeneration: {
+          ...defaultConfig.contentGeneration,
+          ...creditConfigData.contentGeneration
+        },
+        imageGeneration: {
+          ...defaultConfig.imageGeneration,
+          ...creditConfigData.imageGeneration
+        },
+        socialContent: {
+          ...defaultConfig.socialContent,
+          ...creditConfigData.socialContent
+        },
+        aiModels: {
+          ...defaultConfig.aiModels,
+          ...creditConfigData.aiModels
+        }
+      };
+      setConfig(mergedConfig);
     }
   }, [creditConfigData]);
 
