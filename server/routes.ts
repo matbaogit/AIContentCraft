@@ -981,6 +981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('- AI Model:', contentRequest.aiModel);
       console.log('- Generate Images:', contentRequest.generateImages);
       console.log('- Image Count:', contentRequest.imageCount || 0);
+      console.log('Credit config imageGeneration:', JSON.stringify(creditConfig.imageGeneration, null, 2));
       
       // Determine credits needed based on content length using admin configuration
       let contentCredits = 1;
@@ -1017,7 +1018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (contentRequest.generateImages && imageCount > 0) {
         imageCredits = imageCount * creditConfig.imageGeneration.perImage;
       }
-      console.log('✓ Image generation credits:', imageCredits, '(imageCount:', imageCount, ')');
+      console.log('✓ Image generation credits:', imageCredits, '(imageCount:', imageCount, ', perImage:', creditConfig.imageGeneration.perImage, ')');
       
       // Total credits calculation
       const creditsNeeded = contentCredits + aiModelCredits + imageCredits;
