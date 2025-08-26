@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/dashboard/Layout";
 import { useLanguage } from "@/hooks/use-language";
 import { useDbTranslations } from "@/hooks/use-db-translations";
 import { useAuth } from "@/hooks/use-auth";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useCreditCache } from "@/hooks/use-credit-cache";
@@ -129,6 +129,43 @@ export default function CreateContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { invalidateCreditHistory } = useCreditCache();
+
+  // Default credit config fallback
+  const defaultCreditConfig = {
+    contentGeneration: {
+      short: 1,
+      medium: 3,
+      long: 5,
+      extraLong: 8
+    },
+    imageGeneration: {
+      perImage: 2
+    },
+    aiModels: {
+      chatgpt: 1,
+      gemini: 1,
+      claude: 2
+    }
+  };
+
+  // Fetch credit configuration
+  const { data: creditConfigData } = useQuery({
+    queryKey: ['/api/admin/credit-config'],
+    select: (response: any) => {
+      const configData = response?.data?.config;
+      if (configData) {
+        try {
+          return typeof configData === 'string' ? JSON.parse(configData) : configData;
+        } catch (error) {
+          console.error('Error parsing credit config:', error);
+          return defaultCreditConfig;
+        }
+      }
+      return defaultCreditConfig;
+    }
+  });
+
+  const creditConfig = creditConfigData || defaultCreditConfig;
   
   // Ref to store current articleId to prevent loss during state updates
   const currentArticleIdRef = useRef<number | null>(null);
@@ -271,20 +308,20 @@ export default function CreateContent() {
     const breakdown = [];
     let totalCredits = 0;
 
-    // Content length credits
+    // Content length credits from config
     let contentCredits = 1;
     switch (data.length) {
       case 'short':
-        contentCredits = 1;
+        contentCredits = creditConfig.contentGeneration.short;
         break;
       case 'medium':
-        contentCredits = 3;
+        contentCredits = creditConfig.contentGeneration.medium;
         break;
       case 'long':
-        contentCredits = 5;
+        contentCredits = creditConfig.contentGeneration.long;
         break;
       case 'extra_long':
-        contentCredits = 8;
+        contentCredits = creditConfig.contentGeneration.extraLong;
         break;
     }
     
@@ -302,26 +339,15 @@ export default function CreateContent() {
     });
     totalCredits += contentCredits;
 
-    // AI Model credits
+    // AI Model credits from config
     if (data.aiModel) {
-      let aiCredits = 1;
       const aiLabels = {
         'chatgpt': 'ChatGPT AI',
         'gemini': 'Gemini AI',
         'claude': 'Claude AI'
       };
       
-      switch (data.aiModel) {
-        case 'chatgpt':
-          aiCredits = 1;
-          break;
-        case 'gemini':
-          aiCredits = 1;
-          break;
-        case 'claude':
-          aiCredits = 2;
-          break;
-      }
+      const aiCredits = creditConfig.aiModels[data.aiModel] || 1;
       
       breakdown.push({
         label: aiLabels[data.aiModel],
@@ -333,14 +359,26 @@ export default function CreateContent() {
 
     // Image generation credits
     if (data.generateImages) {
-      // Estimate image count (default logic from backend)
-      let imageCount = 1;
-      if (data.length === 'short') imageCount = 1;
-      else if (data.length === 'medium') imageCount = 2;
-      else if (data.length === 'long') imageCount = 3;
-      else if (data.length === 'extra_long') imageCount = 4;
+      // Calculate image count using same logic as backend
+      let imageCount = 2; // Default medium
+      switch (data.length) {
+        case 'short':
+          imageCount = 1;
+          break;
+        case 'medium':
+          imageCount = 2;
+          break;
+        case 'long':
+          imageCount = 3;
+          break;
+        case 'extra_long':
+          imageCount = 4;
+          break;
+        default:
+          imageCount = 2; // Default medium
+      }
       
-      const imageCredits = imageCount * 2; // 2 credits per image
+      const imageCredits = imageCount * creditConfig.imageGeneration.perImage;
       
       breakdown.push({
         label: `Tạo ${imageCount} hình ảnh`,

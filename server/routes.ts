@@ -44,6 +44,25 @@ function htmlToPlainText(html: string): string {
   return text;
 }
 
+// Helper function to calculate image count based on content length
+function calculateImageCount(contentLength: string, generateImages: boolean): number {
+  if (!generateImages) return 0;
+  
+  switch (contentLength) {
+    case 'short':
+      return 1;
+    case 'medium':
+      return 2;
+    case 'long':
+      return 3;
+    case 'extra_long':
+    case 'extraLong':
+      return 4;
+    default:
+      return 2; // Default medium
+  }
+}
+
 // Helper function to log credit usage history
 async function logCreditUsage(
   userId: number,
@@ -994,10 +1013,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate image generation credits
       let imageCredits = 0;
-      if (contentRequest.generateImages && contentRequest.imageCount) {
-        imageCredits = contentRequest.imageCount * creditConfig.imageGeneration.perImage;
+      const imageCount = calculateImageCount(contentRequest.length, contentRequest.generateImages || false);
+      if (contentRequest.generateImages && imageCount > 0) {
+        imageCredits = imageCount * creditConfig.imageGeneration.perImage;
       }
-      console.log('✓ Image generation credits:', imageCredits);
+      console.log('✓ Image generation credits:', imageCredits, '(imageCount:', imageCount, ')');
       
       // Total credits calculation
       const creditsNeeded = contentCredits + aiModelCredits + imageCredits;
@@ -1289,7 +1309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 };
                 
                 // Log credit usage history với imageCount đúng
-                const actualImageCount = contentRequest.generateImages ? 3 : 0; // Default là 3 ảnh khi generateImages = true
+                const actualImageCount = calculateImageCount(contentRequest.length, contentRequest.generateImages || false);
                 await logCreditUsage(
                   userId,
                   'content_generation',
@@ -1325,8 +1345,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 };
                 
-                // Log credit usage history với imageCount đúng
-                const actualImageCount = contentRequest.generateImages ? 3 : 0;
+                // Log credit usage history với imageCount đúng  
+                const actualImageCount = calculateImageCount(contentRequest.length, contentRequest.generateImages || false);
                 await logCreditUsage(
                   userId,
                   'content_generation',
