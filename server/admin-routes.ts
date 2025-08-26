@@ -1374,10 +1374,14 @@ export function registerAdminRoutes(app: Express) {
     }
 
     try {
-      const users = await storage.getAllUsers();
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+
+      const result = await storage.listUsers(page, limit, search);
       return res.status(200).json({
         success: true,
-        data: { users }
+        data: result
       });
     } catch (error) {
       console.error("Error getting users:", error);

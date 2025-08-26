@@ -1,6 +1,6 @@
 import { db } from "@db";
 import * as schema from "@shared/schema";
-import { eq, and, desc, asc, sql, like, gte, lte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, like, gte, lte, or, ilike, isNull } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "@db";
@@ -20,7 +20,7 @@ export interface IStorage {
   updateUser(id: number, data: Partial<schema.User>): Promise<schema.User | null>;
   updateUserPassword(id: number, newPassword: string): Promise<schema.User | null>;
   deleteUser(id: number): Promise<boolean>;
-  listUsers(page: number, limit: number): Promise<{ users: schema.User[], total: number }>;
+  listUsers(page: number, limit: number, search?: string): Promise<{ users: schema.User[], total: number }>;
   getAllUsers(): Promise<schema.User[]>;
   getAdminStats(): Promise<{
     totalUsers: number;
@@ -390,18 +390,29 @@ class DatabaseStorage implements IStorage {
     }
   }
   
-  async listUsers(page: number = 1, limit: number = 10): Promise<{ users: schema.User[], total: number }> {
+  async listUsers(page: number = 1, limit: number = 10, search?: string): Promise<{ users: schema.User[], total: number }> {
     const offset = (page - 1) * limit;
+    
+    let whereCondition = undefined;
+    if (search) {
+      whereCondition = or(
+        ilike(schema.users.username, `%${search}%`),
+        ilike(schema.users.email, `%${search}%`),
+        ilike(schema.users.fullName, `%${search}%`)
+      );
+    }
     
     const users = await db.query.users.findMany({
       limit,
       offset,
+      where: whereCondition,
       orderBy: [desc(schema.users.createdAt)]
     });
     
     const [{ count }] = await db
       .select({ count: sql`count(*)`.mapWith(Number) })
-      .from(schema.users);
+      .from(schema.users)
+      .where(whereCondition);
     
     return { users, total: count };
   }
