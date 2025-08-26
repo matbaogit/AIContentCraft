@@ -290,14 +290,20 @@ export function registerAdminRoutes(app: Express) {
     }
 
     try {
+      console.log('=== CREDIT CONFIG SAVE REQUEST ===');
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
       const { config } = req.body;
       
       if (!config) {
+        console.log('❌ Config is missing from request body');
         return res.status(400).json({
           success: false,
           error: "Configuration is required"
         });
       }
+      
+      console.log('✓ Config received:', JSON.stringify(config, null, 2));
 
       // Validate config structure
       const requiredFields = [
@@ -317,6 +323,7 @@ export function registerAdminRoutes(app: Express) {
         let current = config;
         for (const key of keys) {
           if (!current || typeof current[key] === 'undefined') {
+            console.log(`❌ Missing field: ${field}, current:`, current, 'key:', key);
             return res.status(400).json({
               success: false,
               error: `Missing required field: ${field}`
@@ -325,6 +332,7 @@ export function registerAdminRoutes(app: Express) {
           current = current[key];
         }
       }
+      console.log('✓ All required fields validated');
 
       // Save configuration to system settings
       await storage.setSetting('credit_config', JSON.stringify(config), 'credit');
