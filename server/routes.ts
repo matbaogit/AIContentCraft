@@ -3678,74 +3678,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ========== Admin API ==========
-  // Get all users
-  app.get('/api/admin/users', async (req, res) => {
-    try {
-      if (!req.isAuthenticated() || req.user.role !== 'admin') {
-        return res.status(403).json({ success: false, error: 'Admin access required' });
-      }
+  // Admin users endpoint moved to admin-routes.ts
 
-      const page = parseInt(req.query.page as string || '1');
-      const limit = parseInt(req.query.limit as string || '10');
-      
-      const { users, total } = await storage.listUsers(page, limit);
-      
-      // Remove passwords from response
-      const usersWithoutPasswords = users.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      });
-      
-      res.json({
-        success: true,
-        data: {
-          users: usersWithoutPasswords,
-          pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit)
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch users' });
-    }
-  });
-
-  // Update user (admin)
-  app.patch('/api/admin/users/:id', async (req, res) => {
-    try {
-      if (!req.isAuthenticated() || req.user.role !== 'admin') {
-        return res.status(403).json({ success: false, error: 'Admin access required' });
-      }
-
-      const userId = parseInt(req.params.id);
-      const { fullName, email, role, credits, language } = req.body;
-      
-      // Update user
-      const updatedUser = await storage.updateUser(userId, {
-        fullName,
-        email,
-        role,
-        credits,
-        language
-      });
-      
-      if (!updatedUser) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-      }
-      
-      // Don't include password in response
-      const { password, ...userWithoutPassword } = updatedUser;
-      
-      res.json({ success: true, data: userWithoutPassword });
-    } catch (error) {
-      console.error('Error updating user:', error);
-      res.status(500).json({ success: false, error: 'Failed to update user' });
-    }
-  });
+  // Admin user update endpoint moved to admin-routes.ts
 
   // Get admin dashboard stats
   app.get('/api/admin/stats', async (req, res) => {
