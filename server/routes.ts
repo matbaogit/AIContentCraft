@@ -5,6 +5,8 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { setupFacebookAuth } from "./routes/facebook-auth";
+import { checkDatabaseConnection, handleDatabaseError } from "./middleware/database-error-handler";
+import { isDatabaseConnected } from "@db";
 // // import zaloAuthRouter from "./routes/zalo-auth-working";
 import * as schema from "@shared/schema";
 import { db } from "../db";
@@ -92,6 +94,34 @@ const isAuthenticated = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
+
+  // Add database connection check middleware
+  app.use(checkDatabaseConnection);
+
+  // Health check endpoint (should be early in middleware stack)
+  app.get('/api/health', async (req, res) => {
+    try {
+      const dbStatus = isDatabaseConnected();
+      const status = dbStatus ? 'healthy' : 'unhealthy';
+      
+      res.status(dbStatus ? 200 : 503).json({
+        success: true,
+        status,
+        database: dbStatus ? 'connected' : 'disconnected',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(503).json({
+        success: false,
+        status: 'unhealthy',
+        database: 'error',
+        error: (error as Error).message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   // Debug middleware to log all requests
   app.use((req, res, next) => {
     if (req.url.includes('/api/social') || req.url.includes('/api/auth/zalo')) {
@@ -485,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API routes
-  const httpServer = createServer(app);
+  // httpServer already created at top of function
 
   // ========== Plans API ==========
   // Get all plans
@@ -6848,6 +6878,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 </body>
 </html>`);
   });
+
+  // Add database error handling middleware at the end
+  app.use(handleDatabaseError);
 
   return httpServer;
 }

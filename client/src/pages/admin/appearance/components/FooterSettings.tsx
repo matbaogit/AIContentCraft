@@ -204,7 +204,7 @@ export default function FooterSettings() {
                           alt="Footer logo preview"
                           className="max-h-12 max-w-32 object-contain"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/100x40?text=Footer+Logo";
+                            e.currentTarget.src = "/placeholder-logo.svg";
                           }}
                         />
                       ) : (
@@ -384,7 +384,7 @@ export default function FooterSettings() {
                           alt="Footer logo preview"
                           className="max-h-12 max-w-32 object-contain"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/100x40?text=Footer+Logo";
+                            e.currentTarget.src = "/placeholder-logo.svg";
                           }}
                         />
                       ) : (

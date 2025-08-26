@@ -200,7 +200,7 @@ export default function HeaderSettings() {
                           alt="Logo preview"
                           className="max-h-12 max-w-32 object-contain"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/100x40?text=Logo";
+                            e.currentTarget.src = "/placeholder-logo.svg";
                           }}
                         />
                       ) : (
@@ -359,7 +359,7 @@ export default function HeaderSettings() {
                           alt="Logo preview"
                           className="max-h-12 max-w-32 object-contain"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/100x40?text=Logo";
+                            e.currentTarget.src = "/placeholder-logo.svg";
                           }}
                         />
                       ) : (

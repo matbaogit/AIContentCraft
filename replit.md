@@ -47,6 +47,9 @@ Preferred communication style: Simple, everyday language.
 - **Data Integration**: All analytics now display real database data instead of mock data
 - **Chart Features**: Responsive design, smooth animations, proper scaling, and time-series data visualization
 - **Zalo OAuth Integration**: Successfully resolved -14003 "Invalid redirect uri" error by implementing direct route override in main routes.ts, forcing production callback URL to use server endpoint `/api/auth/zalo/callback` instead of client route
+- **Database Resilience**: Enhanced database connection handling with robust retry logic, graceful error handling, and health check endpoints for production stability
+- **Production Assets**: Replaced via.placeholder.com with local SVG placeholder images to prevent ERR_NAME_NOT_RESOLVED errors and console spam
+- **Error Middleware**: Added database connection check middleware and specialized error handlers for improved production reliability
 
 ## External Dependencies
 

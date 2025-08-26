@@ -173,7 +173,7 @@ function Layout({ children, title }: AdminLayoutProps) {
               alt="SEO AI Writer" 
               className="h-8 w-8"
               onError={(e) => {
-                e.currentTarget.src = "https://via.placeholder.com/32";
+                e.currentTarget.src = "/placeholder-32.svg";
               }}
             />
             {isSidebarOpen && (
@@ -280,7 +280,7 @@ function Layout({ children, title }: AdminLayoutProps) {
                     alt="SEO AI Writer" 
                     className="h-8 w-8"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/32";
+                      e.currentTarget.src = "/placeholder-32.svg";
                     }}
                   />
                   <span className="ml-2 text-xl font-bold">Admin</span>

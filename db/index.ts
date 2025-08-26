@@ -17,23 +17,42 @@ export const pool = new Pool({
     process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
       : false,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 10000, // Return an error after 10 seconds if connection could not be established
-  maxUses: 7500, // Close a connection after it has been used 7500 times
+  max: 10, // Reduced maximum number of clients in the pool for better stability
+  idleTimeoutMillis: 60000, // Increased idle timeout to 1 minute
+  connectionTimeoutMillis: 15000, // Increased connection timeout to 15 seconds
+  maxUses: 5000, // Reduced max uses to force connection refresh more often
+  keepAlive: true, // Enable TCP keep-alive
+  keepAliveInitialDelayMillis: 10000, // Initial delay for keep-alive
+  allowExitOnIdle: false, // Don't allow pool to close when idle
 });
 
 // Add error handling for the connection pool
 pool.on("error", (err) => {
   console.error("Unexpected error on PostgreSQL client:", err);
-  // Don't crash the server, just log the error
+  isDbConnected = false;
+  // Attempt to reconnect after an error
+  setTimeout(() => {
+    console.log("Attempting to reconnect to database after error...");
+    connectWithRetry();
+  }, 5000);
+});
+
+// Add connection event handlers
+pool.on("connect", () => {
+  console.log("New client connected to the database");
+  isDbConnected = true;
+});
+
+pool.on("remove", () => {
+  console.log("Client removed from pool");
 });
 
 // Test the database connection with a timeout
 let isDbConnected = false;
 
-const connectWithRetry = async (maxRetries = 5, retryDelay = 5000) => {
+const connectWithRetry = async (maxRetries = 10, retryDelay = 3000) => {
   let retries = 0;
+  const maxRetryDelay = 30000; // Max 30 seconds between retries
 
   while (retries < maxRetries) {
     try {
@@ -44,20 +63,25 @@ const connectWithRetry = async (maxRetries = 5, retryDelay = 5000) => {
       return;
     } catch (err) {
       retries++;
+      const currentDelay = Math.min(retryDelay * Math.pow(1.5, retries - 1), maxRetryDelay);
+      
       console.error(
         `Failed to connect to database (attempt ${retries}/${maxRetries}):`,
-        err,
+        (err as Error).message,
       );
 
       if (retries >= maxRetries) {
         console.warn(
-          "Maximum connection retries reached. Continuing with a potentially unreliable database connection.",
+          "Maximum connection retries reached. Database operations may fail until connection is restored.",
         );
+        // Still continue but mark as not connected
+        isDbConnected = false;
         break;
       }
 
-      // Wait before retrying
-      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      console.log(`Retrying in ${currentDelay / 1000} seconds...`);
+      // Exponential backoff with jitter
+      await new Promise((resolve) => setTimeout(resolve, currentDelay + Math.random() * 1000));
     }
   }
 };
