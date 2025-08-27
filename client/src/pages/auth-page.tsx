@@ -131,6 +131,8 @@ export default function AuthPage() {
         login_button_text: "Đăng nhập",
         register_title: "Tạo tài khoản mới",
         register_subtitle: "Điền thông tin để tạo tài khoản",
+        terms_of_service_url: "/legal/terms-of-service",
+        privacy_policy_url: "/legal/privacy-policy",
         background_color: "#ffffff",
         text_color: "#000000",
         button_color: "#3b82f6",
@@ -159,6 +161,8 @@ export default function AuthPage() {
       login_button_text: settings.login_button_text || "Đăng nhập",
       register_title: settings.register_title || "Tạo tài khoản mới",
       register_subtitle: settings.register_subtitle || "Điền thông tin để tạo tài khoản",
+      terms_of_service_url: settings.terms_of_service_url || "/legal/terms-of-service",
+      privacy_policy_url: settings.privacy_policy_url || "/legal/privacy-policy",
       background_color: settings.background_color || "#ffffff",
       text_color: settings.text_color || "#000000",
       button_color: settings.button_color || "#3b82f6",
@@ -765,11 +769,11 @@ export default function AuthPage() {
                                 <div className="space-y-1 leading-none">
                                   <FormLabel className="text-sm font-normal text-slate-300">
                                     {t("auth.register.termsAgree")}{" "}
-                                    <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                                    <a href={loginPageSettings.terms_of_service_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                       {t("auth.register.terms")}
                                     </a>{" "}
                                     {t("auth.register.and")}{" "}
-                                    <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                                    <a href={loginPageSettings.privacy_policy_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                       {t("auth.register.privacy")}
                                     </a>
                                   </FormLabel>
@@ -958,11 +962,11 @@ export default function AuthPage() {
                                   <div className="space-y-1 leading-none">
                                     <FormLabel className="text-sm font-normal text-slate-300">
                                       {t("auth.register.termsAgree")}{" "}
-                                      <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                                      <a href={loginPageSettings.terms_of_service_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                         {t("auth.register.terms")}
                                       </a>{" "}
                                       {t("auth.register.and")}{" "}
-                                      <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                                      <a href={loginPageSettings.privacy_policy_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                         {t("auth.register.privacy")}
                                       </a>
                                     </FormLabel>
@@ -1077,11 +1081,11 @@ export default function AuthPage() {
                         <div className="space-y-1 leading-none">
                           <label htmlFor="zalo-terms" className="text-sm font-normal text-slate-300 cursor-pointer">
                             {t("auth.register.termsAgree")}{" "}
-                            <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                            <a href={loginPageSettings.terms_of_service_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                               {t("auth.register.terms")}
                             </a>{" "}
                             {t("auth.register.and")}{" "}
-                            <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                            <a href={loginPageSettings.privacy_policy_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                               {t("auth.register.privacy")}
                             </a>
                           </label>

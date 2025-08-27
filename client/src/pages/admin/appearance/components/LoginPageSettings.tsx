@@ -31,6 +31,8 @@ const loginPageSchema = z.object({
   login_button_text: z.string().min(1, "Text nút đăng nhập không được để trống"),
   register_title: z.string().min(1, "Tiêu đề đăng ký không được để trống"),
   register_subtitle: z.string().optional(),
+  terms_of_service_url: z.string().url("URL không hợp lệ").optional().or(z.literal("")),
+  privacy_policy_url: z.string().url("URL không hợp lệ").optional().or(z.literal("")),
   footer_text: z.string().optional(),
   background_color: z.string().optional(),
   text_color: z.string().optional(),
@@ -69,6 +71,8 @@ export default function LoginPageSettings() {
       login_button_text: "Đăng nhập",
       register_title: "",
       register_subtitle: "",
+      terms_of_service_url: "",
+      privacy_policy_url: "",
       footer_text: "",
       background_color: "#ffffff",
       text_color: "#000000",
@@ -105,6 +109,8 @@ export default function LoginPageSettings() {
           login_button_text: "Đăng nhập",
           register_title: "",
           register_subtitle: "",
+          terms_of_service_url: "",
+          privacy_policy_url: "",
           footer_text: "",
           background_color: "#ffffff",
           text_color: "#000000",
@@ -422,6 +428,43 @@ export default function LoginPageSettings() {
                           <FormLabel>Mô tả đăng ký</FormLabel>
                           <FormControl>
                             <Textarea {...field} placeholder="Điền thông tin để tạo tài khoản" rows={2} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Liên kết pháp lý */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Liên kết pháp lý</CardTitle>
+                    <CardDescription>URL cho điều khoản dịch vụ và chính sách bảo mật</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="terms_of_service_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL Điều khoản dịch vụ</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="/legal/terms-of-service hoặc https://example.com/terms" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="privacy_policy_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL Chính sách bảo mật</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="/legal/privacy-policy hoặc https://example.com/privacy" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
