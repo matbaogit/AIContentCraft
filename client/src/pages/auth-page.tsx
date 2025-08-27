@@ -91,6 +91,7 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showZaloConfirmation, setShowZaloConfirmation] = useState(false);
   const [zaloData, setZaloData] = useState<any>(null);
+  const [zaloTermsAgreed, setZaloTermsAgreed] = useState(false);
   const { toast } = useToast();
   
   // Fetch appearance settings for login page
@@ -1064,6 +1065,30 @@ export default function AuthPage() {
                       </Button>
                     )}
 
+                    {/* Terms checkbox for Zalo Registration */}
+                    {activeTab === "register" && authMethodsSettings.registration.allowZaloRegistration && (
+                      <div className="flex flex-row items-start space-x-2 space-y-0 mb-4">
+                        <Checkbox
+                          id="zalo-terms"
+                          checked={zaloTermsAgreed}
+                          onCheckedChange={(checked) => setZaloTermsAgreed(checked as boolean)}
+                          className="border-slate-500 data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-1"
+                        />
+                        <div className="space-y-1 leading-none">
+                          <label htmlFor="zalo-terms" className="text-sm font-normal text-slate-300 cursor-pointer">
+                            {t("auth.register.termsAgree")}{" "}
+                            <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                              {t("auth.register.terms")}
+                            </a>{" "}
+                            {t("auth.register.and")}{" "}
+                            <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
+                              {t("auth.register.privacy")}
+                            </a>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Zalo Login Button - Show based on current tab and settings */}
                     {((activeTab === "login" && authMethodsSettings.login.allowZaloLogin) ||
                       (activeTab === "register" && authMethodsSettings.registration.allowZaloRegistration) ||
@@ -1072,26 +1097,46 @@ export default function AuthPage() {
                         (hasRegistrationMethods && !hasLoginMethods && authMethodsSettings.registration.allowZaloRegistration)
                       ))
                     ) && (
-                      <ZaloLoginButton 
-                        disabled={isProcessingOAuth || loginMutation.isPending || registerMutation.isPending}
-                        className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
-                        onSuccess={() => {
-                          toast({
-                            title: "Đăng nhập thành công!",
-                            description: "Chào mừng bạn đến với hệ thống!",
-                          });
-                          navigate("/dashboard");
-                        }}
-                        onNeedsConfirmation={() => {
-                          setShowZaloConfirmation(true);
+                      <div 
+                        onClick={(e) => {
+                          if (activeTab === "register" && !zaloTermsAgreed) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toast({
+                              title: "Lỗi đăng ký",
+                              description: "Bạn phải đồng ý với Điều khoản dịch vụ và Chính sách bảo mật để tiếp tục đăng ký.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
                         }}
                       >
-                        {isProcessingOAuth ? "Đang xử lý..." : (
-                          activeTab === "register" || (hasRegistrationMethods && !hasLoginMethods) 
-                            ? "Đăng ký bằng Zalo" 
-                            : "Đăng nhập bằng Zalo"
-                        )}
-                      </ZaloLoginButton>
+                        <ZaloLoginButton 
+                          disabled={
+                            isProcessingOAuth || 
+                            loginMutation.isPending || 
+                            registerMutation.isPending ||
+                            (activeTab === "register" && !zaloTermsAgreed)
+                          }
+                          className="bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          onSuccess={() => {
+                            toast({
+                              title: "Đăng nhập thành công!",
+                              description: "Chào mừng bạn đến với hệ thống!",
+                            });
+                            navigate("/dashboard");
+                          }}
+                          onNeedsConfirmation={() => {
+                            setShowZaloConfirmation(true);
+                          }}
+                        >
+                          {isProcessingOAuth ? "Đang xử lý..." : (
+                            activeTab === "register" || (hasRegistrationMethods && !hasLoginMethods) 
+                              ? "Đăng ký bằng Zalo" 
+                              : "Đăng nhập bằng Zalo"
+                          )}
+                        </ZaloLoginButton>
+                      </div>
                     )}
                   </div>
                 </div>
