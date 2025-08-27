@@ -764,11 +764,11 @@ export default function AuthPage() {
                                 <div className="space-y-1 leading-none">
                                   <FormLabel className="text-sm font-normal text-slate-300">
                                     {t("auth.register.termsAgree")}{" "}
-                                    <a href="#" className="text-primary hover:text-primary/80">
+                                    <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                       {t("auth.register.terms")}
                                     </a>{" "}
                                     {t("auth.register.and")}{" "}
-                                    <a href="#" className="text-primary hover:text-primary/80">
+                                    <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                       {t("auth.register.privacy")}
                                     </a>
                                   </FormLabel>
@@ -957,11 +957,11 @@ export default function AuthPage() {
                                   <div className="space-y-1 leading-none">
                                     <FormLabel className="text-sm font-normal text-slate-300">
                                       {t("auth.register.termsAgree")}{" "}
-                                      <a href="#" className="text-primary hover:text-primary/80">
+                                      <a href="/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                         {t("auth.register.terms")}
                                       </a>{" "}
                                       {t("auth.register.and")}{" "}
-                                      <a href="#" className="text-primary hover:text-primary/80">
+                                      <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline">
                                         {t("auth.register.privacy")}
                                       </a>
                                     </FormLabel>
