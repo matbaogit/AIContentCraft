@@ -140,7 +140,7 @@ export default function TermsOfServicePage() {
           content: "Nếu bạn có câu hỏi về điều khoản này:",
           info: {
             email: "legal@seoaiwriter.com",
-            support: "support@seoaiwriter.com",
+            support: "support@toolbox.vn",
             address: "Việt Nam"
           }
         }
@@ -277,7 +277,7 @@ export default function TermsOfServicePage() {
           content: "If you have questions about these terms:",
           info: {
             email: "legal@seoaiwriter.com",
-            support: "support@seoaiwriter.com",
+            support: "support@toolbox.vn",
             address: "Vietnam"
           }
         }

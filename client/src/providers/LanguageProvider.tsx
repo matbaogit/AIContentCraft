@@ -681,7 +681,7 @@ const translations: TranslationsType = {
         error: {
           description: "Có lỗi xảy ra khi gửi feedback. Vui lòng thử lại."
         },
-        contact: "Bạn cũng có thể liên hệ trực tiếp qua email: support@seoaiwriter.com"
+        contact: "Bạn cũng có thể liên hệ trực tiếp qua email: support@toolbox.vn"
       }
     },
     
@@ -1690,7 +1690,7 @@ const translations: TranslationsType = {
         error: {
           description: "An error occurred while sending feedback. Please try again."
         },
-        contact: "You can also contact us directly via email: support@seoaiwriter.com"
+        contact: "You can also contact us directly via email: support@toolbox.vn"
       }
     },
     
