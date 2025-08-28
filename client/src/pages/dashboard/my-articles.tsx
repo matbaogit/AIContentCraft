@@ -155,11 +155,6 @@ export default function MyArticles() {
       cell: ({ row }) => formatDateTime(row.original.createdAt),
     },
     {
-      accessorKey: "status",
-      header: t("dashboard.articles.columns.status"),
-      cell: ({ row }) => <StatusBadge status={row.original.status as any} />,
-    },
-    {
       accessorKey: "keywords",
       header: t("dashboard.articles.columns.keywords"),
       cell: ({ row }) => {
