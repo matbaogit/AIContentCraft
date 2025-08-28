@@ -168,6 +168,50 @@ export default function MyArticles() {
       },
     },
     {
+      accessorKey: "status",
+      header: t("dashboard.articles.columns.status"),
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const statusConfig = {
+          draft: { 
+            label: t("dashboard.articles.statuses.draft"), 
+            className: "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200" 
+          },
+          published: { 
+            label: t("dashboard.articles.statuses.published"), 
+            className: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200" 
+          },
+          wordpress: { 
+            label: t("dashboard.articles.statuses.wordpress"), 
+            className: "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200" 
+          },
+          facebook: { 
+            label: t("dashboard.articles.statuses.facebook"), 
+            className: "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200" 
+          },
+          tiktok: { 
+            label: t("dashboard.articles.statuses.tiktok"), 
+            className: "bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200" 
+          },
+          twitter: { 
+            label: t("dashboard.articles.statuses.twitter"), 
+            className: "bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200" 
+          },
+        };
+
+        const config = statusConfig[status as keyof typeof statusConfig] || {
+          label: status,
+          className: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200"
+        };
+
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+            {config.label}
+          </span>
+        );
+      },
+    },
+    {
       id: "actions",
       header: t("dashboard.articles.columns.actions"),
       cell: ({ row }) => {
