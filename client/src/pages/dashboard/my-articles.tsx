@@ -44,7 +44,16 @@ import {
   Edit,
   ExternalLink,
   Copy,
+  FileText,
+  Globe,
 } from "lucide-react";
+import { FaFacebook, FaTwitter, FaWordpress, FaTiktok, FaLinkedin } from "react-icons/fa";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Article } from "@shared/schema";
 import Head from "@/components/head";
 
@@ -172,6 +181,65 @@ export default function MyArticles() {
       header: t("dashboard.articles.columns.status"),
       cell: ({ row }) => {
         const status = row.original.status;
+        const article = row.original;
+        
+        const getStatusIcon = (status: string) => {
+          switch (status) {
+            case 'draft':
+              return <FileText className="w-3 h-3" />;
+            case 'published':
+              return <Globe className="w-3 h-3" />;
+            case 'wordpress':
+              return <FaWordpress className="w-3 h-3" />;
+            case 'facebook':
+              return <FaFacebook className="w-3 h-3" />;
+            case 'twitter':
+              return <FaTwitter className="w-3 h-3" />;
+            case 'tiktok':
+              return <FaTiktok className="w-3 h-3" />;
+            case 'linkedin':
+              return <FaLinkedin className="w-3 h-3" />;
+            default:
+              return <FileText className="w-3 h-3" />;
+          }
+        };
+
+        const getTooltipContent = (status: string, article: Article) => {
+          const publishedUrl = article.publishedUrl;
+          const createdAt = formatDateTime(article.createdAt);
+          
+          switch (status) {
+            case 'draft':
+              return `Bản nháp - Tạo lúc ${createdAt}`;
+            case 'published':
+              return publishedUrl 
+                ? `Đã xuất bản - URL: ${publishedUrl}`
+                : `Đã xuất bản - Tạo lúc ${createdAt}`;
+            case 'wordpress':
+              return publishedUrl 
+                ? `Đã đăng lên WordPress - URL: ${publishedUrl}`
+                : `Đã đăng lên WordPress - Tạo lúc ${createdAt}`;
+            case 'facebook':
+              return publishedUrl 
+                ? `Đã đăng lên Facebook - URL: ${publishedUrl}`
+                : `Đã đăng lên Facebook - Tạo lúc ${createdAt}`;
+            case 'twitter':
+              return publishedUrl 
+                ? `Đã đăng lên Twitter - URL: ${publishedUrl}`
+                : `Đã đăng lên Twitter - Tạo lúc ${createdAt}`;
+            case 'tiktok':
+              return publishedUrl 
+                ? `Đã đăng lên TikTok - URL: ${publishedUrl}`
+                : `Đã đăng lên TikTok - Tạo lúc ${createdAt}`;
+            case 'linkedin':
+              return publishedUrl 
+                ? `Đã đăng lên LinkedIn - URL: ${publishedUrl}`
+                : `Đã đăng lên LinkedIn - Tạo lúc ${createdAt}`;
+            default:
+              return `${status} - Tạo lúc ${createdAt}`;
+          }
+        };
+
         const statusConfig = {
           draft: { 
             label: t("dashboard.articles.statuses.draft"), 
@@ -197,6 +265,10 @@ export default function MyArticles() {
             label: t("dashboard.articles.statuses.twitter"), 
             className: "bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200" 
           },
+          linkedin: { 
+            label: t("dashboard.articles.statuses.linkedin") || "LinkedIn", 
+            className: "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200" 
+          },
         };
 
         const config = statusConfig[status as keyof typeof statusConfig] || {
@@ -205,9 +277,19 @@ export default function MyArticles() {
         };
 
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
-            {config.label}
-          </span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-help ${config.className}`}>
+                  {getStatusIcon(status)}
+                  {config.label}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-sm">{getTooltipContent(status, article)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       },
     },
@@ -269,6 +351,7 @@ export default function MyArticles() {
     { value: "facebook", label: t("dashboard.articles.statuses.facebook") },
     { value: "tiktok", label: t("dashboard.articles.statuses.tiktok") },
     { value: "twitter", label: t("dashboard.articles.statuses.twitter") },
+    { value: "linkedin", label: t("dashboard.articles.statuses.linkedin") || "LinkedIn" },
   ];
 
   // Refetch khi thay đổi trang hoặc bộ lọc
