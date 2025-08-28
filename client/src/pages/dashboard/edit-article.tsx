@@ -129,7 +129,7 @@ const EditArticle = () => {
   // Update article mutation
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("PUT", `/api/dashboard/articles/${params.id}`, data);
+      return apiRequest("PATCH", `/api/dashboard/articles/${params.id}`, data);
     },
     onSuccess: () => {
       toast({
