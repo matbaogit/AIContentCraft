@@ -216,29 +216,6 @@ export default function AdminUsers() {
     },
   });
 
-  // Add credits mutation
-  const addCreditsMutation = useMutation({
-    mutationFn: async ({ userId, amount, description }: { userId: number; amount: number; description: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${userId}/credits`, {
-        amount,
-        description
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Thành công",
-        description: "Credits đã được thêm vào tài khoản người dùng",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Lỗi",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const onAddSubmit = (data: UserFormValues) => {
     createUserMutation.mutate(data);
@@ -260,7 +237,7 @@ export default function AdminUsers() {
     editForm.reset({
       username: user.username,
       email: user.email,
-      fullName: user.fullName || "",
+      fullName: user.fullName || undefined,
       role: user.role,
       status: "active", // Assuming all users are active for now
     });
