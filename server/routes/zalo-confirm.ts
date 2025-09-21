@@ -120,7 +120,12 @@ router.post('/confirm', async (req, res) => {
     }
 
     if (existingUser.length > 0) {
-      console.log('User already exists, logging in existing user:', existingUser[0].username);
+      console.log('✅ User already exists, logging in existing user:', {
+        userId: existingUser[0].id,
+        username: existingUser[0].username,
+        zaloId: existingUser[0].zaloId,
+        fullName: existingUser[0].fullName
+      });
       
       // Set session and return existing user
       req.login(existingUser[0], (err) => {
@@ -155,36 +160,88 @@ router.post('/confirm', async (req, res) => {
       avatar: userData.avatar       // This is the Zalo picture URL
     });
 
-    const [newUser] = await db.insert(schema.users).values(userData).returning();
+    let newUser;
+    try {
+      [newUser] = await db.insert(schema.users).values(userData).returning();
 
-    console.log('Successfully created new Zalo user:', {
-      id: newUser.id,
-      username: newUser.username,
-      zaloId: newUser.zaloId
-    });
+      console.log('✅ Successfully created new Zalo user:', {
+        id: newUser.id,
+        username: newUser.username,
+        zaloId: newUser.zaloId,
+        fullName: newUser.fullName,
+        hasEmail: !!newUser.email
+      });
+    } catch (error) {
+      console.error('❌ Failed to create new Zalo user:', error);
+      
+      // Check if it's a duplicate key error (user already exists)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique constraint')) {
+        console.log('🔄 Duplicate user detected, attempting to find and login existing user...');
+        
+        // Try to find existing user again (perhaps race condition)
+        const retryExistingUser = await db.select()
+          .from(schema.users)
+          .where(eq(schema.users.zaloId, userData.zaloId))
+          .limit(1);
+        
+        if (retryExistingUser.length > 0) {
+          console.log('Found existing user on retry, logging in...');
+          req.login(retryExistingUser[0], (err) => {
+            if (err) {
+              console.error('Error setting session for retry user:', err);
+              return res.status(500).json({
+                success: false,
+                error: 'Lỗi đăng nhập'
+              });
+            }
+            
+            return res.json({
+              success: true,
+              data: {
+                id: retryExistingUser[0].id,
+                username: retryExistingUser[0].username,
+                fullName: retryExistingUser[0].fullName,
+                email: retryExistingUser[0].email,
+                role: retryExistingUser[0].role,
+                credits: retryExistingUser[0].credits
+              }
+            });
+          });
+          return;
+        }
+      }
+      
+      return res.status(500).json({
+        success: false,
+        error: 'Không thể tạo tài khoản. Vui lòng thử lại sau.'
+      });
+    }
 
     // Set session for new user
-    req.login(newUser, (err) => {
-      if (err) {
-        console.error('Error setting session for new user:', err);
-        return res.status(500).json({
-          success: false,
-          error: 'Lỗi đăng nhập sau khi tạo tài khoản'
-        });
-      }
-
-      return res.json({
-        success: true,
-        data: {
-          id: newUser.id,
-          username: newUser.username,
-          fullName: newUser.fullName,
-          email: newUser.email,
-          role: newUser.role,
-          credits: newUser.credits
+    if (newUser) {
+      req.login(newUser, (err) => {
+        if (err) {
+          console.error('Error setting session for new user:', err);
+          return res.status(500).json({
+            success: false,
+            error: 'Lỗi đăng nhập sau khi tạo tài khoản'
+          });
         }
+
+        return res.json({
+          success: true,
+          data: {
+            id: newUser.id,
+            username: newUser.username,
+            fullName: newUser.fullName,
+            email: newUser.email,
+            role: newUser.role,
+            credits: newUser.credits
+          }
+        });
       });
-    });
+    }
 
   } catch (error) {
     console.error('Error confirming Zalo account:', error);

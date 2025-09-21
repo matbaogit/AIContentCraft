@@ -188,7 +188,12 @@ router.get('/callback', async (req, res) => {
     }
 
     if (existingUser.length > 0) {
-      console.log('🔄 Existing Zalo user found, auto-login:', existingUser[0].username);
+      console.log('🔄 Existing Zalo user found, auto-login:', {
+        userId: existingUser[0].id,
+        username: existingUser[0].username,
+        zaloId: existingUser[0].zaloId,
+        fullName: existingUser[0].fullName
+      });
       
       // Auto-login existing user
       req.login(existingUser[0], (err) => {
@@ -215,7 +220,11 @@ router.get('/callback', async (req, res) => {
           `);
         }
 
-        console.log('✅ Auto-login successful for existing Zalo user');
+        console.log('✅ Auto-login successful for existing Zalo user:', {
+          userId: existingUser[0].id,
+          username: existingUser[0].username,
+          sessionActive: true
+        });
         
         // Return HTML that redirects to dashboard with welcome message
         return res.send(`
@@ -247,6 +256,11 @@ router.get('/callback', async (req, res) => {
       });
     } else {
       console.log('👤 New Zalo user detected, showing confirmation modal');
+      console.log('New user data preview:', {
+        zaloId: zaloUser.id,
+        name: zaloUser.name,
+        hasAvatar: !!zaloUser.picture?.data?.url
+      });
       
       // Store OAuth data in session for confirmation
       console.log('Storing Zalo OAuth data for user confirmation...');
