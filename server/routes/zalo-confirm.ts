@@ -95,11 +95,29 @@ router.post('/confirm', async (req, res) => {
       };
     }
 
-    // Check if user already exists by username (Zalo ID)
-    const existingUser = await db.select()
+    // Check if user already exists by zaloId (primary) or username (fallback)
+    console.log('Checking for existing user with zaloId:', userData.zaloId);
+    let existingUser = await db.select()
       .from(schema.users)
-      .where(eq(schema.users.username, userData.username))
+      .where(eq(schema.users.zaloId, userData.zaloId))
       .limit(1);
+    
+    // Fallback: check by username for backward compatibility
+    if (existingUser.length === 0 && userData.username) {
+      console.log('No user found by zaloId, checking by username for backward compatibility...');
+      existingUser = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.username, userData.username))
+        .limit(1);
+      
+      // If found by username, update their zaloId field for future consistency
+      if (existingUser.length > 0) {
+        console.log('Found user by username, updating zaloId field for consistency...');
+        await db.update(schema.users)
+          .set({ zaloId: userData.zaloId, updatedAt: new Date() })
+          .where(eq(schema.users.id, existingUser[0].id));
+      }
+    }
 
     if (existingUser.length > 0) {
       console.log('User already exists, logging in existing user:', existingUser[0].username);
