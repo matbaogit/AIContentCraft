@@ -154,13 +154,38 @@ router.get('/callback', async (req, res) => {
     console.log('Available fields:', Object.keys(zaloUser || {}));
     console.log('=== END ZALO USER RESPONSE ===');
 
+    // Validate Zalo user data
+    if (!zaloUser.id) {
+      console.error('❌ Zalo API did not return user ID');
+      return res.redirect('/?error=zalo_invalid_user_data');
+    }
+
     // Check if user already exists before showing confirmation
     console.log('Checking if Zalo user already exists in database...');
+    console.log('Zalo user ID to check:', zaloUser.id);
     
-    const existingUser = await db.select()
+    // Check by zaloId first (primary method)
+    let existingUser = await db.select()
       .from(schema.users)
-      .where(eq(schema.users.username, zaloUser.id))
+      .where(eq(schema.users.zaloId, zaloUser.id))
       .limit(1);
+    
+    // Fallback: check by username for backward compatibility
+    if (existingUser.length === 0) {
+      console.log('No user found by zaloId, checking by username for backward compatibility...');
+      existingUser = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.username, zaloUser.id))
+        .limit(1);
+      
+      // If found by username, update their zaloId field for future consistency
+      if (existingUser.length > 0) {
+        console.log('Found user by username, updating zaloId field for consistency...');
+        await db.update(schema.users)
+          .set({ zaloId: zaloUser.id, updatedAt: new Date() })
+          .where(eq(schema.users.id, existingUser[0].id));
+      }
+    }
 
     if (existingUser.length > 0) {
       console.log('🔄 Existing Zalo user found, auto-login:', existingUser[0].username);
