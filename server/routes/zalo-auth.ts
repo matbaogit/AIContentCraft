@@ -48,8 +48,8 @@ router.get('/', async (req, res) => {
     const authUrl = new URL('https://oauth.zaloapp.com/v4/permission');
     authUrl.searchParams.set('app_id', zaloAppId);
     
-    // CRITICAL FIX: Force production URL for toolbox.vn deployment
-    const callbackUrl = 'https://toolbox.vn/zalo-callback';
+    // CRITICAL FIX: Force production URL for toolbox.vn deployment - Use API endpoint  
+    const callbackUrl = 'https://toolbox.vn/api/auth/zalo/callback';
     
     console.log('🔥🔥🔥 FORCED PRODUCTION CALLBACK URL 🔥🔥🔥');
     console.log('CALLBACK URL FORCED TO:', callbackUrl);
