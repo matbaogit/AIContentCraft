@@ -95,29 +95,56 @@ router.post('/confirm', async (req, res) => {
       };
     }
 
-    // Check if user already exists by zaloId (primary) or username (fallback)
-    console.log('Checking for existing user with zaloId:', userData.zaloId);
+    // Extended check for existing users - same logic as zalo-auth.ts
+    console.log('🔍 Searching for existing user with multiple patterns...');
+    console.log('Zalo ID to search:', userData.zaloId);
+    
+    // Pattern 1: Check by zaloId directly 
     let existingUser = await db.select()
       .from(schema.users)
       .where(eq(schema.users.zaloId, userData.zaloId))
       .limit(1);
+    console.log('Pattern 1 - By zaloId:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
     
-    // Fallback: check by username for backward compatibility
-    if (existingUser.length === 0 && userData.username) {
-      console.log('No user found by zaloId, checking by username for backward compatibility...');
+    // Pattern 2: Check by username = zaloId 
+    if (existingUser.length === 0) {
+      console.log('Pattern 2 - Checking by username = zaloId...');
       existingUser = await db.select()
         .from(schema.users)
-        .where(eq(schema.users.username, userData.username))
+        .where(eq(schema.users.username, userData.zaloId))
         .limit(1);
+      console.log('Pattern 2 - By username = zaloId:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
       
       // If found by username, update their zaloId field for future consistency
       if (existingUser.length > 0) {
-        console.log('Found user by username, updating zaloId field for consistency...');
+        console.log('Updating zaloId field for consistency...');
         await db.update(schema.users)
           .set({ zaloId: userData.zaloId, updatedAt: new Date() })
           .where(eq(schema.users.id, existingUser[0].id));
       }
     }
+    
+    // Pattern 3: Check by username = "zalo_" + zaloId
+    if (existingUser.length === 0) {
+      const zaloUsername = `zalo_${userData.zaloId}`;
+      console.log('Pattern 3 - Checking by username = zalo_ + zaloId:', zaloUsername);
+      existingUser = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.username, zaloUsername))
+        .limit(1);
+      console.log('Pattern 3 - By zalo_username:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
+      
+      // If found, update their zaloId field
+      if (existingUser.length > 0) {
+        console.log('Found user with zalo_ prefix, updating zaloId field...');
+        await db.update(schema.users)
+          .set({ zaloId: userData.zaloId, updatedAt: new Date() })
+          .where(eq(schema.users.id, existingUser[0].id));
+      }
+    }
+    
+    // Final result
+    console.log('🎯 Final search result:', existingUser.length > 0 ? 'USER FOUND' : 'NO USER FOUND');
 
     if (existingUser.length > 0) {
       console.log('✅ User already exists, logging in existing user:', {
