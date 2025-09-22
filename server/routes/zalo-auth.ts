@@ -164,28 +164,56 @@ router.get('/callback', async (req, res) => {
     console.log('Checking if Zalo user already exists in database...');
     console.log('Zalo user ID to check:', zaloUser.id);
     
-    // Check by zaloId first (primary method)
+    // Extended check for existing users - check multiple patterns
+    console.log('🔍 Searching for existing user with multiple patterns...');
+    console.log('Zalo ID to search:', zaloUser.id);
+    
+    // Pattern 1: Check by zaloId directly 
     let existingUser = await db.select()
       .from(schema.users)
       .where(eq(schema.users.zaloId, zaloUser.id))
       .limit(1);
+    console.log('Pattern 1 - By zaloId:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
     
-    // Fallback: check by username for backward compatibility
+    // Pattern 2: Check by username = zaloId 
     if (existingUser.length === 0) {
-      console.log('No user found by zaloId, checking by username for backward compatibility...');
+      console.log('Pattern 2 - Checking by username = zaloId...');
       existingUser = await db.select()
         .from(schema.users)
         .where(eq(schema.users.username, zaloUser.id))
         .limit(1);
+      console.log('Pattern 2 - By username = zaloId:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
       
       // If found by username, update their zaloId field for future consistency
       if (existingUser.length > 0) {
-        console.log('Found user by username, updating zaloId field for consistency...');
+        console.log('Updating zaloId field for consistency...');
         await db.update(schema.users)
           .set({ zaloId: zaloUser.id, updatedAt: new Date() })
           .where(eq(schema.users.id, existingUser[0].id));
       }
     }
+    
+    // Pattern 3: Check by username = "zalo_" + zaloId
+    if (existingUser.length === 0) {
+      const zaloUsername = `zalo_${zaloUser.id}`;
+      console.log('Pattern 3 - Checking by username = zalo_ + zaloId:', zaloUsername);
+      existingUser = await db.select()
+        .from(schema.users)
+        .where(eq(schema.users.username, zaloUsername))
+        .limit(1);
+      console.log('Pattern 3 - By zalo_username:', existingUser.length > 0 ? 'FOUND' : 'NOT FOUND');
+      
+      // If found, update their zaloId field
+      if (existingUser.length > 0) {
+        console.log('Found user with zalo_ prefix, updating zaloId field...');
+        await db.update(schema.users)
+          .set({ zaloId: zaloUser.id, updatedAt: new Date() })
+          .where(eq(schema.users.id, existingUser[0].id));
+      }
+    }
+    
+    // Final result
+    console.log('🎯 Final search result:', existingUser.length > 0 ? 'USER FOUND' : 'NO USER FOUND');
 
     if (existingUser.length > 0) {
       console.log('🔄 Existing Zalo user found, auto-login:', {
